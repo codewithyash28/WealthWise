@@ -1,0 +1,59 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Stores user profile information, currency preference, and financial stats.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "Unique identifier for the user." },
+        "name": { "type": "string", "description": "User's display name." },
+        "currency": { "type": "string", "description": "Selected currency code (e.g., USD, INR)." },
+        "joinDate": { "type": "string", "format": "date-time", "description": "When the user first joined." },
+        "lastVisit": { "type": "string", "format": "date-time", "description": "Last time the user visited." },
+        "visitDates": { "type": "array", "items": { "type": "string" }, "description": "List of dates the user visited." },
+        "highScore": { "type": "integer", "description": "Best score in the financial quiz." },
+        "netWorth": {
+          "type": "object",
+          "properties": {
+            "assets": { "type": "number" },
+            "liabilities": { "type": "number" }
+          }
+        }
+      },
+      "required": ["uid", "name", "currency"]
+    },
+    "BudgetPlan": {
+      "title": "BudgetPlan",
+      "description": "Stores the user's monthly income and expense breakdown.",
+      "type": "object",
+      "properties": {
+        "income": { "type": "number" },
+        "expenses": {
+          "type": "object",
+          "properties": {
+            "housing": { "type": "number" },
+            "food": { "type": "number" },
+            "transport": { "type": "number" },
+            "health": { "type": "number" },
+            "entertainment": { "type": "number" },
+            "education": { "type": "number" },
+            "loans": { "type": "number" },
+            "other": { "type": "number" }
+          }
+        },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["income", "expenses"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User profile document."
+    },
+    "/budgets/{userId}": {
+      "schema": "BudgetPlan",
+      "description": "User budget plan document."
+    }
+  }
+}

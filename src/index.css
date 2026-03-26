@@ -1,0 +1,146 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Syne:wght@600;700;800&family=Outfit:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import "tailwindcss";
+
+:root {
+  --font-sans: "Outfit", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Syne", sans-serif;
+  --font-serif: "Cormorant Garamond", serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  /* Dark Theme (Default) */
+  --bg-void: #040810;
+  --bg-primary: #070C18;
+  --bg-secondary: #0C1220;
+  --bg-card: #111827;
+  --bg-card-hover: #162034;
+  --accent-gold: #F0B429;
+  --accent-emerald: #10D9A0;
+  --accent-blue: #3B82F6;
+  --text-primary: #EFF6FF;
+  --text-secondary: #94A3B8;
+  --text-muted: #475569;
+  --border: rgba(255, 255, 255, 0.07);
+  --border-active: rgba(240, 180, 41, 0.4);
+  --aurora-opacity: 0.05;
+  --grid-opacity: 0.025;
+}
+
+:root.light {
+  --bg-void: #F8FAFC;
+  --bg-primary: #F1F5F9;
+  --bg-secondary: #E2E8F0;
+  --bg-card: #FFFFFF;
+  --bg-card-hover: #F8FAFC;
+  --accent-gold: #D97706;
+  --accent-emerald: #059669;
+  --accent-blue: #2563EB;
+  --text-primary: #0F172A;
+  --text-secondary: #475569;
+  --text-muted: #94A3B8;
+  --border: rgba(0, 0, 0, 0.07);
+  --border-active: rgba(217, 119, 6, 0.4);
+  --aurora-opacity: 0.02;
+  --grid-opacity: 0.05;
+}
+
+@theme {
+  --font-sans: var(--font-sans);
+  --font-display: var(--font-display);
+  --font-serif: var(--font-serif);
+  --font-mono: var(--font-mono);
+
+  --color-bg-void: var(--bg-void);
+  --color-bg-primary: var(--bg-primary);
+  --color-bg-secondary: var(--bg-secondary);
+  --color-bg-card: var(--bg-card);
+  --color-bg-card-hover: var(--bg-card-hover);
+  --color-accent-gold: var(--accent-gold);
+  --color-accent-emerald: var(--accent-emerald);
+  --color-accent-blue: var(--accent-blue);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-border: var(--border);
+  --color-border-active: var(--border-active);
+
+  --opacity-aurora: var(--aurora-opacity);
+  --opacity-grid: var(--grid-opacity);
+}
+
+@layer base {
+  body {
+    @apply bg-bg-void text-text-primary font-sans antialiased overflow-x-hidden;
+    background: radial-gradient(ellipse at 20% 50%, var(--bg-secondary) 0%, var(--bg-void) 70%);
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display;
+  }
+
+  .font-serif {
+    @apply font-serif;
+  }
+
+  .font-mono {
+    @apply font-mono;
+  }
+}
+
+@layer components {
+  .glass {
+    @apply bg-bg-secondary/80 backdrop-blur-xl border border-border;
+  }
+
+  .card {
+    @apply bg-bg-card border border-border rounded-[20px] shadow-2xl transition-all duration-300;
+  }
+
+  .card-hover {
+    @apply hover:bg-bg-card-hover hover:border-border-active hover:-translate-y-1 hover:shadow-[0_0_30px_rgba(240,180,41,0.2)];
+  }
+
+  .btn-primary {
+    @apply bg-linear-to-br from-[#F0B429] to-[#C49A14] text-bg-void font-semibold px-6 py-3 rounded-[10px] transition-all duration-200 hover:brightness-110 hover:-translate-y-0.5 hover:shadow-[0_0_20px_rgba(240,180,41,0.4)] active:scale-95;
+  }
+
+  .btn-secondary {
+    @apply border border-border-active text-accent-gold font-semibold px-6 py-3 rounded-[10px] transition-all duration-200 hover:bg-accent-gold/10 active:scale-95;
+  }
+
+  .input-field {
+    @apply bg-bg-secondary border border-border rounded-[12px] px-4 py-3 text-text-primary placeholder:text-text-muted focus:border-border-active focus:ring-1 focus:ring-accent-gold/40 outline-none transition-all duration-200;
+  }
+}
+
+@keyframes float1 {
+  0%, 100% { transform: translate(0, 0); }
+  33% { transform: translate(60px, -80px); }
+  66% { transform: translate(-40px, 60px); }
+}
+
+@keyframes float2 {
+  0%, 100% { transform: translate(0, 0); }
+  33% { transform: translate(-60px, 80px); }
+  66% { transform: translate(40px, -60px); }
+}
+
+.aurora-1 {
+  @apply fixed w-[600px] h-[600px] blur-[120px] rounded-full pointer-events-none;
+  background-color: var(--accent-gold);
+  opacity: var(--aurora-opacity);
+  animation: float1 20s infinite;
+}
+
+.aurora-2 {
+  @apply fixed w-[500px] h-[500px] blur-[100px] rounded-full pointer-events-none;
+  background-color: var(--accent-emerald);
+  opacity: var(--aurora-opacity);
+  animation: float2 25s infinite;
+}
+
+.grid-overlay {
+  @apply fixed inset-0 pointer-events-none;
+  opacity: var(--grid-opacity);
+  background-image: repeating-linear-gradient(0deg, transparent, transparent 49px, var(--text-primary) 50px),
+                    repeating-linear-gradient(90deg, transparent, transparent 49px, var(--text-primary) 50px);
+}
