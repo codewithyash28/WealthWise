@@ -92,4 +92,4 @@ Contributions are welcome! Please feel free to submit a Pull Request or open an 
 
 ---
 
-Developed with ❤️ by the Code with Yash
+Developed with ❤️ by the WealthWise Team.
