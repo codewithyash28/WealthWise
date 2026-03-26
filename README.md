@@ -1,95 +1,33 @@
-# WealthWise
+About WealthWise
+WealthWise is a next‑generation global financial literacy platform designed to help students and young professionals move from simply earning money to systematically building wealth. It combines interactive budgeting, realistic investment simulations, multi‑currency support, and behavioral insights into a single, premium web experience that feels like a real fintech product, not a classroom worksheet.
 
-WealthWise is a **Global Financial Intelligence Platform** designed to empower users with advanced budgeting tools, investment insights, and comprehensive financial literacy resources. Built with a focus on precision, security, and user experience, WealthWise leverages modern web technologies to provide a seamless financial management journey.
+The application is structured like a complete financial learning journey:
+users onboard with their profile and currency, explore a rich dashboard with savings rate, financial health indicators, and streaks, then dive into tools like a 50/30/20‑aware budget planner, compound‑interest investment simulator, quiz‑driven “Financial IQ” testing, and an AI‑style advisory section that explains concepts in clear, practical language. All major calculations are real, transparent, and aligned with widely used personal finance principles (time value of money, compound interest, diversification, inflation impact, and emergency‑fund best practices).
 
----
+WealthWise is built to meet hackathon‑level judging criteria for Relevance, Technical Execution, Design, Impact, and Innovation:
 
-## 🚀 Features
+Multi‑currency support so users in different countries can relate numbers to their own lives
 
-- **Global Budgeting**: Track expenses and manage budgets across multiple currencies with ease.
-- **Investment Intelligence**: Gain deep insights into market trends and investment opportunities.
-- **Financial Literacy**: Access a curated library of resources to improve your financial knowledge.
-- **AI-Powered Insights**: Leverage Google's Gemini AI for personalized financial advice and analysis.
-- **Real-time Data Visualization**: Interactive charts and dashboards powered by Chart.js for clear financial tracking.
-- **Secure Authentication**: Robust user authentication and data management via Firebase.
-- **Modern UI/UX**: A responsive, high-performance interface built with React 19 and Tailwind CSS 4.
+Dynamic charts for budget allocation, growth over time, and progress tracking
 
----
+Local storage–based persistence so learning and scenarios continue across sessions
 
-## 🛠️ Tech Stack
+A dark “global fintech” aesthetic inspired by modern dashboards and trading terminals
 
-- **Frontend**: [React 19](https://react.dev/), [Vite](https://vitejs.dev/)
-- **Styling**: [Tailwind CSS 4](https://tailwindcss.com/)
-- **Animations**: [Motion](https://motion.dev/)
-- **Backend/Database**: [Firebase](https://firebase.google.com/)
-- **AI Integration**: [Google Gemini API (@google/genai)](https://ai.google.dev/)
-- **Data Visualization**: [Chart.js](https://www.chartjs.org/) & [react-chartjs-2](https://react-chartjs-2.js.org/)
-- **Icons**: [Lucide React](https://lucide.dev/)
+Gamified elements like scores, streaks, and milestones that reward consistent learning and better financial decisions
 
----
+Whether used by an individual learner, a school, or a youth programme, the goal is the same: to make serious money decisions feel understandable, visual, and interactive, so good habits can start early and compound over time.
 
-## 📦 Getting Started
+Creator
+This application was conceived, designed, and engineered by Code With Yash — a young full‑stack developer and fintech enthusiast focused on creating high‑impact educational products. Every screen, interaction, and calculation in WealthWise has been crafted to balance real‑world accuracy with a smooth, modern user experience.
 
-### Prerequisites
+Made by Code With Yash
+Portfolio: yashchoubey-portfolio.netlify.app
 
-- Node.js (v18 or higher)
-- npm or yarn
+Want to build something similar?
+If you want to create your own advanced financial literacy app, here is a concise prompt you can use (and customize) in your favourite AI coding assistant:
 
-### Installation
-
-1. **Clone the repository**:
-   ```bash
-   git clone <repository-url>
-   cd wealthwise
-   ```
-
-2. **Install dependencies**:
-   ```bash
-   npm install
-   ```
-
-3. **Environment Setup**:
-   Create a `.env` file in the root directory and add your configuration:
-   ```env
-   GEMINI_API_KEY=your_gemini_api_key
-   # Add other necessary environment variables
-   ```
-
-4. **Run the development server**:
-   ```bash
-   npm run dev
-   ```
-   Open [http://localhost:3000](http://localhost:3000) in your browser.
-
----
-
-## 🏗️ Project Structure
-
-```text
-├── src/
-│   ├── components/      # Reusable UI components
-│   ├── lib/             # Utility functions and shared logic
-│   ├── services/        # API and Firebase service integrations
-│   ├── App.tsx          # Main application component
-│   ├── main.tsx         # Entry point
-│   └── index.css        # Global styles and Tailwind configuration
-├── public/              # Static assets
-├── metadata.json        # Application metadata
-└── package.json         # Project dependencies and scripts
-```
-
----
-
-## 📜 License
-
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request or open an issue for any suggestions or improvements.
-
----
-
-Developed with ❤️ by the WealthWise Team.
+You are a world‑class full‑stack developer and fintech product designer.
+Build a production‑ready financial literacy web application called “WealthWise” with a premium dark fintech UI.
+Core features must include: multi‑currency budgeting (with the 50/30/20 rule), an investment simulator using real compound interest formulas, a quiz‑based financial IQ module, gamification (points, levels, badges), and a dashboard showing savings rate, financial health, and progress over time.
+Use clean, modular code, responsive layouts, and real, accurate calculations suitable for students and young working professionals.
