@@ -59,6 +59,7 @@ export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [budget, setBudget] = useState<BudgetPlan | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [currentHash, setCurrentHash] = useState(window.location.hash || "#home");
   const [isAuthReady, setIsAuthReady] = useState(false);
   const [theme, setTheme] = useState<"light" | "dark">(() => {
@@ -116,20 +117,29 @@ export default function App() {
           updateDoc(profileRef, {
             lastVisit: new Date().toISOString(),
             visitDates: arrayUnion(today)
-          }).catch(err => handleFirestoreError(err, OperationType.UPDATE, `users/${user.uid}`));
+          }).catch(err => {
+            console.error('Firestore Error: ', err);
+            // Non-critical error, just log it
+          });
         }
       } else {
         // New user - trigger onboarding
         setShowCurrencySelector(true);
       }
-    }, (err) => handleFirestoreError(err, OperationType.GET, `users/${user.uid}`));
+    }, (err) => {
+      console.error('Firestore Profile Error: ', err);
+      setError("Failed to load user profile. Please check your connection or permissions.");
+    });
 
     const budgetRef = doc(db, "budgets", user.uid);
     const unsubscribeBudget = onSnapshot(budgetRef, (snapshot) => {
       if (snapshot.exists()) {
         setBudget(snapshot.data() as BudgetPlan);
       }
-    }, (err) => handleFirestoreError(err, OperationType.GET, `budgets/${user.uid}`));
+    }, (err) => {
+      console.error('Firestore Budget Error: ', err);
+      // Non-critical if budget fails to load, but we should know
+    });
 
     return () => {
       unsubscribe();
@@ -223,6 +233,16 @@ export default function App() {
   };
 
   const renderContent = () => {
+    if (error) {
+      return (
+        <div id="error-display" className="container mx-auto px-6 py-32 flex flex-col items-center justify-center text-center space-y-8">
+          <h2 className="text-4xl font-display font-bold text-accent-gold">Something went wrong</h2>
+          <p className="text-text-secondary max-w-md">{error}</p>
+          <button onClick={() => { setError(null); window.location.reload(); }} className="btn-secondary">Retry</button>
+        </div>
+      );
+    }
+
     if (currentHash === "#home") return <LandingPage />;
     
     if (!user) {

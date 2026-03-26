@@ -1,8 +1,10 @@
 import { GoogleGenAI } from "@google/genai";
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const API_KEY = process.env.GEMINI_API_KEY || "";
+const ai = API_KEY ? new GoogleGenAI({ apiKey: API_KEY }) : null;
 
 export async function getAIResponse(prompt: string, history: { role: "user" | "model", parts: { text: string }[] }[] = []) {
+  if (!ai) return "AI Advisor is currently unavailable (Missing API Key).";
   try {
     const model = ai.models.generateContent({
       model: "gemini-3-flash-preview",
@@ -20,6 +22,7 @@ export async function getAIResponse(prompt: string, history: { role: "user" | "m
 }
 
 export async function analyzeFinancialImage(base64Image: string, prompt: string) {
+  if (!ai) return "Image analysis is currently unavailable (Missing API Key).";
   try {
     const model = ai.models.generateContent({
       model: "gemini-3.1-pro-preview",
@@ -39,6 +42,7 @@ export async function analyzeFinancialImage(base64Image: string, prompt: string)
 }
 
 export async function getFastAIResponse(prompt: string) {
+  if (!ai) return "Fast AI response is currently unavailable (Missing API Key).";
   try {
     const model = ai.models.generateContent({
       model: "gemini-3.1-flash-lite-preview",
