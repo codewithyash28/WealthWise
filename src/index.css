@@ -110,6 +110,14 @@
   .input-field {
     @apply bg-bg-secondary border border-border rounded-[12px] px-4 py-3 text-text-primary placeholder:text-text-muted focus:border-border-active focus:ring-1 focus:ring-accent-gold/40 outline-none transition-all duration-200;
   }
+
+  .markdown-body {
+    @apply space-y-3;
+  }
+  .markdown-body strong { @apply text-accent-gold font-bold; }
+  .markdown-body ul { @apply list-disc list-inside space-y-1; }
+  .markdown-body ol { @apply list-decimal list-inside space-y-1; }
+  .markdown-body h1, .markdown-body h2, .markdown-body h3 { @apply font-bold mt-4 mb-2; }
 }
 
 @keyframes float1 {

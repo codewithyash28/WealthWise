@@ -1,19 +1,25 @@
 import { useState, useEffect } from "react";
 import { motion } from "motion/react";
 import { Sparkles, TrendingUp, ArrowUpRight, ArrowDownRight, Loader2 } from "lucide-react";
-import { getAIResponse } from "../lib/gemini";
+import { getAIResponse, isAIAvailable } from "../lib/gemini";
+import { cn } from "../lib/utils";
 
 export function MarketInsights() {
   const [insight, setInsight] = useState<string>("");
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(isAIAvailable);
 
   useEffect(() => {
     const fetchInsight = async () => {
+      if (!isAIAvailable) {
+        setInsight("Diversification is the only free lunch in investing. Keep your portfolio balanced!");
+        return;
+      }
+
       try {
         const response = await getAIResponse("Give me a short, 2-sentence daily financial tip or market insight for today. Make it encouraging and professional.");
         setInsight(response);
       } catch (error) {
-        setInsight("Diversification is the only free lunch in investing. Keep your portfolio balanced!");
+        setInsight("Compounding is the eighth wonder of the world. He who understands it, earns it; he who doesn't, pays it.");
       } finally {
         setLoading(false);
       }
@@ -29,7 +35,11 @@ export function MarketInsights() {
   ];
 
   return (
-    <div className="card p-8 space-y-8">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="card p-8 space-y-8"
+    >
       <div className="flex items-center justify-between">
         <h3 className="text-xl font-bold flex items-center gap-2">
           <Sparkles className="w-5 h-5 text-accent-gold" /> Market Insights & Wisdom
@@ -69,10 +79,6 @@ export function MarketInsights() {
           )}
         </div>
       </div>
-    </div>
+    </motion.div>
   );
-}
-
-function cn(...classes: (string | boolean | undefined)[]) {
-  return classes.filter(Boolean).join(" ");
 }

@@ -35,7 +35,7 @@ export function InvestmentSimulator({ user }: InvestmentSimulatorProps) {
   const calculateSIP = () => {
     const r = sipReturn / 12 / 100;
     const n = sipPeriod * 12;
-    const fv = sipMonthly * ((Math.pow(1 + r, n) - 1) / r) * (1 + r);
+    const fv = r === 0 ? sipMonthly * n : sipMonthly * ((Math.pow(1 + r, n) - 1) / r) * (1 + r);
     const totalInvested = sipMonthly * n;
     const returns = fv - totalInvested;
     return { fv, totalInvested, returns, multiple: fv / totalInvested };
@@ -52,7 +52,7 @@ export function InvestmentSimulator({ user }: InvestmentSimulatorProps) {
   const calculateGoal = () => {
     const r = goalReturn / 12 / 100;
     const n = goalPeriod * 12;
-    const monthlyNeeded = goalAmount * r / ((Math.pow(1 + r, n) - 1) * (1 + r));
+    const monthlyNeeded = r === 0 ? goalAmount / n : (goalAmount * r) / ((Math.pow(1 + r, n) - 1) * (1 + r));
     const lumpNeeded = goalAmount / Math.pow(1 + goalReturn / 100, goalPeriod);
     return { monthlyNeeded, lumpNeeded };
   };

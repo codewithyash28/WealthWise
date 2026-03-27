@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, ChangeEvent } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Bot, User, Send, Trash2, Copy, ChevronRight, Sparkles, MessageSquare, Plus, Minus, Image as ImageIcon, Loader2 } from "lucide-react";
+import { Bot, User, Send, Trash2, Copy, ChevronRight, Sparkles, Image as ImageIcon, Loader2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { getAIResponse, analyzeFinancialImage } from "../lib/gemini";
 import { cn } from "../lib/utils";

@@ -246,6 +246,15 @@ export default function App() {
     }
   };
 
+  const handleSignOut = async () => {
+    try {
+      await signOut(auth);
+      window.location.hash = "#home";
+    } catch (err) {
+      console.error("Sign out error:", err);
+    }
+  };
+
   const renderContent = () => {
     if (error) {
       return (
@@ -269,7 +278,10 @@ export default function App() {
       );
     }
 
-    if (!profile) return <div className="py-32 text-center text-text-muted">Loading your profile...</div>;
+    if (!profile) {
+      if (showCurrencySelector || showNameInput) return null;
+      return <div className="py-32 text-center text-text-muted">Loading your profile...</div>;
+    }
 
     switch (currentHash) {
       case "#dashboard": return <Dashboard user={profile} budget={budget} onUpdateNetWorth={handleUpdateNetWorth} />;
@@ -291,6 +303,8 @@ export default function App() {
 
       <Navbar 
         currentHash={currentHash} 
+        user={profile}
+        onSignOut={handleSignOut}
         currency={profile?.currency || "USD"} 
         onCurrencyClick={() => profile && setShowCurrencySelector(true)} 
         theme={theme}

@@ -1,18 +1,21 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Menu, X, Globe, ChevronRight, Sun, Moon } from "lucide-react";
+import { Menu, X, Globe, ChevronRight, Sun, Moon, LogOut, User } from "lucide-react";
 import { Logo } from "./Logo";
 import { CURRENCIES } from "../constants";
+import { UserProfile } from "../types";
 
 interface NavbarProps {
   currentHash: string;
+  user: UserProfile | null;
+  onSignOut: () => void;
   currency: string;
   onCurrencyClick: () => void;
   theme: "light" | "dark";
   onToggleTheme: () => void;
 }
 
-export function Navbar({ currentHash, currency, onCurrencyClick, theme, onToggleTheme }: NavbarProps) {
+export function Navbar({ currentHash, user, onSignOut, currency, onCurrencyClick, theme, onToggleTheme }: NavbarProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -69,9 +72,23 @@ export function Navbar({ currentHash, currency, onCurrencyClick, theme, onToggle
             <span className="text-xs font-medium uppercase">{currency}</span>
           </button>
 
-          <a href="#dashboard" className="hidden sm:flex btn-primary !py-2 !px-4 text-sm">
-            Get Started <ChevronRight className="w-4 h-4 ml-1" />
-          </a>
+          {user ? (
+            <div className="hidden sm:flex items-center gap-3">
+              <div className="flex flex-col items-end">
+                <span className="text-xs font-bold text-text-primary">{user.name}</span>
+                <button onClick={onSignOut} className="text-[10px] text-text-muted hover:text-accent-red flex items-center gap-1 transition-colors">
+                  <LogOut className="w-3 h-3" /> Sign Out
+                </button>
+              </div>
+              <div className="w-8 h-8 rounded-full bg-accent-gold/20 flex items-center justify-center text-accent-gold border border-accent-gold/30 font-bold text-xs">
+                {user.name[0]}
+              </div>
+            </div>
+          ) : (
+            <a href="#dashboard" className="hidden sm:flex btn-primary !py-2 !px-4 text-sm">
+              Get Started <ChevronRight className="w-4 h-4 ml-1" />
+            </a>
+          )}
 
           <button
             className="lg:hidden text-text-primary"
