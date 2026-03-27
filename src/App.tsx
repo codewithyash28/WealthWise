@@ -32,16 +32,16 @@ interface FirestoreErrorInfo {
   authInfo: any;
 }
 
-function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null, setErrorCallback?: (msg: string) => void) {
+function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null, setGlobalError?: (msg: string) => void) {
   const errInfo: FirestoreErrorInfo = {
     error: error instanceof Error ? error.message : String(error),
     authInfo: {
-      userId: auth.currentUser?.uid,
-      email: auth.currentUser?.email,
-      emailVerified: auth.currentUser?.emailVerified,
-      isAnonymous: auth.currentUser?.isAnonymous,
-      tenantId: auth.currentUser?.tenantId,
-      providerInfo: auth.currentUser?.providerData.map(provider => ({
+      userId: auth?.currentUser?.uid,
+      email: auth?.currentUser?.email,
+      emailVerified: auth?.currentUser?.emailVerified,
+      isAnonymous: auth?.currentUser?.isAnonymous,
+      tenantId: auth?.currentUser?.tenantId,
+      providerInfo: auth?.currentUser?.providerData.map(provider => ({
         providerId: provider.providerId,
         displayName: provider.displayName,
         email: provider.email,
@@ -52,8 +52,8 @@ function handleFirestoreError(error: unknown, operationType: OperationType, path
     path
   };
   console.error('Firestore Error: ', JSON.stringify(errInfo));
-  if (setErrorCallback) {
-    setErrorCallback(`Database error during ${operationType} on ${path}. Please check your connection.`);
+  if (setGlobalError) {
+    setGlobalError(`Database error during ${operationType} on ${path}. Please check your connection.`);
   } else {
     // Re-throw if no callback is provided, but typically we want to update the UI
     throw new Error(JSON.stringify(errInfo));
@@ -64,7 +64,7 @@ export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [budget, setBudget] = useState<BudgetPlan | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [globalError, setGlobalError] = useState<string | null>(null);
   const [currentHash, setCurrentHash] = useState(window.location.hash || "#home");
   const [isAuthReady, setIsAuthReady] = useState(false);
   const [theme, setTheme] = useState<"light" | "dark">(() => {
@@ -97,26 +97,33 @@ export default function App() {
 
   useEffect(() => {
     let unsubscribe: () => void = () => {};
-    try {
-      if (!auth) {
-        throw new Error("Firebase Auth is not initialized.");
-      }
-      unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-        setUser(firebaseUser);
-        setIsAuthReady(true);
-        if (!firebaseUser) {
-          setProfile(null);
-          setBudget(null);
+    const initAuth = async () => {
+      try {
+        console.log("Initializing Auth Service...");
+        if (!auth) {
+          throw new Error("Firebase Auth is not initialized.");
         }
-      }, (err) => {
-        console.error("Auth State Change Error:", err);
-        setError("Authentication service encountered an error. Please refresh the page.");
-      });
-    } catch (err) {
-      console.error("Auth Initialization Error:", err);
-      setError("Failed to initialize authentication service. This might be due to a script loading error or an incompatible browser.");
-    }
-    return () => unsubscribe();
+
+        // Use the function version to ensure we're calling it correctly
+        unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+          console.log("Auth State Changed:", firebaseUser ? "User Logged In" : "No User");
+          setUser(firebaseUser);
+          setIsAuthReady(true);
+          if (!firebaseUser) {
+            setProfile(null);
+            setBudget(null);
+          }
+        }, (err) => {
+          console.error("Auth State Change Error:", err);
+          setGlobalError(`Authentication error: ${err.message}. Please refresh the page.`);
+        });
+      } catch (err: any) {
+        console.error("Auth Initialization Error:", err);
+        setGlobalError(`Failed to initialize authentication service: ${err.message || String(err)}. This might be due to a script loading error or an incompatible browser.`);
+      }
+    };
+    initAuth();
+    return () => unsubscribe && unsubscribe();
   }, []);
 
   useEffect(() => {
@@ -143,7 +150,7 @@ export default function App() {
         setShowCurrencySelector(true);
       }
     }, (err) => {
-      handleFirestoreError(err, OperationType.GET, `users/${user.uid}`, setError);
+      handleFirestoreError(err, OperationType.GET, `users/${user.uid}`, setGlobalError);
     });
 
     const budgetRef = doc(db, "budgets", user.uid);
@@ -201,7 +208,7 @@ export default function App() {
       setShowNameInput(false);
       window.location.hash = "#dashboard";
     } catch (err) {
-      handleFirestoreError(err, OperationType.WRITE, `users/${user.uid}`, setError);
+      handleFirestoreError(err, OperationType.WRITE, `users/${user.uid}`, setGlobalError);
     }
   };
 
@@ -211,7 +218,7 @@ export default function App() {
       await setDoc(doc(db, "budgets", user.uid), plan);
       alert("Budget plan saved successfully!");
     } catch (err) {
-      handleFirestoreError(err, OperationType.WRITE, `budgets/${user.uid}`, setError);
+      handleFirestoreError(err, OperationType.WRITE, `budgets/${user.uid}`, setGlobalError);
     }
   };
 
@@ -223,7 +230,7 @@ export default function App() {
         "netWorth.liabilities": liabilities
       });
     } catch (err) {
-      handleFirestoreError(err, OperationType.UPDATE, `users/${user.uid}`, setError);
+      handleFirestoreError(err, OperationType.UPDATE, `users/${user.uid}`, setGlobalError);
     }
   };
 
@@ -233,7 +240,7 @@ export default function App() {
       try {
         await updateDoc(doc(db, "users", user.uid), { highScore: score });
       } catch (err) {
-        handleFirestoreError(err, OperationType.UPDATE, `users/${user.uid}`, setError);
+        handleFirestoreError(err, OperationType.UPDATE, `users/${user.uid}`, setGlobalError);
       }
     }
   };
@@ -256,12 +263,12 @@ export default function App() {
   };
 
   const renderContent = () => {
-    if (error) {
+    if (globalError) {
       return (
         <div id="error-display" className="container mx-auto px-6 py-32 flex flex-col items-center justify-center text-center space-y-8">
           <h2 className="text-4xl font-display font-bold text-accent-gold">Something went wrong</h2>
-          <p className="text-text-secondary max-w-md">{error}</p>
-          <button onClick={() => { setError(null); window.location.reload(); }} className="btn-secondary">Retry</button>
+          <p className="text-text-secondary max-w-md">{globalError}</p>
+          <button onClick={() => { setGlobalError(null); window.location.reload(); }} className="btn-secondary">Retry</button>
         </div>
       );
     }
