@@ -12,6 +12,8 @@ export interface CurrencyConfig {
 export interface UserProfile {
   uid: string;
   name: string;
+  age: string;
+  learningGoal: string;
   currency: string;
   joinDate: string;
   lastVisit: string;
@@ -35,6 +37,20 @@ export interface BudgetPlan {
     loans: number;
     other: number;
   };
+  goals?: {
+    housing?: number;
+    food?: number;
+    transport?: number;
+    health?: number;
+    entertainment?: number;
+    education?: number;
+    loans?: number;
+    other?: number;
+  };
+  history?: {
+    month: string;
+    total: number;
+  }[];
   timestamp: string;
 }
 

@@ -65,13 +65,17 @@ export function CurrencySelector({ isOpen, onSelect, currentCurrency }: Currency
 
 interface NameInputProps {
   isOpen: boolean;
-  onComplete: (name: string) => void;
+  onComplete: (name: string, age: string, learningGoal: string) => void;
 }
 
 export function NameInput({ isOpen, onComplete }: NameInputProps) {
   const [name, setName] = useState("");
+  const [age, setAge] = useState("");
+  const [learningGoal, setLearningGoal] = useState("");
 
   if (!isOpen) return null;
+
+  const ageOptions = ["11-14", "15-17", "18-21", "22-25", "25+"];
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-bg-void/90 backdrop-blur-md">
@@ -84,22 +88,57 @@ export function NameInput({ isOpen, onComplete }: NameInputProps) {
           <div className="w-16 h-16 bg-accent-gold/10 rounded-full flex items-center justify-center mx-auto mb-4">
             <User className="w-8 h-8 text-accent-gold" />
           </div>
-          <h2 className="text-2xl font-display font-bold">What should we call you?</h2>
-          <p className="text-text-secondary">Your name will be used to personalize your dashboard</p>
+          <h2 className="text-2xl font-display font-bold">Tell us about yourself</h2>
+          <p className="text-text-secondary">We'll personalize your experience based on your profile</p>
         </div>
 
-        <div className="space-y-4">
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Enter your name..."
-            className="input-field w-full text-center text-lg"
-            autoFocus
-          />
+        <div className="space-y-6">
+          <div className="space-y-2">
+            <label className="text-xs font-bold uppercase tracking-widest text-text-muted ml-1">Your Name</label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Enter your name..."
+              className="input-field w-full text-lg"
+              autoFocus
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-xs font-bold uppercase tracking-widest text-text-muted ml-1">Your Age</label>
+            <div className="grid grid-cols-3 gap-2">
+              {ageOptions.map(option => (
+                <button
+                  key={option}
+                  onClick={() => setAge(option)}
+                  className={cn(
+                    "py-2 rounded-xl border text-sm font-bold transition-all",
+                    age === option 
+                      ? "bg-accent-gold/10 border-accent-gold text-accent-gold" 
+                      : "bg-bg-secondary border-border hover:border-border-active text-text-secondary"
+                  )}
+                >
+                  {option}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-xs font-bold uppercase tracking-widest text-text-muted ml-1">What do you want to learn?</label>
+            <input
+              type="text"
+              value={learningGoal}
+              onChange={(e) => setLearningGoal(e.target.value)}
+              placeholder="e.g. Investing, Budgeting, Debt..."
+              className="input-field w-full"
+            />
+          </div>
+
           <button
-            onClick={() => name.trim() && onComplete(name.trim())}
-            disabled={!name.trim()}
+            onClick={() => name.trim() && age && learningGoal.trim() && onComplete(name.trim(), age, learningGoal.trim())}
+            disabled={!name.trim() || !age || !learningGoal.trim()}
             className="btn-primary w-full flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Welcome to WealthWise <ChevronRight className="w-5 h-5" />

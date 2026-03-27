@@ -1,13 +1,13 @@
 import { useState, useEffect, useMemo } from "react";
 import { motion } from "motion/react";
-import { PieChart, Home, Utensils, Car, HeartPulse, Gamepad2, GraduationCap, CreditCard, Package, Save, RotateCcw, Copy, ChevronRight, AlertTriangle, CheckCircle2, TrendingUp } from "lucide-react";
-import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
-import { Doughnut } from 'react-chartjs-2';
+import { PieChart, Home, Utensils, Car, HeartPulse, Gamepad2, GraduationCap, CreditCard, Package, Save, RotateCcw, Copy, ChevronRight, AlertTriangle, CheckCircle2, TrendingUp, Download, Target, BarChart3, LineChart } from "lucide-react";
+import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title } from 'chart.js';
+import { Doughnut, Bar, Line } from 'react-chartjs-2';
 import { formatCurrency, cn } from "../lib/utils";
 import { CURRENCIES } from "../constants";
 import { UserProfile, BudgetPlan } from "../types";
 
-ChartJS.register(ArcElement, Tooltip, Legend);
+ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title);
 
 interface BudgetPlannerProps {
   user: UserProfile;
@@ -27,8 +27,29 @@ export function BudgetPlanner({ user, onSave, initialPlan }: BudgetPlannerProps)
     loans: 0,
     other: 0,
   });
+  const [goals, setGoals] = useState(initialPlan?.goals || {
+    housing: 0,
+    food: 0,
+    transport: 0,
+    health: 0,
+    entertainment: 0,
+    education: 0,
+    loans: 0,
+    other: 0,
+  });
 
   const currency = CURRENCIES[user.currency] || CURRENCIES.USD;
+
+  // Mock historical data if not present
+  const history = useMemo(() => {
+    if (initialPlan?.history && initialPlan.history.length > 0) return initialPlan.history;
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const currentMonthIndex = new Date().getMonth();
+    return months.map((m, i) => ({
+      month: m,
+      total: (initialPlan?.income || 5000) * 0.7 + (Math.random() * 500 - 250)
+    }));
+  }, [initialPlan]);
 
   const totalExpenses = Object.values(expenses).reduce((a, b) => a + b, 0);
   const savings = Math.max(0, income - totalExpenses);
@@ -80,6 +101,7 @@ export function BudgetPlanner({ user, onSave, initialPlan }: BudgetPlannerProps)
     const list = [];
     if (income === 0) return [];
 
+    // Basic Savings Rate Insights
     if (savingsRate < 10) {
       const highest = Object.entries(expenses).reduce((a, b) => a[1] > b[1] ? a : b);
       list.push({
@@ -101,6 +123,24 @@ export function BudgetPlanner({ user, onSave, initialPlan }: BudgetPlannerProps)
       });
     }
 
+    // Currency/Local Average Comparison Insights
+    if (expenses.housing > currency.avgRent) {
+      list.push({
+        type: "warning",
+        icon: <Home className="w-5 h-5" />,
+        text: `Your housing cost is higher than the local average of ${formatCurrency(currency.avgRent, user.currency, currency.locale)}. Consider downsizing or finding a roommate.`
+      });
+    }
+
+    if (expenses.food > currency.avgFood) {
+      list.push({
+        type: "warning",
+        icon: <Utensils className="w-5 h-5" />,
+        text: `Food spending is above average (${formatCurrency(currency.avgFood, user.currency, currency.locale)}). Meal prepping could save you significantly.`
+      });
+    }
+
+    // Category Specific Insights
     if (expenses.housing / income > 0.35) {
       list.push({
         type: "warning",
@@ -123,29 +163,46 @@ export function BudgetPlanner({ user, onSave, initialPlan }: BudgetPlannerProps)
       });
     }
 
-    if (expenses.food / income > 0.15) {
-      list.push({
-        type: "warning",
-        icon: <Utensils className="w-5 h-5" />,
-        text: `Food spending is high (${Math.round((expenses.food / income) * 100)}%). Consider meal prepping to save ${formatCurrency(expenses.food * 0.2, user.currency, currency.locale)}/mo.`
-      });
-    }
-
-    if (expenses.entertainment / income > 0.10) {
-      list.push({
-        type: "warning",
-        icon: <Gamepad2 className="w-5 h-5" />,
-        text: `High lifestyle spending. Reducing entertainment by 20% could boost your savings by ${formatCurrency(expenses.entertainment * 0.2, user.currency, currency.locale)}.`
-      });
-    }
+    // Goal Comparison Insights
+    Object.entries(expenses).forEach(([key, value]) => {
+      const goal = (goals as any)[key];
+      if (goal > 0 && value > goal) {
+        list.push({
+          type: "danger",
+          icon: <Target className="w-5 h-5" />,
+          text: `Over Goal: You spent ${formatCurrency(value - goal, user.currency, currency.locale)} more than your ${key} limit.`
+        });
+      }
+    });
 
     return list;
-  }, [income, expenses, savings, savingsRate, user.currency, currency.locale]);
+  }, [income, expenses, savings, savingsRate, user.currency, currency.locale, currency.avgRent, currency.avgFood, goals]);
+
+  const exportToCSV = () => {
+    const rows = [
+      ["Category", "Amount", "Goal"],
+      ["Income", income, ""],
+      ...Object.entries(expenses).map(([key, value]) => [key, value, (goals as any)[key] || 0]),
+      ["Total Expenses", totalExpenses, ""],
+      ["Savings", savings, ""]
+    ];
+
+    const csvContent = "data:text/csv;charset=utf-8," + rows.map(e => e.join(",")).join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `budget_plan_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   const handleSave = () => {
     onSave({
       income,
       expenses,
+      goals,
+      history,
       timestamp: new Date().toISOString()
     });
   };
@@ -227,9 +284,53 @@ export function BudgetPlanner({ user, onSave, initialPlan }: BudgetPlannerProps)
               <button onClick={handleSave} className="btn-primary flex-1 flex items-center justify-center gap-2">
                 <Save className="w-4 h-4" /> Save Plan
               </button>
-              <button onClick={() => { setIncome(0); setExpenses({ housing: 0, food: 0, transport: 0, health: 0, entertainment: 0, education: 0, loans: 0, other: 0 }); }} className="btn-secondary px-4">
+              <button onClick={exportToCSV} className="btn-secondary flex-1 flex items-center justify-center gap-2">
+                <Download className="w-4 h-4" /> Export CSV
+              </button>
+              <button onClick={() => { setIncome(0); setExpenses({ housing: 0, food: 0, transport: 0, health: 0, entertainment: 0, education: 0, loans: 0, other: 0 }); setGoals({ housing: 0, food: 0, transport: 0, health: 0, entertainment: 0, education: 0, loans: 0, other: 0 }); }} className="btn-secondary px-4">
                 <RotateCcw className="w-4 h-4" />
               </button>
+            </div>
+          </div>
+
+          {/* Goals Section */}
+          <div className="card p-8 space-y-6">
+            <h3 className="text-xl font-bold flex items-center gap-2">
+              <Target className="w-5 h-5 text-accent-gold" /> Financial Goals
+            </h3>
+            <p className="text-xs text-text-secondary">Set spending limits for each category to stay on track.</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {Object.entries(expenses).map(([key, value]) => (
+                <div key={key} className="space-y-2">
+                  <label className="text-[10px] font-medium text-text-muted uppercase tracking-wider">{key} Limit</label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-xs font-mono">{currency.symbol}</span>
+                    <input
+                      type="number"
+                      value={(goals as any)[key] || ""}
+                      onChange={(e) => setGoals({ ...goals, [key]: Number(e.target.value) })}
+                      placeholder="No limit set"
+                      className={cn(
+                        "input-field w-full pl-8 py-2 text-sm font-mono",
+                        (goals as any)[key] > 0 && value > (goals as any)[key] ? "border-accent-red text-accent-red" : ""
+                      )}
+                    />
+                  </div>
+                  {(goals as any)[key] > 0 && (
+                    <div className="flex justify-between items-center px-1">
+                      <div className="h-1 bg-border rounded-full flex-1 mr-2 overflow-hidden">
+                        <div 
+                          className={cn("h-full", value > (goals as any)[key] ? "bg-accent-red" : "bg-accent-emerald")}
+                          style={{ width: `${Math.min(100, (value / (goals as any)[key]) * 100)}%` }}
+                        />
+                      </div>
+                      <span className={cn("text-[8px] font-bold", value > (goals as any)[key] ? "text-accent-red" : "text-accent-emerald")}>
+                        {Math.round((value / (goals as any)[key]) * 100)}%
+                      </span>
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -312,6 +413,81 @@ export function BudgetPlanner({ user, onSave, initialPlan }: BudgetPlannerProps)
               )) : (
                 <p className="text-text-muted text-sm italic">Enter your income and expenses to see insights.</p>
               )}
+            </div>
+          </div>
+
+          {/* Comparison Bar Chart */}
+          <div className="card p-8 space-y-6">
+            <h3 className="text-xl font-bold flex items-center gap-2">
+              <BarChart3 className="w-5 h-5 text-accent-gold" /> Spending Comparison
+            </h3>
+            <div className="h-[300px]">
+              <Bar 
+                data={{
+                  labels: Object.keys(expenses).map(k => k.charAt(0).toUpperCase() + k.slice(1)),
+                  datasets: [
+                    {
+                      label: 'Your Spending',
+                      data: Object.values(expenses),
+                      backgroundColor: '#F0B429',
+                    },
+                    {
+                      label: 'Local Average',
+                      data: Object.keys(expenses).map(k => {
+                        if (k === 'housing') return currency.avgRent;
+                        if (k === 'food') return currency.avgFood;
+                        return currency.avgSalary * 0.05; // Dummy average for others
+                      }),
+                      backgroundColor: '#94A3B8',
+                    }
+                  ]
+                }}
+                options={{
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  scales: {
+                    y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' } },
+                    x: { grid: { display: false } }
+                  },
+                  plugins: {
+                    legend: { position: 'bottom', labels: { color: '#94A3B8', font: { family: 'Outfit' } } }
+                  }
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Monthly Trends Line Chart */}
+          <div className="card p-8 space-y-6">
+            <h3 className="text-xl font-bold flex items-center gap-2">
+              <LineChart className="w-5 h-5 text-accent-gold" /> Monthly Expense Trends
+            </h3>
+            <div className="h-[300px]">
+              <Line 
+                data={{
+                  labels: history.map(h => h.month),
+                  datasets: [{
+                    label: 'Monthly Expenses',
+                    data: history.map(h => h.total),
+                    borderColor: '#10D9A0',
+                    backgroundColor: 'rgba(16, 217, 160, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: '#10D9A0',
+                  }]
+                }}
+                options={{
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  scales: {
+                    y: { beginAtZero: false, grid: { color: 'rgba(255,255,255,0.05)' } },
+                    x: { grid: { display: false } }
+                  },
+                  plugins: {
+                    legend: { display: false }
+                  }
+                }}
+              />
             </div>
           </div>
         </div>

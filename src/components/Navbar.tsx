@@ -23,11 +23,12 @@ export function Navbar({ currentHash, currency, onCurrencyClick, theme, onToggle
   }, []);
 
   const navLinks = [
-    { name: "Home", hash: "#home" },
-    { name: "Dashboard", hash: "#dashboard" },
+    { name: "Architect", hash: "#dashboard" },
+    { name: "Net Worth", hash: "#networth" },
+    { name: "Budget", hash: "#budget" },
+    { name: "What-If", hash: "#scenarios" },
     { name: "Learn", hash: "#resources" },
     { name: "Simulate", hash: "#simulator" },
-    { name: "Allocation", hash: "#allocation" },
     { name: "Quiz", hash: "#quiz" },
     { name: "AI Advisor", hash: "#advisor" },
   ];

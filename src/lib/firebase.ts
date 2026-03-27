@@ -1,9 +1,5 @@
-import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
-import firebaseConfig from '../../firebase-applet-config.json';
-
-const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
-export const auth = getAuth(app);
-export const googleProvider = new GoogleAuthProvider();
+// Firebase has been removed as per user request.
+// This file is kept as a placeholder to avoid breaking existing imports.
+export const db = {} as any;
+export const auth = {} as any;
+export const googleProvider = {} as any;

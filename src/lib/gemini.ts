@@ -1,15 +1,33 @@
 import { GoogleGenAI } from "@google/genai";
 
-// Support both Vite-style (import.meta.env) and process.env (for compatibility)
-const API_KEY = (import.meta.env?.VITE_GEMINI_API_KEY || process.env?.GEMINI_API_KEY || "").trim();
+let aiInstance: GoogleGenAI | null = null;
 
-// Ensure the API key is valid and not just the string "undefined" or "null"
-const isValidKey = API_KEY && API_KEY !== "undefined" && API_KEY !== "null";
-const ai = isValidKey ? new GoogleGenAI({ apiKey: API_KEY }) : null;
+function getAI() {
+  const apiKey = process.env.GEMINI_API_KEY;
+  
+  // If no API key is provided, or it's a placeholder, don't even try to initialize
+  if (!apiKey || apiKey === "undefined" || apiKey === "null" || apiKey.length < 10) {
+    return null;
+  }
+
+  if (!aiInstance) {
+    try {
+      aiInstance = new GoogleGenAI({ apiKey });
+    } catch (error) {
+      console.error("Failed to initialize GoogleGenAI:", error);
+      return null;
+    }
+  }
+  return aiInstance;
+}
 
 export async function getAIResponse(prompt: string, history: { role: "user" | "model", parts: { text: string }[] }[] = []) {
-  if (!ai) return "AI Advisor is currently unavailable (Missing API Key).";
   try {
+    const ai = getAI();
+    if (!ai) {
+      // Return a helpful mock response if AI is not configured
+      return "I'm currently in 'offline mode' because the Gemini API key isn't set up. To enable my full AI capabilities, please add your GEMINI_API_KEY to the environment variables. In the meantime, remember that consistent saving and diversified investing are keys to long-term wealth!";
+    }
     const model = ai.models.generateContent({
       model: "gemini-3-flash-preview",
       contents: history.length > 0 ? [...history, { role: "user", parts: [{ text: prompt }] }] : [{ role: "user", parts: [{ text: prompt }] }],
@@ -26,8 +44,11 @@ export async function getAIResponse(prompt: string, history: { role: "user" | "m
 }
 
 export async function analyzeFinancialImage(base64Image: string, prompt: string) {
-  if (!ai) return "Image analysis is currently unavailable (Missing API Key).";
   try {
+    const ai = getAI();
+    if (!ai) {
+      return "AI image analysis is currently unavailable. Please check your API configuration.";
+    }
     const model = ai.models.generateContent({
       model: "gemini-3.1-pro-preview",
       contents: {
@@ -46,8 +67,11 @@ export async function analyzeFinancialImage(base64Image: string, prompt: string)
 }
 
 export async function getFastAIResponse(prompt: string) {
-  if (!ai) return "Fast AI response is currently unavailable (Missing API Key).";
   try {
+    const ai = getAI();
+    if (!ai) {
+      return "Fast AI response is currently unavailable.";
+    }
     const model = ai.models.generateContent({
       model: "gemini-3.1-flash-lite-preview",
       contents: [{ role: "user", parts: [{ text: prompt }] }],
@@ -57,5 +81,43 @@ export async function getFastAIResponse(prompt: string) {
   } catch (error) {
     console.error("Gemini Lite Error:", error);
     return "Error getting fast response.";
+  }
+}
+
+export async function generateWealthAudit(user: any, budget: any) {
+  const ai = getAI();
+  if (!ai) return "AI services are currently unavailable. Please check your configuration.";
+
+  const prompt = `
+    As a World-Class Personal Wealth Architect, perform a "One-Click AI Audit" for the following user:
+    Name: ${user.name}
+    Currency: ${user.currency}
+    Net Worth: Assets ${user.netWorth.assets}, Liabilities ${user.netWorth.liabilities}
+    Financial Literacy Score: ${user.highScore}/150
+    Budget: ${budget ? JSON.stringify(budget) : "Not set up yet"}
+
+    Provide a concise, high-impact financial roadmap in 3 sections:
+    1. **Wealth Health Check**: A brutal but fair assessment of their current position.
+    2. **The Golden Path**: 3 specific, actionable steps to increase their net worth by 20% in 12 months.
+    3. **Risk Mitigation**: One major blind spot they are currently ignoring.
+
+    Keep the tone professional, elite, and encouraging. Use Markdown formatting.
+    Max 300 words.
+  `;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      config: {
+        temperature: 0.7,
+        topP: 0.95,
+        topK: 40,
+      }
+    });
+    return response.text || "Unable to generate audit at this time.";
+  } catch (error) {
+    console.error("Gemini Audit Error:", error);
+    return "The Wealth Architect is currently over capacity. Please try again in a few moments.";
   }
 }

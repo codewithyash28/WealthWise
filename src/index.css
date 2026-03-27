@@ -7,40 +7,42 @@
   --font-serif: "Cormorant Garamond", serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
 
-  /* Dark Theme (Default) */
-  --bg-void: #040810;
-  --bg-primary: #070C18;
-  --bg-secondary: #0C1220;
-  --bg-card: #111827;
-  --bg-card-hover: #162034;
-  --accent-gold: #F0B429;
+  /* Dark Theme (Default) - Refined for Luxury */
+  --bg-void: #020408;
+  --bg-primary: #050812;
+  --bg-secondary: #0A0F1E;
+  --bg-card: rgba(13, 18, 34, 0.7);
+  --bg-card-hover: rgba(18, 25, 48, 0.8);
+  --accent-gold: #D4AF37; /* More metallic gold */
+  --accent-gold-bright: #F0B429;
   --accent-emerald: #10D9A0;
   --accent-blue: #3B82F6;
-  --text-primary: #EFF6FF;
+  --text-primary: #F8FAFC;
   --text-secondary: #94A3B8;
   --text-muted: #475569;
-  --border: rgba(255, 255, 255, 0.07);
-  --border-active: rgba(240, 180, 41, 0.4);
-  --aurora-opacity: 0.05;
-  --grid-opacity: 0.025;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-active: rgba(212, 175, 55, 0.4);
+  --aurora-opacity: 0.08;
+  --grid-opacity: 0.03;
 }
 
 :root.light {
   --bg-void: #F8FAFC;
   --bg-primary: #F1F5F9;
   --bg-secondary: #E2E8F0;
-  --bg-card: #FFFFFF;
-  --bg-card-hover: #F8FAFC;
-  --accent-gold: #D97706;
+  --bg-card: rgba(255, 255, 255, 0.8);
+  --bg-card-hover: rgba(248, 250, 252, 0.9);
+  --accent-gold: #B48A04;
+  --accent-gold-bright: #D97706;
   --accent-emerald: #059669;
   --accent-blue: #2563EB;
   --text-primary: #0F172A;
   --text-secondary: #475569;
   --text-muted: #94A3B8;
-  --border: rgba(0, 0, 0, 0.07);
-  --border-active: rgba(217, 119, 6, 0.4);
-  --aurora-opacity: 0.02;
-  --grid-opacity: 0.05;
+  --border: rgba(0, 0, 0, 0.08);
+  --border-active: rgba(180, 138, 4, 0.4);
+  --aurora-opacity: 0.03;
+  --grid-opacity: 0.06;
 }
 
 @theme {

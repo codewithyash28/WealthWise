@@ -1,5 +1,5 @@
 import { motion } from "motion/react";
-import { ChevronRight, Play, CheckCircle2, BookOpen, TrendingUp, Brain, Bot, PieChart } from "lucide-react";
+import { ChevronRight, Play, CheckCircle2, BookOpen, TrendingUp, Brain, Bot, PieChart, Sparkles, BrainCircuit } from "lucide-react";
 
 export function LandingPage() {
   const fadeInUp = {
@@ -10,11 +10,11 @@ export function LandingPage() {
   };
 
   const features = [
-    { icon: <TrendingUp className="w-8 h-8 text-accent-gold" />, title: "Smart Budget Planner", desc: "50/30/20 analysis in real-time" },
-    { icon: <TrendingUp className="w-8 h-8 text-accent-emerald" />, title: "Investment Simulator", desc: "Compound growth visualized" },
-    { icon: <PieChart className="w-8 h-8 text-accent-orange" />, title: "Asset Allocation", desc: "Diversify your portfolio" },
-    { icon: <Brain className="w-8 h-8 text-accent-blue" />, title: "Financial Quiz", desc: "15 questions, global standards" },
-    { icon: <Bot className="w-8 h-8 text-accent-purple" />, title: "AI Advisor", desc: "35+ expert answers, instant" }
+    { icon: <Sparkles className="w-8 h-8 text-accent-gold" />, title: "Wealth Architect", desc: "One-click AI financial audits" },
+    { icon: <BrainCircuit className="w-8 h-8 text-accent-emerald" />, title: "What-If Simulator", desc: "Visualize life decision impacts" },
+    { icon: <TrendingUp className="w-8 h-8 text-accent-blue" />, title: "Investment Lab", desc: "Compound growth projections" },
+    { icon: <PieChart className="w-8 h-8 text-accent-orange" />, title: "Smart Budgeting", desc: "50/30/20 real-time analysis" },
+    { icon: <Bot className="w-8 h-8 text-accent-purple" />, title: "AI Concierge", desc: "24/7 expert financial advice" }
   ];
 
   return (
@@ -27,9 +27,9 @@ export function LandingPage() {
           transition={{ duration: 0.8 }}
           className="text-6xl md:text-9xl font-serif leading-tight mb-6"
         >
-          <span className="block font-light text-text-primary">Financial Freedom</span>
+          <span className="block font-light text-text-primary">Your Personal</span>
           <span className="relative inline-block font-semibold text-accent-gold">
-            Starts Here.
+            Wealth Architect.
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: "100%" }}
@@ -45,7 +45,7 @@ export function LandingPage() {
           transition={{ delay: 0.3, duration: 0.8 }}
           className="text-lg md:text-xl text-text-secondary max-w-2xl mb-12"
         >
-          Learn budgeting, simulate investments, test your knowledge, and get personalized AI advice — completely free.
+          Master your financial future with AI-driven audits, real-time scenario simulations, and elite wealth-building tools.
         </motion.p>
 
         <motion.div

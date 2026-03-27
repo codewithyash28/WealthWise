@@ -1,4 +1,47 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, Component, ErrorInfo, ReactNode } from "react";
+
+class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean, error: Error | null }> {
+  constructor(props: { children: ReactNode }) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error("ErrorBoundary caught an error:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen bg-bg-primary flex items-center justify-center p-4">
+          <div className="card p-8 max-w-md w-full text-center space-y-4">
+            <h2 className="text-2xl font-bold text-accent-red">Something went wrong</h2>
+            <p className="text-text-secondary">
+              The application encountered an unexpected error. This might be due to missing configuration or a temporary issue.
+            </p>
+            <div className="p-4 bg-bg-secondary rounded-xl text-left overflow-auto max-h-40">
+              <code className="text-xs font-mono text-accent-red">
+                {this.state.error?.message || "Unknown error"}
+              </code>
+            </div>
+            <button 
+              onClick={() => window.location.reload()}
+              className="w-full py-3 bg-accent-gold text-bg-primary font-bold rounded-xl hover:opacity-90 transition-opacity"
+            >
+              Reload Application
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
 import { onAuthStateChanged, signInWithPopup, signOut, User } from "firebase/auth";
 import { doc, onSnapshot, setDoc, getDoc, updateDoc, arrayUnion } from "firebase/firestore";
 import { auth, db, googleProvider } from "./lib/firebase";
@@ -6,10 +49,12 @@ import { Navbar } from "./components/Navbar";
 import { Footer } from "./components/Footer";
 import { LandingPage } from "./components/LandingPage";
 import { Dashboard } from "./components/Dashboard";
+import { WealthDashboard } from "./components/WealthDashboard";
 import { BudgetPlanner } from "./components/BudgetPlanner";
 import { InvestmentSimulator } from "./components/InvestmentSimulator";
 import { FinancialQuiz } from "./components/FinancialQuiz";
 import { AIAdvisor } from "./components/AIAdvisor";
+import { ScenarioSimulator } from "./components/ScenarioSimulator";
 import { Resources } from "./components/Resources";
 import { AssetAllocation } from "./components/AssetAllocation";
 import { CurrencySelector, NameInput } from "./components/Modals";
@@ -32,7 +77,7 @@ interface FirestoreErrorInfo {
   authInfo: any;
 }
 
-function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null, setErrorCallback?: (msg: string) => void) {
+function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
   const errInfo: FirestoreErrorInfo = {
     error: error instanceof Error ? error.message : String(error),
     authInfo: {
@@ -52,20 +97,22 @@ function handleFirestoreError(error: unknown, operationType: OperationType, path
     path
   };
   console.error('Firestore Error: ', JSON.stringify(errInfo));
-  if (setErrorCallback) {
-    setErrorCallback(`Database error during ${operationType} on ${path}. Please check your connection.`);
-  } else {
-    // Re-throw if no callback is provided, but typically we want to update the UI
-    throw new Error(JSON.stringify(errInfo));
-  }
+  throw new Error(JSON.stringify(errInfo));
 }
 
 export default function App() {
+  return (
+    <ErrorBoundary>
+      <AppContent />
+    </ErrorBoundary>
+  );
+}
+
+function AppContent() {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [budget, setBudget] = useState<BudgetPlan | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [currentHash, setCurrentHash] = useState(window.location.hash || "#home");
+  const [currentHash, setCurrentHash] = useState(window.location.hash || "#dashboard");
   const [isAuthReady, setIsAuthReady] = useState(false);
   const [theme, setTheme] = useState<"light" | "dark">(() => {
     const saved = localStorage.getItem("ww_theme");
@@ -122,26 +169,20 @@ export default function App() {
           updateDoc(profileRef, {
             lastVisit: new Date().toISOString(),
             visitDates: arrayUnion(today)
-          }).catch(err => {
-            handleFirestoreError(err, OperationType.UPDATE, `users/${user.uid}/visitDates`);
-          });
+          }).catch(err => handleFirestoreError(err, OperationType.UPDATE, `users/${user.uid}`));
         }
       } else {
         // New user - trigger onboarding
         setShowCurrencySelector(true);
       }
-    }, (err) => {
-      handleFirestoreError(err, OperationType.GET, `users/${user.uid}`, setError);
-    });
+    }, (err) => handleFirestoreError(err, OperationType.GET, `users/${user.uid}`));
 
     const budgetRef = doc(db, "budgets", user.uid);
     const unsubscribeBudget = onSnapshot(budgetRef, (snapshot) => {
       if (snapshot.exists()) {
         setBudget(snapshot.data() as BudgetPlan);
       }
-    }, (err) => {
-      handleFirestoreError(err, OperationType.GET, `budgets/${user.uid}`);
-    });
+    }, (err) => handleFirestoreError(err, OperationType.GET, `budgets/${user.uid}`));
 
     return () => {
       unsubscribe();
@@ -170,12 +211,14 @@ export default function App() {
     setShowNameInput(true);
   };
 
-  const handleOnboardingComplete = async (name: string) => {
+  const handleOnboardingComplete = async (name: string, age: string, learningGoal: string) => {
     if (!user || !tempCurrency) return;
 
     const newProfile: UserProfile = {
       uid: user.uid,
       name,
+      age,
+      learningGoal,
       currency: tempCurrency,
       joinDate: new Date().toISOString(),
       lastVisit: new Date().toISOString(),
@@ -189,7 +232,7 @@ export default function App() {
       setShowNameInput(false);
       window.location.hash = "#dashboard";
     } catch (err) {
-      handleFirestoreError(err, OperationType.WRITE, `users/${user.uid}`, setError);
+      handleFirestoreError(err, OperationType.WRITE, `users/${user.uid}`);
     }
   };
 
@@ -199,7 +242,7 @@ export default function App() {
       await setDoc(doc(db, "budgets", user.uid), plan);
       alert("Budget plan saved successfully!");
     } catch (err) {
-      handleFirestoreError(err, OperationType.WRITE, `budgets/${user.uid}`, setError);
+      handleFirestoreError(err, OperationType.WRITE, `budgets/${user.uid}`);
     }
   };
 
@@ -211,7 +254,7 @@ export default function App() {
         "netWorth.liabilities": liabilities
       });
     } catch (err) {
-      handleFirestoreError(err, OperationType.UPDATE, `users/${user.uid}`, setError);
+      handleFirestoreError(err, OperationType.UPDATE, `users/${user.uid}`);
     }
   };
 
@@ -221,7 +264,7 @@ export default function App() {
       try {
         await updateDoc(doc(db, "users", user.uid), { highScore: score });
       } catch (err) {
-        handleFirestoreError(err, OperationType.UPDATE, `users/${user.uid}`, setError);
+        handleFirestoreError(err, OperationType.UPDATE, `users/${user.uid}`);
       }
     }
   };
@@ -235,16 +278,6 @@ export default function App() {
   };
 
   const renderContent = () => {
-    if (error) {
-      return (
-        <div id="error-display" className="container mx-auto px-6 py-32 flex flex-col items-center justify-center text-center space-y-8">
-          <h2 className="text-4xl font-display font-bold text-accent-gold">Something went wrong</h2>
-          <p className="text-text-secondary max-w-md">{error}</p>
-          <button onClick={() => { setError(null); window.location.reload(); }} className="btn-secondary">Retry</button>
-        </div>
-      );
-    }
-
     if (currentHash === "#home") return <LandingPage />;
     
     if (!user) {
@@ -260,11 +293,13 @@ export default function App() {
     if (!profile) return <div className="py-32 text-center text-text-muted">Loading your profile...</div>;
 
     switch (currentHash) {
-      case "#dashboard": return <Dashboard user={profile} budget={budget} onUpdateNetWorth={handleUpdateNetWorth} />;
+      case "#dashboard": return <WealthDashboard user={profile} budget={budget} />;
+      case "#networth": return <Dashboard user={profile} budget={budget} onUpdateNetWorth={handleUpdateNetWorth} />;
       case "#budget": return <BudgetPlanner user={profile} onSave={handleSaveBudget} initialPlan={budget} />;
       case "#simulator": return <InvestmentSimulator user={profile} />;
       case "#quiz": return <FinancialQuiz onComplete={handleQuizComplete} bestScore={profile.highScore} />;
-      case "#advisor": return <AIAdvisor />;
+      case "#scenarios": return <ScenarioSimulator user={profile} budget={budget} />;
+      case "#advisor": return <AIAdvisor user={profile} />;
       case "#resources": return <Resources />;
       case "#allocation": return <AssetAllocation />;
       default: return <LandingPage />;

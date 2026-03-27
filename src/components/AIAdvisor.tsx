@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef, ChangeEvent } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Bot, User, Send, Trash2, Copy, ChevronRight, Sparkles, MessageSquare, Plus, Minus, Image as ImageIcon, Loader2 } from "lucide-react";
+import { Bot, User, Send, Trash2, Copy, ChevronRight, Sparkles, MessageSquare, Plus, Minus, Image as ImageIcon, Loader2, History } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { getAIResponse, analyzeFinancialImage } from "../lib/gemini";
 import { cn } from "../lib/utils";
-import { ChatMessage } from "../types";
+import { ChatMessage, UserProfile } from "../types";
 
 const TOPICS = [
   "🚀 Start Investing", "💳 Credit Scores", "📊 Budgeting", "🛡️ Insurance",
@@ -14,7 +14,11 @@ const TOPICS = [
   "🔢 Rule of 72", "📊 Asset Allocation", "💡 Passive Income", "🏆 FIRE Movement"
 ];
 
-export function AIAdvisor() {
+interface AIAdvisorProps {
+  user?: UserProfile;
+}
+
+export function AIAdvisor({ user }: AIAdvisorProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
@@ -23,22 +27,28 @@ export function AIAdvisor() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const saved = localStorage.getItem("ww_chat");
+    const saved = localStorage.getItem(`ww_chat_${user?.uid || 'guest'}`);
     if (saved) {
       setMessages(JSON.parse(saved));
     } else {
+      const welcomeMsg = user 
+        ? `Hello ${user.name}! 👋 I'm your WealthWise AI Advisor. I see you're ${user.age} years old and interested in learning about ${user.learningGoal}. How can I help you reach your financial goals today?`
+        : "Hello! 👋 I'm your WealthWise AI Advisor. I can help you understand budgeting, investing, credit scores, and more. What financial topic would you like to explore today?";
+      
       setMessages([{
         role: "model",
-        text: "Hello! 👋 I'm your WealthWise AI Advisor. I can help you understand budgeting, investing, credit scores, and more. What financial topic would you like to explore today?",
+        text: welcomeMsg,
         timestamp: new Date().toISOString()
       }]);
     }
-  }, []);
+  }, [user]);
 
   useEffect(() => {
-    localStorage.setItem("ww_chat", JSON.stringify(messages));
+    if (messages.length > 0) {
+      localStorage.setItem(`ww_chat_${user?.uid || 'guest'}`, JSON.stringify(messages));
+    }
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [messages, user]);
 
   const handleSend = async (text: string = input) => {
     if (!text.trim() || isTyping) return;
@@ -53,7 +63,26 @@ export function AIAdvisor() {
       parts: [{ text: m.text }]
     }));
 
-    const response = await getAIResponse(text, history);
+    const systemContext = user ? `
+      User Profile:
+      - Name: ${user.name}
+      - Age: ${user.age}
+      - Learning Goal: ${user.learningGoal}
+      - Currency: ${user.currency}
+      
+      Please provide advice tailored to this user's age and goals.
+    ` : "";
+
+    const promptWithHistory = `
+      ${systemContext}
+      
+      Previous conversation history:
+      ${messages.slice(-10).map(m => `${m.role.toUpperCase()}: ${m.text}`).join('\n')}
+      
+      New user message: ${text}
+    `;
+
+    const response = await getAIResponse(promptWithHistory, history);
     const modelMsg: ChatMessage = { role: "model", text: response, timestamp: new Date().toISOString() };
     
     setIsTyping(false);
