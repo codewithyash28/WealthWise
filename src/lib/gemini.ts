@@ -1,8 +1,14 @@
 import { GoogleGenAI } from "@google/genai";
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+// Support both Vite-style (import.meta.env) and process.env (for compatibility)
+const API_KEY = (import.meta.env?.VITE_GEMINI_API_KEY || process.env?.GEMINI_API_KEY || "").trim();
+
+// Ensure the API key is valid and not just the string "undefined" or "null"
+const isValidKey = API_KEY && API_KEY !== "undefined" && API_KEY !== "null";
+const ai = isValidKey ? new GoogleGenAI({ apiKey: API_KEY }) : null;
 
 export async function getAIResponse(prompt: string, history: { role: "user" | "model", parts: { text: string }[] }[] = []) {
+  if (!ai) return "AI Advisor is currently unavailable (Missing API Key).";
   try {
     const model = ai.models.generateContent({
       model: "gemini-3-flash-preview",
@@ -20,6 +26,7 @@ export async function getAIResponse(prompt: string, history: { role: "user" | "m
 }
 
 export async function analyzeFinancialImage(base64Image: string, prompt: string) {
+  if (!ai) return "Image analysis is currently unavailable (Missing API Key).";
   try {
     const model = ai.models.generateContent({
       model: "gemini-3.1-pro-preview",
@@ -39,6 +46,7 @@ export async function analyzeFinancialImage(base64Image: string, prompt: string)
 }
 
 export async function getFastAIResponse(prompt: string) {
+  if (!ai) return "Fast AI response is currently unavailable (Missing API Key).";
   try {
     const model = ai.models.generateContent({
       model: "gemini-3.1-flash-lite-preview",

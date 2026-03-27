@@ -32,7 +32,7 @@ interface FirestoreErrorInfo {
   authInfo: any;
 }
 
-function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
+function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null, setErrorCallback?: (msg: string) => void) {
   const errInfo: FirestoreErrorInfo = {
     error: error instanceof Error ? error.message : String(error),
     authInfo: {
@@ -52,13 +52,19 @@ function handleFirestoreError(error: unknown, operationType: OperationType, path
     path
   };
   console.error('Firestore Error: ', JSON.stringify(errInfo));
-  throw new Error(JSON.stringify(errInfo));
+  if (setErrorCallback) {
+    setErrorCallback(`Database error during ${operationType} on ${path}. Please check your connection.`);
+  } else {
+    // Re-throw if no callback is provided, but typically we want to update the UI
+    throw new Error(JSON.stringify(errInfo));
+  }
 }
 
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [budget, setBudget] = useState<BudgetPlan | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [currentHash, setCurrentHash] = useState(window.location.hash || "#home");
   const [isAuthReady, setIsAuthReady] = useState(false);
   const [theme, setTheme] = useState<"light" | "dark">(() => {
@@ -116,20 +122,26 @@ export default function App() {
           updateDoc(profileRef, {
             lastVisit: new Date().toISOString(),
             visitDates: arrayUnion(today)
-          }).catch(err => handleFirestoreError(err, OperationType.UPDATE, `users/${user.uid}`));
+          }).catch(err => {
+            handleFirestoreError(err, OperationType.UPDATE, `users/${user.uid}/visitDates`);
+          });
         }
       } else {
         // New user - trigger onboarding
         setShowCurrencySelector(true);
       }
-    }, (err) => handleFirestoreError(err, OperationType.GET, `users/${user.uid}`));
+    }, (err) => {
+      handleFirestoreError(err, OperationType.GET, `users/${user.uid}`, setError);
+    });
 
     const budgetRef = doc(db, "budgets", user.uid);
     const unsubscribeBudget = onSnapshot(budgetRef, (snapshot) => {
       if (snapshot.exists()) {
         setBudget(snapshot.data() as BudgetPlan);
       }
-    }, (err) => handleFirestoreError(err, OperationType.GET, `budgets/${user.uid}`));
+    }, (err) => {
+      handleFirestoreError(err, OperationType.GET, `budgets/${user.uid}`);
+    });
 
     return () => {
       unsubscribe();
@@ -177,7 +189,7 @@ export default function App() {
       setShowNameInput(false);
       window.location.hash = "#dashboard";
     } catch (err) {
-      handleFirestoreError(err, OperationType.WRITE, `users/${user.uid}`);
+      handleFirestoreError(err, OperationType.WRITE, `users/${user.uid}`, setError);
     }
   };
 
@@ -187,7 +199,7 @@ export default function App() {
       await setDoc(doc(db, "budgets", user.uid), plan);
       alert("Budget plan saved successfully!");
     } catch (err) {
-      handleFirestoreError(err, OperationType.WRITE, `budgets/${user.uid}`);
+      handleFirestoreError(err, OperationType.WRITE, `budgets/${user.uid}`, setError);
     }
   };
 
@@ -199,7 +211,7 @@ export default function App() {
         "netWorth.liabilities": liabilities
       });
     } catch (err) {
-      handleFirestoreError(err, OperationType.UPDATE, `users/${user.uid}`);
+      handleFirestoreError(err, OperationType.UPDATE, `users/${user.uid}`, setError);
     }
   };
 
@@ -209,7 +221,7 @@ export default function App() {
       try {
         await updateDoc(doc(db, "users", user.uid), { highScore: score });
       } catch (err) {
-        handleFirestoreError(err, OperationType.UPDATE, `users/${user.uid}`);
+        handleFirestoreError(err, OperationType.UPDATE, `users/${user.uid}`, setError);
       }
     }
   };
@@ -223,6 +235,16 @@ export default function App() {
   };
 
   const renderContent = () => {
+    if (error) {
+      return (
+        <div id="error-display" className="container mx-auto px-6 py-32 flex flex-col items-center justify-center text-center space-y-8">
+          <h2 className="text-4xl font-display font-bold text-accent-gold">Something went wrong</h2>
+          <p className="text-text-secondary max-w-md">{error}</p>
+          <button onClick={() => { setError(null); window.location.reload(); }} className="btn-secondary">Retry</button>
+        </div>
+      );
+    }
+
     if (currentHash === "#home") return <LandingPage />;
     
     if (!user) {
