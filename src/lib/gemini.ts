@@ -1,7 +1,16 @@
 import { GoogleGenAI } from "@google/genai";
 
 // Support both Vite-style (import.meta.env) and process.env (for compatibility)
-const API_KEY = (import.meta.env?.VITE_GEMINI_API_KEY || process.env?.GEMINI_API_KEY || "").trim();
+const getApiKey = () => {
+  try {
+    // @ts-ignore
+    return (import.meta.env?.VITE_GEMINI_API_KEY || process.env?.GEMINI_API_KEY || "").trim();
+  } catch {
+    return "";
+  }
+};
+
+const API_KEY = getApiKey();
 
 // Ensure the API key is valid and not just the string "undefined" or "null"
 const isValidKey = API_KEY && API_KEY !== "undefined" && API_KEY !== "null";

@@ -25,7 +25,16 @@ export function AIAdvisor() {
   useEffect(() => {
     const saved = localStorage.getItem("ww_chat");
     if (saved) {
-      setMessages(JSON.parse(saved));
+      try {
+        setMessages(JSON.parse(saved));
+      } catch (err) {
+        console.error("Failed to parse chat history:", err);
+        setMessages([{
+          role: "model",
+          text: "Hello! 👋 I'm your WealthWise AI Advisor. I can help you understand budgeting, investing, credit scores, and more. What financial topic would you like to explore today?",
+          timestamp: new Date().toISOString()
+        }]);
+      }
     } else {
       setMessages([{
         role: "model",

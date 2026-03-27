@@ -36,12 +36,12 @@ function handleFirestoreError(error: unknown, operationType: OperationType, path
   const errInfo: FirestoreErrorInfo = {
     error: error instanceof Error ? error.message : String(error),
     authInfo: {
-      userId: auth?.currentUser?.uid,
-      email: auth?.currentUser?.email,
-      emailVerified: auth?.currentUser?.emailVerified,
-      isAnonymous: auth?.currentUser?.isAnonymous,
-      tenantId: auth?.currentUser?.tenantId,
-      providerInfo: auth?.currentUser?.providerData.map(provider => ({
+      userId: auth?.currentUser?.uid || "unauthenticated",
+      email: auth?.currentUser?.email || "none",
+      emailVerified: auth?.currentUser?.emailVerified || false,
+      isAnonymous: auth?.currentUser?.isAnonymous || false,
+      tenantId: auth?.currentUser?.tenantId || "none",
+      providerInfo: auth?.currentUser?.providerData?.map(provider => ({
         providerId: provider.providerId,
         displayName: provider.displayName,
         email: provider.email,
@@ -159,7 +159,7 @@ export default function App() {
         setBudget(snapshot.data() as BudgetPlan);
       }
     }, (err) => {
-      handleFirestoreError(err, OperationType.GET, `budgets/${user.uid}`);
+      handleFirestoreError(err, OperationType.GET, `budgets/${user.uid}`, setGlobalError);
     });
 
     return () => {
@@ -247,18 +247,22 @@ export default function App() {
 
   const handleSignIn = async () => {
     try {
+      if (!auth) throw new Error("Authentication service is not available.");
       await signInWithPopup(auth, googleProvider);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Sign in error:", err);
+      setGlobalError(`Sign in failed: ${err.message || "Please try again."}`);
     }
   };
 
   const handleSignOut = async () => {
     try {
+      if (!auth) throw new Error("Authentication service is not available.");
       await signOut(auth);
       window.location.hash = "#home";
-    } catch (err) {
+    } catch (err: any) {
       console.error("Sign out error:", err);
+      setGlobalError(`Sign out failed: ${err.message || "Please try again."}`);
     }
   };
 
@@ -275,6 +279,10 @@ export default function App() {
 
     if (currentHash === "#home") return <LandingPage />;
     
+    if (!isAuthReady) {
+      return <div className="py-32 text-center text-text-muted">Initializing WealthWise...</div>;
+    }
+
     if (!user) {
       return (
         <div className="container mx-auto px-6 py-32 flex flex-col items-center justify-center text-center space-y-8">
