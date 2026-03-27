@@ -1,19 +1,20 @@
 import { useState, useEffect, useMemo } from "react";
 import { motion } from "motion/react";
-import { TrendingUp, DollarSign, Calendar, Target, Info, ArrowRight, ChevronRight, Calculator, PieChart } from "lucide-react";
+import { TrendingUp, DollarSign, Calendar, Target, Info, ArrowRight, ChevronRight, Calculator, PieChart, Plus, Trash2 } from "lucide-react";
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler } from 'chart.js';
 import { Line } from 'react-chartjs-2';
 import { formatCurrency, cn } from "../lib/utils";
 import { CURRENCIES } from "../constants";
-import { UserProfile } from "../types";
+import { UserProfile, FinancialGoal } from "../types";
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler);
 
 interface InvestmentSimulatorProps {
   user: UserProfile;
+  onUpdateGoals?: (goals: FinancialGoal[]) => void;
 }
 
-export function InvestmentSimulator({ user }: InvestmentSimulatorProps) {
+export function InvestmentSimulator({ user, onUpdateGoals }: InvestmentSimulatorProps) {
   const [activeTab, setActiveTab] = useState<"SIP" | "LUMP" | "GOAL">("SIP");
   const currency = CURRENCIES[user.currency] || CURRENCIES.USD;
 
@@ -60,6 +61,49 @@ export function InvestmentSimulator({ user }: InvestmentSimulatorProps) {
   const sipResults = calculateSIP();
   const lumpResults = calculateLump();
   const goalResults = calculateGoal();
+
+  const [savedGoals, setSavedGoals] = useState<FinancialGoal[]>(user.goals || []);
+
+  // Sync state with user profile if it changes externally
+  useEffect(() => {
+    if (user.goals) {
+      setSavedGoals(user.goals);
+    }
+  }, [user.goals]);
+
+  const handleSaveGoal = () => {
+    if (activeTab === "GOAL") {
+      const newGoal: FinancialGoal = {
+        id: Math.random().toString(36).substr(2, 9),
+        title: `Goal for ${formatCurrency(goalAmount, user.currency, currency.locale)}`,
+        targetAmount: goalAmount,
+        currentAmount: 0,
+        deadline: new Date(new Date().setFullYear(new Date().getFullYear() + goalPeriod)).toISOString().split('T')[0],
+        category: "OTHER"
+      };
+      const updated = [...savedGoals, newGoal];
+      setSavedGoals(updated);
+      onUpdateGoals?.(updated);
+      // Removed alert for iframe compatibility
+    }
+  };
+
+  const handleDeleteGoal = (id: string) => {
+    const updated = savedGoals.filter(g => g.id !== id);
+    setSavedGoals(updated);
+    onUpdateGoals?.(updated);
+  };
+
+  // Automatically check for completed goals
+  useEffect(() => {
+    const completed = savedGoals.filter(g => g.currentAmount >= g.targetAmount && g.targetAmount > 0);
+    if (completed.length > 0) {
+      const remaining = savedGoals.filter(g => g.currentAmount < g.targetAmount || g.targetAmount === 0);
+      // Auto-delete completed goals as per user request
+      setSavedGoals(remaining);
+      onUpdateGoals?.(remaining);
+    }
+  }, [savedGoals]);
 
   const chartData = useMemo(() => {
     const labels = Array.from({ length: (activeTab === "SIP" ? sipPeriod : lumpPeriod) + 1 }, (_, i) => i);
@@ -137,6 +181,74 @@ export function InvestmentSimulator({ user }: InvestmentSimulatorProps) {
       <div className="space-y-2">
         <h1 className="text-4xl font-display font-bold">Investment Simulator</h1>
         <p className="text-text-secondary">Discover the power of compound growth</p>
+      </div>
+
+      {/* Goal Progress Section */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {savedGoals.map(goal => {
+          const progress = (goal.currentAmount / goal.targetAmount) * 100;
+          const remaining = goal.targetAmount - goal.currentAmount;
+          const yearsLeft = Math.ceil((new Date(goal.deadline).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24 * 365));
+          
+          return (
+            <motion.div
+              key={goal.id}
+              whileHover={{ y: -5 }}
+              className="card p-6 space-y-6 border-l-4 border-l-accent-gold relative group"
+            >
+              <button 
+                onClick={() => handleDeleteGoal(goal.id)}
+                className="absolute top-4 right-4 p-2 text-text-muted hover:text-accent-red opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-accent-gold/10 flex items-center justify-center text-accent-gold">
+                    <Target className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold">{goal.title}</h3>
+                    <p className="text-[10px] text-text-muted uppercase tracking-widest font-bold">{goal.category}</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-xs text-text-muted">Target Date</div>
+                  <div className="text-sm font-bold">{new Date(goal.deadline).toLocaleDateString()}</div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex justify-between text-xs font-bold">
+                  <span className="text-text-muted uppercase tracking-widest">Progress</span>
+                  <span className="text-accent-gold">{progress.toFixed(1)}%</span>
+                </div>
+                <div className="h-2 bg-border rounded-full overflow-hidden">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${progress}%` }}
+                    className="h-full bg-accent-gold"
+                  />
+                </div>
+                <div className="flex justify-between text-[10px] text-text-muted">
+                  <span>{formatCurrency(goal.currentAmount, user.currency, currency.locale)}</span>
+                  <span>{formatCurrency(goal.targetAmount, user.currency, currency.locale)}</span>
+                </div>
+              </div>
+
+              <div className="pt-4 border-t border-border flex items-center justify-between">
+                <div className="space-y-1">
+                  <div className="text-[10px] text-text-muted uppercase tracking-widest font-bold">Remaining</div>
+                  <div className="text-sm font-mono font-bold">{formatCurrency(remaining, user.currency, currency.locale)}</div>
+                </div>
+                <div className="space-y-1 text-right">
+                  <div className="text-[10px] text-text-muted uppercase tracking-widest font-bold">Est. Completion</div>
+                  <div className="text-sm font-bold text-accent-emerald">{yearsLeft} Years</div>
+                </div>
+              </div>
+            </motion.div>
+          );
+        })}
       </div>
 
       {/* Tabs */}
@@ -267,10 +379,18 @@ export function InvestmentSimulator({ user }: InvestmentSimulatorProps) {
               </>
             ) : (
               <>
-                <div className="card p-6 col-span-2 bg-accent-gold/10 border-accent-gold/20 text-center space-y-2">
-                  <div className="text-xs text-text-muted uppercase tracking-wider">Monthly Investment Needed</div>
-                  <div className="text-3xl font-mono font-bold text-accent-gold">{formatCurrency(goalResults.monthlyNeeded, user.currency, currency.locale)}</div>
-                  <div className="text-xs text-text-muted">Or a lump sum of {formatCurrency(goalResults.lumpNeeded, user.currency, currency.locale)} today</div>
+                <div className="card p-6 col-span-2 bg-accent-gold/10 border-accent-gold/20 text-center space-y-4">
+                  <div className="space-y-1">
+                    <div className="text-xs text-text-muted uppercase tracking-wider">Monthly Investment Needed</div>
+                    <div className="text-3xl font-mono font-bold text-accent-gold">{formatCurrency(goalResults.monthlyNeeded, user.currency, currency.locale)}</div>
+                    <div className="text-xs text-text-muted">Or a lump sum of {formatCurrency(goalResults.lumpNeeded, user.currency, currency.locale)} today</div>
+                  </div>
+                  <button 
+                    onClick={handleSaveGoal}
+                    className="btn-primary w-full flex items-center justify-center gap-2"
+                  >
+                    <Plus className="w-4 h-4" /> Save This Goal
+                  </button>
                 </div>
               </>
             )}

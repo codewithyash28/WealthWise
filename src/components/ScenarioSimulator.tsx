@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { motion } from "motion/react";
-import { BrainCircuit, TrendingUp, Wallet, Car, Home, Briefcase, Zap, Info, ChevronRight, ArrowRight } from "lucide-react";
+import { BrainCircuit, TrendingUp, Wallet, Car, Home, Briefcase, Zap, Info, ChevronRight, ArrowRight, Target } from "lucide-react";
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler } from 'chart.js';
 import { Line } from 'react-chartjs-2';
 import { formatCurrency, cn } from "../lib/utils";
@@ -33,36 +33,39 @@ export function ScenarioSimulator({ user, budget }: ScenarioSimulatorProps) {
   const [years, setYears] = useState(10);
   const [growthRate, setGrowthRate] = useState(7);
 
-  const scenarios: Scenario[] = [
-    {
-      id: "car",
-      title: "Buy a Luxury Car",
-      icon: <Car />,
-      description: "Purchase a high-end vehicle with a loan.",
-      impact: { liabilities: 50000, monthlyExpenses: 800 }
-    },
-    {
-      id: "raise",
-      title: "15% Salary Raise",
-      icon: <Briefcase />,
-      description: "Negotiate a successful promotion.",
-      impact: { monthlyIncome: (budget?.income || 5000) * 0.15 }
-    },
-    {
-      id: "frugal",
-      title: "Extreme Frugality",
-      icon: <Zap />,
-      description: "Cut non-essential spending by 40%.",
-      impact: { monthlyExpenses: -(budget?.income || 5000) * 0.2 }
-    },
-    {
-      id: "house",
-      title: "Buy a Home",
-      icon: <Home />,
-      description: "Downpayment and mortgage commitment.",
-      impact: { assets: 300000, liabilities: 240000, monthlyExpenses: 500 }
-    }
-  ];
+  const scenarios: Scenario[] = useMemo(() => {
+    const baseScenarios: Scenario[] = [
+      {
+        id: "raise",
+        title: "15% Salary Increment",
+        icon: <Briefcase />,
+        description: "Secure a strategic promotion and salary adjustment.",
+        impact: { monthlyIncome: (budget?.income || 5000) * 0.15 }
+      },
+      {
+        id: "frugal",
+        title: "Optimized Expenditure",
+        icon: <Zap />,
+        description: "Reduce non-essential expenditures by 40%.",
+        impact: { monthlyExpenses: -(budget?.income || 5000) * 0.2 }
+      }
+    ];
+
+    // Add scenarios based on user goals
+    const goalScenarios: Scenario[] = (user.goals || []).map(goal => ({
+      id: `goal-${goal.id}`,
+      title: `Achieve: ${goal.title}`,
+      icon: goal.category === "HOUSE" ? <Home /> : goal.category === "CAR" ? <Car /> : <Target />,
+      description: `Commit to reaching your ${formatCurrency(goal.targetAmount, user.currency, currency.locale)} target.`,
+      impact: { 
+        liabilities: goal.category === "HOUSE" || goal.category === "CAR" ? goal.targetAmount * 0.8 : 0,
+        assets: goal.targetAmount,
+        monthlyExpenses: goal.category === "HOUSE" ? 500 : goal.category === "CAR" ? 300 : 0
+      }
+    }));
+
+    return [...baseScenarios, ...goalScenarios];
+  }, [user.goals, budget?.income, user.currency, currency.locale]);
 
   const toggleScenario = (id: string) => {
     setSelectedScenarios(prev => 
@@ -156,8 +159,8 @@ export function ScenarioSimulator({ user, budget }: ScenarioSimulatorProps) {
     <div className="container mx-auto px-6 py-12 space-y-12">
       <div className="flex flex-col md:flex-row justify-between items-start gap-6">
         <div className="space-y-2">
-          <h1 className="text-4xl font-display font-bold">What-If Scenario Simulator</h1>
-          <p className="text-text-secondary">Visualize how major life decisions impact your long-term wealth.</p>
+          <h1 className="text-4xl font-display font-bold">Strategic Projection Simulator</h1>
+          <p className="text-text-secondary">Analyze the long-term fiscal impact of significant life events and strategic decisions.</p>
         </div>
         
         <div className="flex items-center gap-4 bg-bg-secondary p-2 rounded-2xl border border-border">
@@ -189,7 +192,7 @@ export function ScenarioSimulator({ user, budget }: ScenarioSimulatorProps) {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
         {/* Scenario Selection */}
         <div className="space-y-6">
-          <h3 className="text-sm font-bold uppercase tracking-[0.2em] text-text-muted">Select Scenarios</h3>
+          <h3 className="text-sm font-bold uppercase tracking-[0.2em] text-text-muted">Scenario Selection</h3>
           <div className="grid grid-cols-1 gap-4">
             {scenarios.map((s) => (
               <button
@@ -239,30 +242,30 @@ export function ScenarioSimulator({ user, budget }: ScenarioSimulatorProps) {
         <div className="lg:col-span-2 space-y-8">
           <div className="card p-8 h-[500px] relative">
             <div className="absolute top-6 left-8 z-10">
-              <h3 className="text-sm font-bold uppercase tracking-widest text-text-muted">Wealth Projection</h3>
+              <h3 className="text-sm font-bold uppercase tracking-widest text-text-muted">Fiscal Projection</h3>
             </div>
             <Line data={projectionData} options={chartOptions} />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="card p-8 space-y-4">
-              <h4 className="text-xs font-bold uppercase tracking-widest text-text-muted">Net Worth at Year {years}</h4>
+              <h4 className="text-xs font-bold uppercase tracking-widest text-text-muted">Projected Net Worth (Year {years})</h4>
               <div className="space-y-2">
                 <div className="flex items-end justify-between">
-                  <span className="text-sm text-text-secondary">Baseline</span>
+                  <span className="text-sm text-text-secondary">Baseline Projection</span>
                   <span className="text-xl font-mono font-bold text-text-muted">
                     {formatCurrency(projectionData.datasets[0].data[years], user.currency, currency.locale)}
                   </span>
                 </div>
                 <div className="flex items-end justify-between">
-                  <span className="text-sm text-text-secondary">Scenario</span>
+                  <span className="text-sm text-text-secondary">Scenario Projection</span>
                   <span className="text-3xl font-mono font-bold text-accent-gold">
                     {formatCurrency(projectionData.datasets[1].data[years], user.currency, currency.locale)}
                   </span>
                 </div>
               </div>
               <div className="pt-4 border-t border-border flex items-center justify-between">
-                <span className="text-xs font-bold uppercase text-accent-emerald">Wealth Delta</span>
+                <span className="text-xs font-bold uppercase text-accent-emerald">Projected Variance</span>
                 <span className="text-lg font-mono font-bold text-accent-emerald">
                   {formatCurrency(projectionData.datasets[1].data[years] - projectionData.datasets[0].data[years], user.currency, currency.locale)}
                 </span>
@@ -274,7 +277,7 @@ export function ScenarioSimulator({ user, budget }: ScenarioSimulatorProps) {
                 <div className="w-10 h-10 rounded-full bg-accent-gold/20 flex items-center justify-center">
                   <BrainCircuit className="w-5 h-5 text-accent-gold" />
                 </div>
-                <h4 className="font-bold">AI Decision Insight</h4>
+                <h4 className="font-bold">Strategic Insight</h4>
               </div>
               <p className="text-sm text-text-secondary leading-relaxed italic">
                 {selectedScenarios.length === 0 

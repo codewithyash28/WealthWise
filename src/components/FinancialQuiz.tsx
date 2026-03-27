@@ -141,7 +141,7 @@ export function FinancialQuiz({ onComplete, bestScore }: FinancialQuizProps) {
           <button onClick={() => window.location.hash = "#dashboard"} className="btn-primary">
             Back to Dashboard
           </button>
-          <button onClick={() => { navigator.clipboard.writeText(`I scored ${score}/250 on WealthWise! Can you beat me?`); alert("Score copied to clipboard!"); }} className="btn-secondary flex items-center gap-2">
+          <button onClick={() => { navigator.clipboard.writeText(`I scored ${score}/250 on WealthWise Elite! Can you beat me?`); }} className="btn-secondary flex items-center gap-2">
             <Share2 className="w-5 h-5" /> Share Score
           </button>
         </div>

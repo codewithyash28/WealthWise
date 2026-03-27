@@ -47,8 +47,8 @@ export function Logo({ className = "" }: { className?: string }) {
         </motion.div>
       </div>
       <div className="flex items-baseline font-serif">
-        <span className="text-2xl font-light text-text-primary">Wealth</span>
-        <span className="text-2xl font-semibold text-accent-gold">Wise</span>
+        <span className="text-2xl font-light text-text-primary">WealthWise</span>
+        <span className="text-2xl font-semibold text-accent-gold ml-1">Elite</span>
       </div>
     </div>
   );

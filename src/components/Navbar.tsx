@@ -10,9 +10,11 @@ interface NavbarProps {
   onCurrencyClick: () => void;
   theme: "light" | "dark";
   onToggleTheme: () => void;
+  user?: { displayName: string | null; photoURL: string | null } | null;
+  onSignOut?: () => void;
 }
 
-export function Navbar({ currentHash, currency, onCurrencyClick, theme, onToggleTheme }: NavbarProps) {
+export function Navbar({ currentHash, currency, onCurrencyClick, theme, onToggleTheme, user, onSignOut }: NavbarProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -23,14 +25,14 @@ export function Navbar({ currentHash, currency, onCurrencyClick, theme, onToggle
   }, []);
 
   const navLinks = [
-    { name: "Architect", hash: "#dashboard" },
-    { name: "Net Worth", hash: "#networth" },
-    { name: "Budget", hash: "#budget" },
-    { name: "What-If", hash: "#scenarios" },
-    { name: "Learn", hash: "#resources" },
-    { name: "Simulate", hash: "#simulator" },
-    { name: "Quiz", hash: "#quiz" },
+    { name: "Dashboard", hash: "#dashboard" },
+    { name: "Portfolio", hash: "#portfolio" },
+    { name: "Budget Architect", hash: "#budget" },
+    { name: "Strategic Projection", hash: "#scenarios" },
+    { name: "Investment Simulator", hash: "#simulator" },
+    { name: "Wealth Quiz", hash: "#quiz" },
     { name: "AI Advisor", hash: "#advisor" },
+    { name: "Learn", hash: "#resources" },
   ];
 
   return (
@@ -66,13 +68,30 @@ export function Navbar({ currentHash, currency, onCurrencyClick, theme, onToggle
             onClick={onCurrencyClick}
             className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-bg-secondary border border-border hover:border-border-active transition-all"
           >
-            <span className="text-xs font-bold text-accent-gold">{CURRENCIES[currency]?.symbol}</span>
+            <span className="text-xs font-bold text-accent-gold">{CURRENCIES[currency]?.symbol || "$"}</span>
             <span className="text-xs font-medium uppercase">{currency}</span>
           </button>
 
-          <a href="#dashboard" className="hidden sm:flex btn-primary !py-2 !px-4 text-sm">
-            Get Started <ChevronRight className="w-4 h-4 ml-1" />
-          </a>
+          {user ? (
+            <div className="hidden sm:flex items-center gap-3 ml-2">
+              <div className="w-8 h-8 rounded-full overflow-hidden border border-border bg-bg-secondary flex items-center justify-center">
+                {user.photoURL ? (
+                  <img src={user.photoURL} alt={user.displayName || "User"} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                ) : (
+                  <span className="text-xs font-bold text-accent-gold">
+                    {(user.displayName || "U").charAt(0).toUpperCase()}
+                  </span>
+                )}
+              </div>
+              <button onClick={onSignOut} className="text-xs text-text-secondary hover:text-text-primary transition-colors font-medium">
+                Sign Out
+              </button>
+            </div>
+          ) : (
+            <a href="#dashboard" className="hidden sm:flex btn-primary !py-2 !px-4 text-sm">
+              Get Started <ChevronRight className="w-4 h-4 ml-1" />
+            </a>
+          )}
 
           <button
             className="lg:hidden text-text-primary"

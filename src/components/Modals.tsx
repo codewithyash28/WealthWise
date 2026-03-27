@@ -21,7 +21,7 @@ export function CurrencySelector({ isOpen, onSelect, currentCurrency }: Currency
         className="card max-w-lg w-full p-8 space-y-8"
       >
         <div className="text-center space-y-2">
-          <h2 className="text-3xl font-display font-bold text-accent-gold">🌍 Welcome to WealthWise</h2>
+          <h2 className="text-3xl font-display font-bold text-accent-gold">🌍 Welcome to WealthWise Elite</h2>
           <p className="text-text-secondary">Select your currency to personalize all calculations</p>
         </div>
 
@@ -88,25 +88,25 @@ export function NameInput({ isOpen, onComplete }: NameInputProps) {
           <div className="w-16 h-16 bg-accent-gold/10 rounded-full flex items-center justify-center mx-auto mb-4">
             <User className="w-8 h-8 text-accent-gold" />
           </div>
-          <h2 className="text-2xl font-display font-bold">Tell us about yourself</h2>
-          <p className="text-text-secondary">We'll personalize your experience based on your profile</p>
+          <h2 className="text-2xl font-display font-bold">Personalize Your Experience</h2>
+          <p className="text-text-secondary">We'll tailor your financial insights based on your profile</p>
         </div>
 
         <div className="space-y-6">
           <div className="space-y-2">
-            <label className="text-xs font-bold uppercase tracking-widest text-text-muted ml-1">Your Name</label>
+            <label className="text-xs font-bold uppercase tracking-widest text-text-muted ml-1">Full Name</label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Enter your name..."
+              placeholder="e.g. John Doe"
               className="input-field w-full text-lg"
               autoFocus
             />
           </div>
 
           <div className="space-y-2">
-            <label className="text-xs font-bold uppercase tracking-widest text-text-muted ml-1">Your Age</label>
+            <label className="text-xs font-bold uppercase tracking-widest text-text-muted ml-1">Age Range</label>
             <div className="grid grid-cols-3 gap-2">
               {ageOptions.map(option => (
                 <button
@@ -126,12 +126,12 @@ export function NameInput({ isOpen, onComplete }: NameInputProps) {
           </div>
 
           <div className="space-y-2">
-            <label className="text-xs font-bold uppercase tracking-widest text-text-muted ml-1">What do you want to learn?</label>
+            <label className="text-xs font-bold uppercase tracking-widest text-text-muted ml-1">Primary Financial Goal</label>
             <input
               type="text"
               value={learningGoal}
               onChange={(e) => setLearningGoal(e.target.value)}
-              placeholder="e.g. Investing, Budgeting, Debt..."
+              placeholder="e.g. Retirement, Investing, Debt Management"
               className="input-field w-full"
             />
           </div>
@@ -141,7 +141,7 @@ export function NameInput({ isOpen, onComplete }: NameInputProps) {
             disabled={!name.trim() || !age || !learningGoal.trim()}
             className="btn-primary w-full flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Welcome to WealthWise <ChevronRight className="w-5 h-5" />
+            Welcome to WealthWise Elite <ChevronRight className="w-5 h-5" />
           </button>
         </div>
       </motion.div>

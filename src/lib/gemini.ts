@@ -91,15 +91,17 @@ export async function generateWealthAudit(user: any, budget: any) {
   const prompt = `
     As a World-Class Personal Wealth Architect, perform a "One-Click AI Audit" for the following user:
     Name: ${user.name}
+    Age: ${user.age}
+    Learning Goals: ${user.learningGoal}
     Currency: ${user.currency}
     Net Worth: Assets ${user.netWorth.assets}, Liabilities ${user.netWorth.liabilities}
     Financial Literacy Score: ${user.highScore}/150
     Budget: ${budget ? JSON.stringify(budget) : "Not set up yet"}
 
     Provide a concise, high-impact financial roadmap in 3 sections:
-    1. **Wealth Health Check**: A brutal but fair assessment of their current position.
-    2. **The Golden Path**: 3 specific, actionable steps to increase their net worth by 20% in 12 months.
-    3. **Risk Mitigation**: One major blind spot they are currently ignoring.
+    1. **Wealth Health Check**: A brutal but fair assessment of their current position, specifically considering their age group (${user.age}).
+    2. **The Golden Path**: 3 specific, actionable steps to increase their net worth by 20% in 12 months, aligned with their goal of learning about ${user.learningGoal}.
+    3. **Risk Mitigation**: One major blind spot they are currently ignoring based on their profile.
 
     Keep the tone professional, elite, and encouraging. Use Markdown formatting.
     Max 300 words.

@@ -23,6 +23,7 @@ export function AIAdvisor({ user }: AIAdvisorProps) {
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -32,8 +33,8 @@ export function AIAdvisor({ user }: AIAdvisorProps) {
       setMessages(JSON.parse(saved));
     } else {
       const welcomeMsg = user 
-        ? `Hello ${user.name}! 👋 I'm your WealthWise AI Advisor. I see you're ${user.age} years old and interested in learning about ${user.learningGoal}. How can I help you reach your financial goals today?`
-        : "Hello! 👋 I'm your WealthWise AI Advisor. I can help you understand budgeting, investing, credit scores, and more. What financial topic would you like to explore today?";
+        ? `Hello ${user.name}! 👋 I'm your WealthWise Elite AI Advisor. I see you're ${user.age} years old and interested in learning about ${user.learningGoal}. How can I help you reach your financial goals today?`
+        : "Hello! 👋 I'm your WealthWise Elite AI Advisor. I can help you understand budgeting, investing, credit scores, and more. What financial topic would you like to explore today?";
       
       setMessages([{
         role: "model",
@@ -111,13 +112,12 @@ export function AIAdvisor({ user }: AIAdvisorProps) {
   };
 
   const clearChat = () => {
-    if (confirm("Are you sure you want to clear the chat history?")) {
-      setMessages([{
-        role: "model",
-        text: "Hello! 👋 I'm your WealthWise AI Advisor. I can help you understand budgeting, investing, credit scores, and more. What financial topic would you like to explore today?",
-        timestamp: new Date().toISOString()
-      }]);
-    }
+    setMessages([{
+      role: "model",
+      text: "Hello! 👋 I'm your WealthWise Elite AI Advisor. I can help you understand budgeting, investing, credit scores, and more. What financial topic would you like to explore today?",
+      timestamp: new Date().toISOString()
+    }]);
+    setShowClearConfirm(false);
   };
 
   return (
@@ -149,7 +149,12 @@ export function AIAdvisor({ user }: AIAdvisorProps) {
               <Bot className="w-6 h-6" />
             </div>
             <div>
-              <div className="font-bold">WealthWise AI Advisor</div>
+              <div className="flex items-center gap-2">
+                <div className="font-bold">WealthWise Elite AI Advisor</div>
+                <span className="px-2 py-0.5 rounded-full bg-accent-gold/10 text-accent-gold text-[8px] font-bold uppercase tracking-widest border border-accent-gold/20">
+                  Educational Only
+                </span>
+              </div>
               <div className="flex items-center gap-1.5 text-[10px] text-accent-emerald uppercase tracking-widest font-bold">
                 <div className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" /> Online
               </div>
@@ -164,11 +169,37 @@ export function AIAdvisor({ user }: AIAdvisorProps) {
               {isAnalyzing ? <Loader2 className="w-5 h-5 animate-spin" /> : <ImageIcon className="w-5 h-5" />}
             </button>
             <input type="file" ref={fileInputRef} onChange={handleImageUpload} accept="image/*" className="hidden" />
-            <button onClick={clearChat} className="p-2 text-text-muted hover:text-accent-red transition-colors">
+            <button onClick={() => setShowClearConfirm(true)} className="p-2 text-text-muted hover:text-accent-red transition-colors">
               <Trash2 className="w-5 h-5" />
             </button>
           </div>
         </div>
+
+        {/* Clear Confirmation Overlay */}
+        <AnimatePresence>
+          {showClearConfirm && (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 z-50 bg-bg-void/80 backdrop-blur-sm flex items-center justify-center p-6"
+            >
+              <div className="card p-8 max-w-sm w-full text-center space-y-6">
+                <div className="w-16 h-16 bg-accent-red/10 rounded-full flex items-center justify-center mx-auto">
+                  <Trash2 className="w-8 h-8 text-accent-red" />
+                </div>
+                <div className="space-y-2">
+                  <h3 className="text-xl font-bold">Clear Chat History?</h3>
+                  <p className="text-sm text-text-secondary">This action cannot be undone. All current messages will be deleted.</p>
+                </div>
+                <div className="flex gap-4">
+                  <button onClick={() => setShowClearConfirm(false)} className="btn-secondary flex-1">Cancel</button>
+                  <button onClick={clearChat} className="btn-primary !bg-accent-red !text-white flex-1">Clear All</button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Messages */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent">
@@ -186,7 +217,7 @@ export function AIAdvisor({ user }: AIAdvisorProps) {
                 "w-8 h-8 rounded-full shrink-0 flex items-center justify-center text-xs font-bold",
                 msg.role === "user" ? "bg-accent-gold text-bg-void" : "bg-bg-secondary text-accent-gold border border-border"
               )}>
-                {msg.role === "user" ? "U" : "WW"}
+                {msg.role === "user" ? "U" : "WWE"}
               </div>
               <div className={cn(
                 "p-4 rounded-2xl text-sm leading-relaxed relative group",
@@ -203,7 +234,7 @@ export function AIAdvisor({ user }: AIAdvisorProps) {
                 </div>
                 {msg.role === "model" && (
                   <button 
-                    onClick={() => { navigator.clipboard.writeText(msg.text); alert("Tip copied!"); }}
+                    onClick={() => { navigator.clipboard.writeText(msg.text); }}
                     className="absolute top-2 right-2 p-1.5 rounded-lg bg-bg-secondary opacity-0 group-hover:opacity-100 transition-opacity text-text-muted hover:text-accent-gold"
                   >
                     <Copy className="w-3 h-3" />
@@ -215,7 +246,7 @@ export function AIAdvisor({ user }: AIAdvisorProps) {
           {(isTyping || isAnalyzing) && (
             <div className="flex gap-4 max-w-[85%]">
               <div className="w-8 h-8 rounded-full bg-bg-secondary text-accent-gold border border-border flex items-center justify-center text-xs font-bold">
-                WW
+                WWE
               </div>
               <div className="p-4 rounded-2xl bg-bg-card border-l-4 border-l-accent-gold border border-border flex gap-1">
                 <motion.div animate={{ y: [0, -5, 0] }} transition={{ repeat: Infinity, duration: 0.6 }} className="w-1.5 h-1.5 rounded-full bg-accent-gold" />
@@ -242,9 +273,15 @@ export function AIAdvisor({ user }: AIAdvisorProps) {
               <Send className="w-5 h-5" />
             </button>
           </div>
-          <p className="text-[10px] text-text-muted mt-3 text-center uppercase tracking-widest">
-            💡 Tip: Click a topic above for instant answers · Not financial advice
-          </p>
+          <div className="mt-4 space-y-2">
+            <p className="text-[10px] text-text-muted text-center uppercase tracking-widest">
+              💡 Tip: Click a topic above for instant answers · Not financial advice
+            </p>
+            <p className="text-[9px] text-text-muted/60 text-center leading-relaxed">
+              WealthWise Elite AI provides educational information only. We do not store your personal financial documents permanently. 
+              All analysis is performed in real-time to ensure your privacy.
+            </p>
+          </div>
         </div>
       </div>
     </div>

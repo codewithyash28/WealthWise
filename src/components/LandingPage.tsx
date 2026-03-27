@@ -12,8 +12,8 @@ export function LandingPage() {
   const features = [
     { icon: <Sparkles className="w-8 h-8 text-accent-gold" />, title: "Wealth Architect", desc: "One-click AI financial audits" },
     { icon: <BrainCircuit className="w-8 h-8 text-accent-emerald" />, title: "What-If Simulator", desc: "Visualize life decision impacts" },
-    { icon: <TrendingUp className="w-8 h-8 text-accent-blue" />, title: "Investment Lab", desc: "Compound growth projections" },
-    { icon: <PieChart className="w-8 h-8 text-accent-orange" />, title: "Smart Budgeting", desc: "50/30/20 real-time analysis" },
+    { icon: <TrendingUp className="w-8 h-8 text-accent-blue" />, title: "Investment Simulator", desc: "Compound growth projections" },
+    { icon: <PieChart className="w-8 h-8 text-accent-orange" />, title: "Budget Architect", desc: "50/30/20 real-time analysis" },
     { icon: <Bot className="w-8 h-8 text-accent-purple" />, title: "AI Concierge", desc: "24/7 expert financial advice" }
   ];
 
@@ -114,7 +114,7 @@ export function LandingPage() {
               <div className="w-10 h-10 rounded-full bg-accent-emerald/20 flex items-center justify-center">💰</div>
               <div>
                 <div className="text-xs text-text-muted">Investment</div>
-                <div className="text-sm font-bold">SIP Success</div>
+                <div className="text-sm font-bold">Simulated SIP Growth</div>
               </div>
             </div>
           </motion.div>
@@ -123,11 +123,11 @@ export function LandingPage() {
 
       {/* Stats Section */}
       <section className="container mx-auto px-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-16">
           {[
-            { label: "Students Worldwide", value: "50,000+", icon: "📚" },
-            { label: "Total Simulated", value: "$2M+", icon: "💰" },
-            { label: "Quiz Completion Rate", value: "94%", icon: "🧠" }
+            { label: "Learners Worldwide (and growing)", value: "50,000+", icon: "📚" },
+            { label: "Total Wealth Simulated", value: "$2M+", icon: "💰" },
+            { label: "Community Quiz Completion", value: "94%", icon: "🧠" }
           ].map((stat, i) => (
             <motion.div
               key={i}
@@ -175,7 +175,7 @@ export function LandingPage() {
           {[
             { step: "01", title: "Choose Your Currency", desc: "Personalize for your country" },
             { step: "02", title: "Learn & Simulate", desc: "Use all 4 powerful tools" },
-            { step: "03", title: "Track Your Progress", desc: "Dashboard shows your growth" }
+            { step: "03", title: "Track Your Progress", desc: "Wealth Architect shows your growth" }
           ].map((step, i) => (
             <motion.div
               key={i}
@@ -197,9 +197,9 @@ export function LandingPage() {
 
       {/* Testimonials */}
       <section className="container mx-auto px-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-16">
           {[
-            { text: "WealthWise helped me understand SIPs. Now I invest every month!", author: "Priya S.", age: 24, role: "Software Engineer" },
+            { text: "WealthWise Elite helped me understand SIPs. Now I invest every month!", author: "Priya S.", age: 24, role: "Software Engineer" },
             { text: "The budget planner showed me I was spending 40% on wants. Game changer.", author: "Marcus T.", age: 28, role: "Marketing Manager" },
             { text: "Finally a financial tool that works in GBP and actually makes sense!", author: "Sophie L.", age: 22, role: "University Student" }
           ].map((t, i) => (
@@ -227,6 +227,9 @@ export function LandingPage() {
             </motion.div>
           ))}
         </div>
+        <p className="text-center text-[10px] text-text-muted/60 mt-12 uppercase tracking-widest">
+          Testimonials are illustrative for education
+        </p>
       </section>
     </div>
   );

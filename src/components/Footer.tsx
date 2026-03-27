@@ -27,16 +27,16 @@ export function Footer() {
             <ul className="space-y-4">
               <li><a href="#home" className="text-text-secondary hover:text-accent-gold transition-colors">Home</a></li>
               <li><a href="#dashboard" className="text-text-secondary hover:text-accent-gold transition-colors">Dashboard</a></li>
-              <li><a href="#budget" className="text-text-secondary hover:text-accent-gold transition-colors">Budget Planner</a></li>
+              <li><a href="#budget" className="text-text-secondary hover:text-accent-gold transition-colors">Budget Architect</a></li>
               <li><a href="#simulator" className="text-text-secondary hover:text-accent-gold transition-colors">Investment Simulator</a></li>
-              <li><a href="#quiz" className="text-text-secondary hover:text-accent-gold transition-colors">Financial Quiz</a></li>
+              <li><a href="#quiz" className="text-text-secondary hover:text-accent-gold transition-colors">Wealth Quiz</a></li>
             </ul>
           </div>
 
           <div>
             <h4 className="font-display font-bold text-lg mb-6">Global Impact</h4>
             <p className="text-text-secondary mb-6">
-              Join over 50,000 students worldwide mastering their personal finances with WealthWise.
+              Join learners worldwide mastering their personal finances with WealthWise Elite.
             </p>
             <div className="flex items-center gap-2 text-text-muted text-sm">
               <div className="flex -space-x-2">
@@ -53,7 +53,7 @@ export function Footer() {
 
         <div className="pt-10 border-t border-border flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
           <div className="text-text-muted text-sm">
-            © WealthWise · Educational content only · Not financial advice
+            © WealthWise Elite · Educational content only · Not financial advice
           </div>
           <div className="flex items-center gap-4 text-text-muted text-xs">
             <span>HTML5</span>

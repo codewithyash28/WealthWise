@@ -23,6 +23,35 @@ export interface UserProfile {
     assets: number;
     liabilities: number;
   };
+  portfolio?: Portfolio;
+  goals?: FinancialGoal[];
+}
+
+export interface Portfolio {
+  totalValue: number;
+  change24h: number;
+  allocation: {
+    stocks: number;
+    bonds: number;
+    crypto: number;
+    cash: number;
+    realEstate: number;
+  };
+  holdings: {
+    name: string;
+    value: number;
+    allocation: number;
+    performance: number;
+  }[];
+}
+
+export interface FinancialGoal {
+  id: string;
+  title: string;
+  targetAmount: number;
+  currentAmount: number;
+  deadline: string;
+  category: "RETIREMENT" | "HOUSE" | "CAR" | "EDUCATION" | "OTHER";
 }
 
 export interface BudgetPlan {
@@ -47,6 +76,13 @@ export interface BudgetPlan {
     loans?: number;
     other?: number;
   };
+  transactions?: {
+    id: number;
+    date: string;
+    description: string;
+    amount: number;
+    category: string;
+  }[];
   history?: {
     month: string;
     total: number;

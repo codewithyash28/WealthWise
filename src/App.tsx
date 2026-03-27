@@ -42,9 +42,6 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boole
     return this.props.children;
   }
 }
-import { onAuthStateChanged, signInWithPopup, signOut, User } from "firebase/auth";
-import { doc, onSnapshot, setDoc, getDoc, updateDoc, arrayUnion } from "firebase/firestore";
-import { auth, db, googleProvider } from "./lib/firebase";
 import { Navbar } from "./components/Navbar";
 import { Footer } from "./components/Footer";
 import { LandingPage } from "./components/LandingPage";
@@ -58,46 +55,17 @@ import { ScenarioSimulator } from "./components/ScenarioSimulator";
 import { Resources } from "./components/Resources";
 import { AssetAllocation } from "./components/AssetAllocation";
 import { CurrencySelector, NameInput } from "./components/Modals";
-import { UserProfile, BudgetPlan } from "./types";
+import { UserProfile, BudgetPlan, FinancialGoal } from "./types";
 import { CURRENCIES } from "./constants";
+import { Tutorial } from "./components/Tutorial";
+import { PortfolioOverview } from "./components/PortfolioOverview";
+import { Skeleton } from "./components/ui/Skeleton";
 
-enum OperationType {
-  CREATE = 'create',
-  UPDATE = 'update',
-  DELETE = 'delete',
-  LIST = 'list',
-  GET = 'get',
-  WRITE = 'write',
-}
-
-interface FirestoreErrorInfo {
-  error: string;
-  operationType: OperationType;
-  path: string | null;
-  authInfo: any;
-}
-
-function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
-  const errInfo: FirestoreErrorInfo = {
-    error: error instanceof Error ? error.message : String(error),
-    authInfo: {
-      userId: auth.currentUser?.uid,
-      email: auth.currentUser?.email,
-      emailVerified: auth.currentUser?.emailVerified,
-      isAnonymous: auth.currentUser?.isAnonymous,
-      tenantId: auth.currentUser?.tenantId,
-      providerInfo: auth.currentUser?.providerData.map(provider => ({
-        providerId: provider.providerId,
-        displayName: provider.displayName,
-        email: provider.email,
-        photoUrl: provider.photoURL
-      })) || []
-    },
-    operationType,
-    path
-  };
-  console.error('Firestore Error: ', JSON.stringify(errInfo));
-  throw new Error(JSON.stringify(errInfo));
+interface LocalUser {
+  uid: string;
+  displayName: string | null;
+  email: string | null;
+  photoURL: string | null;
 }
 
 export default function App() {
@@ -109,14 +77,16 @@ export default function App() {
 }
 
 function AppContent() {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<LocalUser | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [budget, setBudget] = useState<BudgetPlan | null>(null);
   const [currentHash, setCurrentHash] = useState(window.location.hash || "#dashboard");
   const [isAuthReady, setIsAuthReady] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [theme, setTheme] = useState<"light" | "dark">(() => {
     const saved = localStorage.getItem("ww_theme");
-    return (saved as "light" | "dark") || "dark";
+    if (saved) return saved as "light" | "dark";
+    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
   });
 
   useEffect(() => {
@@ -134,6 +104,7 @@ function AppContent() {
   // Onboarding state
   const [showCurrencySelector, setShowCurrencySelector] = useState(false);
   const [showNameInput, setShowNameInput] = useState(false);
+  const [showTutorial, setShowTutorial] = useState(false);
   const [tempCurrency, setTempCurrency] = useState<string | null>(null);
 
   useEffect(() => {
@@ -143,78 +114,22 @@ function AppContent() {
   }, []);
 
   useEffect(() => {
-    let unsubscribe: () => void = () => {};
-    try {
-      if (!auth) {
-        throw new Error("Firebase Auth is not initialized.");
-      }
-      unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-        setUser(firebaseUser);
-        setIsAuthReady(true);
-        if (!firebaseUser) {
-          setProfile(null);
-          setBudget(null);
-        }
-      }, (err) => {
-        console.error("Auth State Change Error:", err);
-        setError("Authentication service encountered an error. Please refresh the page.");
-      });
-    } catch (err) {
-      console.error("Auth Initialization Error:", err);
-      setError("Failed to initialize authentication service. This might be due to a script loading error or an incompatible browser.");
+    // Load local user and profile
+    const savedUser = localStorage.getItem("ww_user");
+    const savedProfile = localStorage.getItem("ww_profile");
+    const savedBudget = localStorage.getItem("ww_budget");
+
+    if (savedUser) {
+      setUser(JSON.parse(savedUser));
     }
-    return () => unsubscribe();
-  }, []);
-
-  useEffect(() => {
-    if (!user) return;
-
-    const profileRef = doc(db, "users", user.uid);
-    const unsubscribe = onSnapshot(profileRef, (snapshot) => {
-      if (snapshot.exists()) {
-        const data = snapshot.data() as UserProfile;
-        setProfile(data);
-        
-        // Update last visit and streak
-        const today = new Date().toISOString().split('T')[0];
-        if (!data.visitDates.includes(today)) {
-          updateDoc(profileRef, {
-            lastVisit: new Date().toISOString(),
-            visitDates: arrayUnion(today)
-          }).catch(err => handleFirestoreError(err, OperationType.UPDATE, `users/${user.uid}`));
-        }
-      } else {
-        // New user - trigger onboarding
-        setShowCurrencySelector(true);
-      }
-    }, (err) => handleFirestoreError(err, OperationType.GET, `users/${user.uid}`));
-
-    const budgetRef = doc(db, "budgets", user.uid);
-    const unsubscribeBudget = onSnapshot(budgetRef, (snapshot) => {
-      if (snapshot.exists()) {
-        setBudget(snapshot.data() as BudgetPlan);
-      }
-    }, (err) => handleFirestoreError(err, OperationType.GET, `budgets/${user.uid}`));
-
-    return () => {
-      unsubscribe();
-      unsubscribeBudget();
-    };
-  }, [user]);
-
-  useEffect(() => {
-    const keys: string[] = [];
-    const konami = ["ArrowUp", "ArrowUp", "ArrowDown", "ArrowDown", "ArrowLeft", "ArrowRight", "ArrowLeft", "ArrowRight", "b", "a"];
+    if (savedProfile) {
+      setProfile(JSON.parse(savedProfile));
+    }
+    if (savedBudget) {
+      setBudget(JSON.parse(savedBudget));
+    }
     
-    const handleKeyDown = (e: KeyboardEvent) => {
-      keys.push(e.key);
-      if (keys.length > 10) keys.shift();
-      if (keys.join(",") === konami.join(",")) {
-        alert("🏆 You found the Easter Egg! Pro tip: The best investment is knowledge. You're already ahead of 90% by being here!");
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    setIsAuthReady(true);
   }, []);
 
   const handleCurrencySelect = (currency: string) => {
@@ -223,15 +138,21 @@ function AppContent() {
     setShowNameInput(true);
   };
 
-  const handleOnboardingComplete = async (name: string, age: string, learningGoal: string) => {
-    if (!user || !tempCurrency) return;
+  const handleOnboardingComplete = (name: string, age: string, learningGoal: string) => {
+    const uid = Math.random().toString(36).substring(2, 15);
+    const newUser: LocalUser = {
+      uid,
+      displayName: name,
+      email: null,
+      photoURL: null
+    };
 
     const newProfile: UserProfile = {
-      uid: user.uid,
+      uid,
       name,
       age,
       learningGoal,
-      currency: tempCurrency,
+      currency: tempCurrency || "USD",
       joinDate: new Date().toISOString(),
       lastVisit: new Date().toISOString(),
       visitDates: [new Date().toISOString().split('T')[0]],
@@ -239,54 +160,66 @@ function AppContent() {
       netWorth: { assets: 0, liabilities: 0 }
     };
 
-    try {
-      await setDoc(doc(db, "users", user.uid), newProfile);
-      setShowNameInput(false);
-      window.location.hash = "#dashboard";
-    } catch (err) {
-      handleFirestoreError(err, OperationType.WRITE, `users/${user.uid}`);
-    }
+    setUser(newUser);
+    setProfile(newProfile);
+    localStorage.setItem("ww_user", JSON.stringify(newUser));
+    localStorage.setItem("ww_profile", JSON.stringify(newProfile));
+    
+    setShowNameInput(false);
+    setShowTutorial(true);
+    window.location.hash = "#dashboard";
   };
 
-  const handleSaveBudget = async (plan: BudgetPlan) => {
-    if (!user) return;
-    try {
-      await setDoc(doc(db, "budgets", user.uid), plan);
-      alert("Budget plan saved successfully!");
-    } catch (err) {
-      handleFirestoreError(err, OperationType.WRITE, `budgets/${user.uid}`);
-    }
+  const handleSaveBudget = (plan: BudgetPlan) => {
+    setBudget(plan);
+    localStorage.setItem("ww_budget", JSON.stringify(plan));
   };
 
-  const handleUpdateNetWorth = async (assets: number, liabilities: number) => {
-    if (!user) return;
-    try {
-      await updateDoc(doc(db, "users", user.uid), {
-        "netWorth.assets": assets,
-        "netWorth.liabilities": liabilities
-      });
-    } catch (err) {
-      handleFirestoreError(err, OperationType.UPDATE, `users/${user.uid}`);
-    }
+  const handleUpdateNetWorth = (assets: number, liabilities: number) => {
+    if (!profile) return;
+    const updatedProfile = {
+      ...profile,
+      netWorth: { assets, liabilities }
+    };
+    setProfile(updatedProfile);
+    localStorage.setItem("ww_profile", JSON.stringify(updatedProfile));
   };
 
-  const handleQuizComplete = async (score: number) => {
-    if (!user || !profile) return;
+  const handleQuizComplete = (score: number) => {
+    if (!profile) return;
     if (score > profile.highScore) {
-      try {
-        await updateDoc(doc(db, "users", user.uid), { highScore: score });
-      } catch (err) {
-        handleFirestoreError(err, OperationType.UPDATE, `users/${user.uid}`);
-      }
+      const updatedProfile = { ...profile, highScore: score };
+      setProfile(updatedProfile);
+      localStorage.setItem("ww_profile", JSON.stringify(updatedProfile));
     }
   };
 
-  const handleSignIn = async () => {
-    try {
-      await signInWithPopup(auth, googleProvider);
-    } catch (err) {
-      console.error("Sign in error:", err);
-    }
+  const handleSignIn = () => {
+    setShowCurrencySelector(true);
+  };
+
+  const handleSignOut = () => {
+    setUser(null);
+    setProfile(null);
+    setBudget(null);
+    localStorage.removeItem("ww_user");
+    localStorage.removeItem("ww_profile");
+    localStorage.removeItem("ww_budget");
+    window.location.hash = "#home";
+  };
+
+  const handleUpdateGoals = (goals: FinancialGoal[]) => {
+    if (!profile) return;
+    const updatedProfile = { ...profile, goals };
+    setProfile(updatedProfile);
+    localStorage.setItem("ww_profile", JSON.stringify(updatedProfile));
+  };
+
+  const getWelcomeMessage = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good morning! Sign in to unlock your dashboard";
+    if (hour < 18) return "Good afternoon! Sign in to unlock your dashboard";
+    return "Good evening! Sign in to unlock your dashboard";
   };
 
   const renderContent = () => {
@@ -295,20 +228,45 @@ function AppContent() {
     if (!user) {
       return (
         <div className="container mx-auto px-6 py-32 flex flex-col items-center justify-center text-center space-y-8">
-          <h2 className="text-4xl font-display font-bold">Sign in to unlock your dashboard</h2>
-          <p className="text-text-secondary max-w-md">Your financial data is securely stored and synced across your devices.</p>
-          <button onClick={handleSignIn} className="btn-primary text-lg px-10 py-4">Sign in with Google</button>
+          <h2 className="text-4xl font-display font-bold">{getWelcomeMessage()}</h2>
+          <p className="text-text-secondary max-w-md">Your financial data is securely stored locally on your device.</p>
+          <button onClick={handleSignIn} className="btn-primary text-lg px-10 py-4">Get Started</button>
         </div>
       );
     }
 
-    if (!profile) return <div className="py-32 text-center text-text-muted">Loading your profile...</div>;
+    if (isLoading || !profile) {
+      return (
+        <div className="container mx-auto px-6 py-12 space-y-12">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+            <div className="space-y-4">
+              <Skeleton className="h-12 w-64" />
+              <Skeleton className="h-6 w-48" />
+            </div>
+            <Skeleton className="h-14 w-48 rounded-xl" />
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <Skeleton className="h-[400px] rounded-2xl" />
+            <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Skeleton className="h-[200px] rounded-2xl" />
+              <Skeleton className="h-[200px] rounded-2xl" />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Skeleton className="h-24 rounded-xl" />
+            <Skeleton className="h-24 rounded-xl" />
+            <Skeleton className="h-24 rounded-xl" />
+          </div>
+        </div>
+      );
+    }
 
     switch (currentHash) {
       case "#dashboard": return <WealthDashboard user={profile} budget={budget} />;
+      case "#portfolio": return <PortfolioOverview user={profile} />;
       case "#networth": return <Dashboard user={profile} budget={budget} onUpdateNetWorth={handleUpdateNetWorth} />;
       case "#budget": return <BudgetPlanner user={profile} onSave={handleSaveBudget} initialPlan={budget} />;
-      case "#simulator": return <InvestmentSimulator user={profile} />;
+      case "#simulator": return <InvestmentSimulator user={profile} onUpdateGoals={handleUpdateGoals} />;
       case "#quiz": return <FinancialQuiz onComplete={handleQuizComplete} bestScore={profile.highScore} />;
       case "#scenarios": return <ScenarioSimulator user={profile} budget={budget} />;
       case "#advisor": return <AIAdvisor user={profile} />;
@@ -330,6 +288,8 @@ function AppContent() {
         onCurrencyClick={() => profile && setShowCurrencySelector(true)} 
         theme={theme}
         onToggleTheme={toggleTheme}
+        user={user}
+        onSignOut={handleSignOut}
       />
 
       <main className="flex-1 pt-24">
@@ -348,6 +308,10 @@ function AppContent() {
         isOpen={showNameInput} 
         onComplete={handleOnboardingComplete} 
       />
+
+      {showTutorial && (
+        <Tutorial onClose={() => setShowTutorial(false)} />
+      )}
     </div>
   );
 }

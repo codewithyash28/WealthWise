@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { motion } from "motion/react";
-import { PieChart, Home, Utensils, Car, HeartPulse, Gamepad2, GraduationCap, CreditCard, Package, Save, RotateCcw, Copy, ChevronRight, AlertTriangle, CheckCircle2, TrendingUp, Download, Target, BarChart3, LineChart } from "lucide-react";
+import { PieChart, Home, Utensils, Car, HeartPulse, Gamepad2, GraduationCap, CreditCard, Package, Save, RotateCcw, Copy, ChevronRight, AlertTriangle, CheckCircle2, TrendingUp, Download, Target, BarChart3, LineChart, Trash2 } from "lucide-react";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title } from 'chart.js';
 import { Doughnut, Bar, Line } from 'react-chartjs-2';
 import { formatCurrency, cn } from "../lib/utils";
@@ -45,9 +45,10 @@ export function BudgetPlanner({ user, onSave, initialPlan }: BudgetPlannerProps)
     if (initialPlan?.history && initialPlan.history.length > 0) return initialPlan.history;
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const currentMonthIndex = new Date().getMonth();
-    return months.map((m, i) => ({
+    // Only return data up to current month if it's a new user
+    return months.slice(0, currentMonthIndex + 1).map((m, i) => ({
       month: m,
-      total: (initialPlan?.income || 5000) * 0.7 + (Math.random() * 500 - 250)
+      total: (initialPlan?.income || 0) > 0 ? (initialPlan?.income || 0) * 0.7 + (Math.random() * 500 - 250) : 0
     }));
   }, [initialPlan]);
 
@@ -202,16 +203,54 @@ export function BudgetPlanner({ user, onSave, initialPlan }: BudgetPlannerProps)
       income,
       expenses,
       goals,
+      transactions,
       history,
       timestamp: new Date().toISOString()
     });
   };
 
+  const [transactions, setTransactions] = useState(initialPlan?.transactions || []);
+
+  const [isConnecting, setIsConnecting] = useState(false);
+
+  const handleConnectBank = () => {
+    setIsConnecting(true);
+    setTimeout(() => {
+      setIsConnecting(false);
+      // Auto-categorize simulation
+      const newTransactions = [
+        { id: Date.now(), date: new Date().toISOString().split('T')[0], description: "Apple Store", amount: 1299.00, category: "entertainment" },
+        { id: Date.now() + 1, date: new Date().toISOString().split('T')[0], description: "Starbucks", amount: 5.50, category: "food" },
+        { id: Date.now() + 2, date: new Date().toISOString().split('T')[0], description: "Shell Oil", amount: 60.00, category: "transport" },
+      ];
+      setTransactions(prev => [...newTransactions, ...prev]);
+      // Removed alert for iframe compatibility
+    }, 2000);
+  };
+
+  const updateTransactionCategory = (id: number, category: string) => {
+    setTransactions(prev => prev.map(t => t.id === id ? { ...t, category } : t));
+  };
+
+  const deleteTransaction = (id: number) => {
+    setTransactions(prev => prev.filter(t => t.id !== id));
+  };
+
   return (
     <div className="container mx-auto px-6 py-12 space-y-12">
-      <div className="space-y-2">
-        <h1 className="text-4xl font-display font-bold">Budget Planner</h1>
-        <p className="text-text-secondary">See exactly where your money goes and how to optimize it</p>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="space-y-2">
+          <h1 className="text-4xl font-display font-bold">Budget Architect</h1>
+          <p className="text-text-secondary">Analyze your expenditures and optimize your financial strategy</p>
+        </div>
+        <button 
+          onClick={handleConnectBank}
+          disabled={isConnecting}
+          className="btn-primary flex items-center gap-2"
+        >
+          {isConnecting ? <RotateCcw className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />}
+          {isConnecting ? "Synchronizing..." : "Synchronize Accounts"}
+        </button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
@@ -234,7 +273,7 @@ export function BudgetPlanner({ user, onSave, initialPlan }: BudgetPlannerProps)
           </div>
 
           <div className="card p-8 space-y-8">
-            <h3 className="text-xl font-bold">Expense Categories</h3>
+            <h3 className="text-xl font-bold">Monthly Expenditures</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               {[
                 { key: 'housing', label: 'Housing / Rent', icon: <Home className="w-4 h-4" />, color: "text-accent-gold" },
@@ -293,12 +332,55 @@ export function BudgetPlanner({ user, onSave, initialPlan }: BudgetPlannerProps)
             </div>
           </div>
 
+          {/* Transaction History */}
+          <div className="card p-8 space-y-6">
+            <h3 className="text-xl font-bold flex items-center gap-2">
+              <Package className="w-5 h-5 text-accent-gold" /> Transaction Ledger
+            </h3>
+            <div className="space-y-4">
+              {transactions.length > 0 ? transactions.map(t => (
+                <div key={t.id} className="flex items-center justify-between p-4 rounded-xl bg-bg-secondary border border-border group hover:border-border-active transition-all">
+                  <div className="space-y-1">
+                    <div className="text-sm font-bold">{t.description}</div>
+                    <div className="text-[10px] text-text-muted uppercase tracking-wider">{t.date}</div>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <div className="text-right">
+                      <div className="text-sm font-mono font-bold text-accent-red">-{formatCurrency(t.amount, user.currency, currency.locale)}</div>
+                      <div className="flex items-center gap-2">
+                        <select 
+                          value={t.category}
+                          onChange={(e) => updateTransactionCategory(t.id, e.target.value)}
+                          className="text-[10px] bg-transparent text-text-muted border-none p-0 focus:ring-0 cursor-pointer hover:text-accent-gold"
+                        >
+                          {Object.keys(expenses).map(cat => (
+                            <option key={cat} value={cat}>{cat.charAt(0).toUpperCase() + cat.slice(1)}</option>
+                          ))}
+                        </select>
+                        <button 
+                          onClick={() => deleteTransaction(t.id)}
+                          className="p-1 text-text-muted hover:text-accent-red opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )) : (
+                <div className="text-center py-8 text-text-muted italic text-sm">
+                  No transactions yet. Connect your bank or add them manually.
+                </div>
+              )}
+            </div>
+          </div>
+
           {/* Goals Section */}
           <div className="card p-8 space-y-6">
             <h3 className="text-xl font-bold flex items-center gap-2">
-              <Target className="w-5 h-5 text-accent-gold" /> Financial Goals
+              <Target className="w-5 h-5 text-accent-gold" /> Spending Thresholds
             </h3>
-            <p className="text-xs text-text-secondary">Set spending limits for each category to stay on track.</p>
+            <p className="text-xs text-text-secondary">Set strategic limits for each category to maintain financial discipline.</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {Object.entries(expenses).map(([key, value]) => (
                 <div key={key} className="space-y-2">
@@ -338,7 +420,7 @@ export function BudgetPlanner({ user, onSave, initialPlan }: BudgetPlannerProps)
         {/* Visual Analysis */}
         <div className="space-y-8">
           <div className="card p-8 flex flex-col items-center justify-center space-y-8">
-            <h3 className="text-xl font-bold w-full text-left">Visual Analysis</h3>
+            <h3 className="text-xl font-bold w-full text-left">Expenditure Distribution</h3>
             <div className="relative w-full h-[300px]">
               <Doughnut data={chartData} options={chartOptions} />
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
@@ -398,7 +480,7 @@ export function BudgetPlanner({ user, onSave, initialPlan }: BudgetPlannerProps)
           </div>
 
           <div className="card p-8 space-y-6">
-            <h3 className="text-xl font-bold">Smart Insights</h3>
+            <h3 className="text-xl font-bold">Strategic Insights</h3>
             <div className="space-y-4">
               {insights.length > 0 ? insights.map((insight, i) => (
                 <div key={i} className={cn(
