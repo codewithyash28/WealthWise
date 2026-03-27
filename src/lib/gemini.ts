@@ -1,7 +1,11 @@
 import { GoogleGenAI } from "@google/genai";
 
-const API_KEY = process.env.GEMINI_API_KEY || "";
-const ai = API_KEY ? new GoogleGenAI({ apiKey: API_KEY }) : null;
+// Support both Vite-style (import.meta.env) and process.env (for compatibility)
+const API_KEY = (import.meta.env?.VITE_GEMINI_API_KEY || process.env?.GEMINI_API_KEY || "").trim();
+
+// Ensure the API key is valid and not just the string "undefined" or "null"
+const isValidKey = API_KEY && API_KEY !== "undefined" && API_KEY !== "null";
+const ai = isValidKey ? new GoogleGenAI({ apiKey: API_KEY }) : null;
 
 export async function getAIResponse(prompt: string, history: { role: "user" | "model", parts: { text: string }[] }[] = []) {
   if (!ai) return "AI Advisor is currently unavailable (Missing API Key).";

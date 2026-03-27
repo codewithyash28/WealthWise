@@ -32,7 +32,7 @@ interface FirestoreErrorInfo {
   authInfo: any;
 }
 
-function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
+function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null, setErrorCallback?: (msg: string) => void) {
   const errInfo: FirestoreErrorInfo = {
     error: error instanceof Error ? error.message : String(error),
     authInfo: {
@@ -52,7 +52,12 @@ function handleFirestoreError(error: unknown, operationType: OperationType, path
     path
   };
   console.error('Firestore Error: ', JSON.stringify(errInfo));
-  throw new Error(JSON.stringify(errInfo));
+  if (setErrorCallback) {
+    setErrorCallback(`Database error during ${operationType} on ${path}. Please check your connection.`);
+  } else {
+    // Re-throw if no callback is provided, but typically we want to update the UI
+    throw new Error(JSON.stringify(errInfo));
+  }
 }
 
 export default function App() {
@@ -118,8 +123,7 @@ export default function App() {
             lastVisit: new Date().toISOString(),
             visitDates: arrayUnion(today)
           }).catch(err => {
-            console.error('Firestore Error: ', err);
-            // Non-critical error, just log it
+            handleFirestoreError(err, OperationType.UPDATE, `users/${user.uid}/visitDates`);
           });
         }
       } else {
@@ -127,8 +131,7 @@ export default function App() {
         setShowCurrencySelector(true);
       }
     }, (err) => {
-      console.error('Firestore Profile Error: ', err);
-      setError("Failed to load user profile. Please check your connection or permissions.");
+      handleFirestoreError(err, OperationType.GET, `users/${user.uid}`, setError);
     });
 
     const budgetRef = doc(db, "budgets", user.uid);
@@ -137,8 +140,7 @@ export default function App() {
         setBudget(snapshot.data() as BudgetPlan);
       }
     }, (err) => {
-      console.error('Firestore Budget Error: ', err);
-      // Non-critical if budget fails to load, but we should know
+      handleFirestoreError(err, OperationType.GET, `budgets/${user.uid}`);
     });
 
     return () => {
@@ -187,7 +189,7 @@ export default function App() {
       setShowNameInput(false);
       window.location.hash = "#dashboard";
     } catch (err) {
-      handleFirestoreError(err, OperationType.WRITE, `users/${user.uid}`);
+      handleFirestoreError(err, OperationType.WRITE, `users/${user.uid}`, setError);
     }
   };
 
@@ -197,7 +199,7 @@ export default function App() {
       await setDoc(doc(db, "budgets", user.uid), plan);
       alert("Budget plan saved successfully!");
     } catch (err) {
-      handleFirestoreError(err, OperationType.WRITE, `budgets/${user.uid}`);
+      handleFirestoreError(err, OperationType.WRITE, `budgets/${user.uid}`, setError);
     }
   };
 
@@ -209,7 +211,7 @@ export default function App() {
         "netWorth.liabilities": liabilities
       });
     } catch (err) {
-      handleFirestoreError(err, OperationType.UPDATE, `users/${user.uid}`);
+      handleFirestoreError(err, OperationType.UPDATE, `users/${user.uid}`, setError);
     }
   };
 
@@ -219,7 +221,7 @@ export default function App() {
       try {
         await updateDoc(doc(db, "users", user.uid), { highScore: score });
       } catch (err) {
-        handleFirestoreError(err, OperationType.UPDATE, `users/${user.uid}`);
+        handleFirestoreError(err, OperationType.UPDATE, `users/${user.uid}`, setError);
       }
     }
   };
