@@ -143,14 +143,26 @@ function AppContent() {
   }, []);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      setUser(firebaseUser);
-      setIsAuthReady(true);
-      if (!firebaseUser) {
-        setProfile(null);
-        setBudget(null);
+    let unsubscribe: () => void = () => {};
+    try {
+      if (!auth) {
+        throw new Error("Firebase Auth is not initialized.");
       }
-    });
+      unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+        setUser(firebaseUser);
+        setIsAuthReady(true);
+        if (!firebaseUser) {
+          setProfile(null);
+          setBudget(null);
+        }
+      }, (err) => {
+        console.error("Auth State Change Error:", err);
+        setError("Authentication service encountered an error. Please refresh the page.");
+      });
+    } catch (err) {
+      console.error("Auth Initialization Error:", err);
+      setError("Failed to initialize authentication service. This might be due to a script loading error or an incompatible browser.");
+    }
     return () => unsubscribe();
   }, []);
 
