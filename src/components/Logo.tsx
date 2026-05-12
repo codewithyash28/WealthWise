@@ -1,54 +1,62 @@
 import { motion } from "motion/react";
+import { ShieldCheck, TrendingUp } from "lucide-react";
 
-export function Logo({ className = "" }: { className?: string }) {
+export function Logo({ className = "", size = "md" }: { className?: string; size?: "sm" | "md" | "lg" | "xl" }) {
+  const sizes = {
+    sm: "h-6",
+    md: "h-8",
+    lg: "h-12",
+    xl: "h-20"
+  };
+
+  const iconSizes = {
+    sm: "w-6 h-6",
+    md: "w-8 h-8",
+    lg: "w-12 h-12",
+    xl: "w-20 h-20"
+  };
+
+  const textSizes = {
+    sm: "text-lg",
+    md: "text-2xl",
+    lg: "text-4xl",
+    xl: "text-6xl"
+  };
+
   return (
-    <div className={`flex items-center gap-2 ${className}`}>
-      <div className="relative w-8 h-8 flex items-end gap-[2px]">
-        <motion.div 
-          initial={{ height: 0 }}
-          animate={{ height: "40%" }}
-          className="w-1 bg-accent-gold/40 rounded-t-sm"
+    <div className={`flex items-center gap-3 ${className}`}>
+      <div className={`relative ${iconSizes[size]} flex items-center justify-center`}>
+        {/* Shield Background */}
+        <motion.div
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="absolute inset-0 bg-accent-gold/10 rounded-xl border border-accent-gold/20"
         />
-        <motion.div 
-          initial={{ height: 0 }}
-          animate={{ height: "70%" }}
-          transition={{ delay: 0.1 }}
-          className="w-1 bg-accent-gold/60 rounded-t-sm"
-        />
-        <motion.div 
-          initial={{ height: 0 }}
-          animate={{ height: "50%" }}
+        
+        {/* Animated Graph Icon */}
+        <motion.div
+          initial={{ scale: 0.5, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
           transition={{ delay: 0.2 }}
-          className="w-1 bg-accent-gold/80 rounded-t-sm"
-        />
-        <motion.div 
-          initial={{ height: 0 }}
-          animate={{ height: "90%" }}
-          transition={{ delay: 0.3 }}
-          className="w-1 bg-accent-gold rounded-t-sm"
-        />
-        <motion.div 
-          initial={{ pathLength: 0 }}
-          animate={{ pathLength: 1 }}
-          transition={{ duration: 1, delay: 0.5 }}
-          className="absolute bottom-0 left-0 w-full h-full"
+          className="relative z-10 text-accent-gold"
         >
-          <svg viewBox="0 0 32 32" className="w-full h-full overflow-visible">
-            <motion.path
-              d="M2 28 L10 20 L18 24 L30 8 L30 16 M30 8 L22 8"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="text-accent-gold"
-            />
-          </svg>
+          <TrendingUp className="w-full h-full p-[20%]" strokeWidth={2.5} />
         </motion.div>
+
+        {/* Glow Effect */}
+        <motion.div
+          animate={{ 
+            opacity: [0.2, 0.4, 0.2],
+            scale: [1, 1.1, 1]
+          }}
+          transition={{ duration: 4, repeat: Infinity }}
+          className="absolute inset-0 bg-accent-gold/30 blur-xl rounded-full -z-10"
+        />
       </div>
-      <div className="flex items-baseline font-serif">
-        <span className="text-2xl font-light text-text-primary">WealthWise</span>
-        <span className="text-2xl font-semibold text-accent-gold ml-1">Elite</span>
+      
+      <div className={`flex items-baseline font-serif ${textSizes[size]}`}>
+        <span className="font-light text-text-primary tracking-tight">WealthWise</span>
+        <span className="font-bold text-accent-gold ml-1.5 tracking-tighter">Elite</span>
       </div>
     </div>
   );

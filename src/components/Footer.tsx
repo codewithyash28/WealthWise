@@ -6,13 +6,13 @@ export function Footer() {
       <div className="container mx-auto px-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-16">
           <div className="space-y-6">
-            <Logo />
+            <Logo size="sm" />
             <p className="text-text-secondary leading-relaxed max-width-xs">
               Empowering global financial literacy, one decision at a time. Your journey to financial freedom starts here.
             </p>
             <div className="flex gap-4">
               <a 
-                href="https://yashchoubey.netlify.app/" 
+                href="https://yash-choubey-student-developer-port.vercel.app/" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="px-3 py-1 rounded-full bg-accent-gold/10 text-accent-gold text-xs font-semibold border border-accent-gold/20 hover:bg-accent-gold/20 transition-all"

@@ -1,4 +1,4 @@
-import { CurrencyConfig, QuizQuestion } from "./types";
+import { CurrencyConfig, QuizQuestion, Achievement } from "./types";
 
 export const CURRENCIES: Record<string, CurrencyConfig> = {
   USD: { symbol: "$", name: "US Dollar", locale: "en-US", avgSalary: 5000, avgRent: 1500, avgFood: 400, sipExample: 200, emergencyTarget: 15000 },
@@ -124,4 +124,13 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
     correctAnswer: 1,
     explanation: "Sequence of returns risk is the danger that the timing of withdrawals from a portfolio coincides with a market downturn."
   }
+];
+
+export const ACHIEVEMENTS: Achievement[] = [
+  { id: 'first_budget', title: 'Budget Architect', description: 'Saved your first financial plan', icon: '🏛️' },
+  { id: 'quiz_master', title: 'Scholar of Wealth', description: 'Scored over 100 on the Wealth Quiz', icon: '🎓' },
+  { id: 'goal_setter', title: 'Future Visionary', description: 'Defined a major life goal', icon: '🔭' },
+  { id: 'networth_positive', title: 'Wealth Builder', description: 'Assets exceed your liabilities', icon: '📈' },
+  { id: 'simulation_expert', title: 'Scenario Master', description: 'Ran a What-If life simulation', icon: '🎮' },
+  { id: 'audit_elite', title: 'AI Optimized', description: 'Completed a deep-dive AI audit', icon: '💎' }
 ];

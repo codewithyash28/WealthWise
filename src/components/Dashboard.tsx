@@ -7,6 +7,8 @@ import { UserProfile, BudgetPlan } from "../types";
 
 import { MarketInsights } from "./MarketInsights";
 
+import { Logo } from "./Logo";
+
 interface DashboardProps {
   user: UserProfile;
   budget: BudgetPlan | null;
@@ -62,12 +64,18 @@ export function Dashboard({ user, budget, onUpdateNetWorth }: DashboardProps) {
   return (
     <div className="container mx-auto px-6 py-12 space-y-12">
       {/* Welcome Bar */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div>
-          <h1 className="text-4xl font-display font-bold">
-            Good {new Date().getHours() < 12 ? "morning" : new Date().getHours() < 18 ? "afternoon" : "evening"}, {user.name}! 👋
-          </h1>
-          <p className="text-text-secondary mt-1">{new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-bg-secondary/20 p-8 rounded-3xl border border-border/50 relative overflow-hidden">
+        <div className="absolute top-0 right-0 p-8 opacity-5">
+           <Logo size="xl" />
+        </div>
+        <div className="space-y-4">
+          <Logo size="md" />
+          <div>
+            <h1 className="text-4xl font-display font-bold">
+              Good {new Date().getHours() < 12 ? "morning" : new Date().getHours() < 18 ? "afternoon" : "evening"}, {user.name}! 👋
+            </h1>
+            <p className="text-text-secondary mt-1 font-medium">{new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+          </div>
         </div>
         <div className="flex items-center gap-4">
           <div className="glass px-4 py-2 rounded-full flex items-center gap-2">
@@ -124,6 +132,7 @@ export function Dashboard({ user, budget, onUpdateNetWorth }: DashboardProps) {
                   type="number" 
                   value={assets} 
                   onChange={(e) => setAssets(Number(e.target.value))}
+                  aria-label="Edit Assets"
                   className="bg-bg-secondary border border-border rounded px-2 py-1 text-xs w-full outline-none focus:border-accent-gold"
                 />
               </div>
@@ -133,6 +142,7 @@ export function Dashboard({ user, budget, onUpdateNetWorth }: DashboardProps) {
                   type="number" 
                   value={liabilities} 
                   onChange={(e) => setLiabilities(Number(e.target.value))}
+                  aria-label="Edit Liabilities"
                   className="bg-bg-secondary border border-border rounded px-2 py-1 text-xs w-full outline-none focus:border-accent-gold"
                 />
               </div>

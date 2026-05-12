@@ -28,20 +28,39 @@ export function MarketInsights() {
     { name: "Gold", value: "$2,174.20", change: "+0.34%", up: true },
   ];
 
+  const greedIndex = 68; // Greed
+
   return (
     <div className="card p-8 space-y-8">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <h3 className="text-xl font-bold flex items-center gap-2">
-          <Sparkles className="w-5 h-5 text-accent-gold" /> Market Insights & Wisdom
+          <Sparkles className="w-5 h-5 text-accent-gold" /> Global Market Intel
         </h3>
-        <div className="text-[10px] text-text-muted uppercase tracking-widest font-bold">Live Data Simulation</div>
+        <div className="flex items-center gap-6">
+          <div className="flex items-center gap-3">
+            <div className="text-[10px] text-text-muted uppercase tracking-widest font-bold text-right hidden sm:block">
+              Market Sentiment<br />
+              <span className={cn(greedIndex > 60 ? "text-accent-emerald" : greedIndex < 40 ? "text-accent-red" : "text-accent-gold")}>
+                {greedIndex > 60 ? "Greed" : greedIndex < 40 ? "Fear" : "Neutral"}
+              </span>
+            </div>
+            <div className="w-16 h-2 bg-bg-secondary rounded-full overflow-hidden border border-border">
+              <motion.div 
+                initial={{ width: 0 }}
+                animate={{ width: `${greedIndex}%` }}
+                className={cn("h-full transition-all", greedIndex > 60 ? "bg-accent-emerald" : greedIndex < 40 ? "bg-accent-red" : "bg-accent-gold")}
+              />
+            </div>
+          </div>
+          <div className="text-[10px] text-text-muted uppercase tracking-widest font-bold bg-bg-secondary px-3 py-1 rounded-full border border-border">Live Simulation</div>
+        </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
         {mockMarkets.map((m, i) => (
-          <div key={i} className="space-y-1">
-            <div className="text-xs text-text-muted">{m.name}</div>
-            <div className="text-lg font-mono font-bold">{m.value}</div>
+          <div key={i} className="card p-4 bg-bg-secondary/30 hover:bg-bg-secondary/50 transition-colors border-border/40 space-y-1">
+            <div className="text-[10px] text-text-muted font-bold uppercase tracking-wider">{m.name}</div>
+            <div className="text-lg font-mono font-bold tracking-tight">{m.value}</div>
             <div className={cn("text-xs flex items-center gap-1 font-bold", m.up ? "text-accent-emerald" : "text-accent-red")}>
               {m.up ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
               {m.change}

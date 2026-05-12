@@ -1,17 +1,20 @@
 import { motion } from "motion/react";
-import { TrendingUp, ShieldCheck, Target, BrainCircuit, ChevronRight, Sparkles, Wallet, PieChart, ArrowUpRight, ArrowDownRight, CheckCircle2, Info } from "lucide-react";
+import { TrendingUp, ShieldCheck, Target, BrainCircuit, ChevronRight, Sparkles, Wallet, PieChart, ArrowUpRight, ArrowDownRight, CheckCircle2, Info, Trophy } from "lucide-react";
 import { UserProfile, BudgetPlan } from "../types";
 import { formatCurrency, cn } from "../lib/utils";
 import { CURRENCIES } from "../constants";
 import { useMemo, useState } from "react";
 import { generateWealthAudit } from "../lib/gemini";
+import { WealthPathChart } from "./WealthPathChart";
+import { MarketInsights } from "./MarketInsights";
 
 interface WealthDashboardProps {
   user: UserProfile;
   budget: BudgetPlan | null;
+  onUnlockAchievement: (id: string) => void;
 }
 
-export function WealthDashboard({ user, budget }: WealthDashboardProps) {
+export function WealthDashboard({ user, budget, onUnlockAchievement }: WealthDashboardProps) {
   const [isAuditing, setIsAuditing] = useState(false);
   const [auditResult, setAuditResult] = useState<string | null>(null);
 
@@ -54,11 +57,20 @@ export function WealthDashboard({ user, budget }: WealthDashboardProps) {
     return Math.round(score);
   }, [user, budget, currency]);
 
+  const masteryTier = useMemo(() => {
+    if (healthScore >= 80) return { label: 'Diamond', color: 'text-[#b9f2ff]', bg: 'bg-[#b9f2ff]/10', border: 'border-[#b9f2ff]/20' };
+    if (healthScore >= 60) return { label: 'Platinum', color: 'text-[#e5e4e2]', bg: 'bg-[#e5e4e2]/10', border: 'border-[#e5e4e2]/20' };
+    if (healthScore >= 40) return { label: 'Gold', color: 'text-accent-gold', bg: 'bg-accent-gold/10', border: 'border-accent-gold/20' };
+    if (healthScore >= 20) return { label: 'Silver', color: 'text-[#c0c0c0]', bg: 'bg-[#c0c0c0]/10', border: 'border-[#c0c0c0]/20' };
+    return { label: 'Bronze', color: 'text-[#cd7f32]', bg: 'bg-[#cd7f32]/10', border: 'border-[#cd7f32]/20' };
+  }, [healthScore]);
+
   const handleRunAudit = async () => {
     setIsAuditing(true);
     try {
       const result = await generateWealthAudit(user, budget);
       setAuditResult(result);
+      onUnlockAchievement('audit_elite');
     } catch (error) {
       console.error("Audit failed:", error);
     } finally {
@@ -77,6 +89,9 @@ export function WealthDashboard({ user, budget }: WealthDashboardProps) {
             className="text-5xl font-display font-bold tracking-tight"
           >
             Welcome back, <span className="text-accent-gold">{user.name}</span>
+            <div className={cn("inline-flex items-center gap-1.5 ml-4 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border", masteryTier.bg, masteryTier.color, masteryTier.border)}>
+              <Trophy className="w-3 h-3" /> {masteryTier.label} Tier
+            </div>
           </motion.h1>
           <div className="flex items-center gap-4">
             <p className="text-text-secondary text-lg">Your Personal Wealth Architect is ready.</p>
@@ -103,6 +118,27 @@ export function WealthDashboard({ user, budget }: WealthDashboardProps) {
           )}
           {isAuditing ? "Analyzing Wealth..." : "One-Click AI Audit"}
         </motion.button>
+      </div>
+
+      {/* Elite Status Summary */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        {[
+          { label: "Overall Mastery", value: `${healthScore}%`, color: "text-accent-gold" },
+          { label: "Savings Rate", value: budget ? `${Math.round(((budget.income - Object.values(budget.expenses).reduce((a, b) => a + b, 0)) / budget.income) * 100)}%` : "0%", color: "text-accent-emerald" },
+          { label: "Elite Tier", value: masteryTier.label, color: masteryTier.color },
+          { label: "Achievements", value: `${user.achievements?.length || 0}/6`, color: "text-accent-blue" }
+        ].map((stat, i) => (
+          <motion.div
+            key={i}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.1 }}
+            className="card p-6 border-border/40 bg-bg-secondary/20 flex flex-col items-center text-center space-y-1"
+          >
+            <div className="text-[10px] text-text-muted font-bold uppercase tracking-widest">{stat.label}</div>
+            <div className={cn("text-2xl font-display font-bold", stat.color)}>{stat.value}</div>
+          </motion.div>
+        ))}
       </div>
 
       {/* Getting Started Checklist for New Users */}
@@ -153,6 +189,63 @@ export function WealthDashboard({ user, budget }: WealthDashboardProps) {
           </div>
         </motion.div>
       )}
+
+      {/* Achievements Section */}
+      {(user.achievements || []).length > 0 && (
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="space-y-4"
+        >
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-bold uppercase tracking-widest text-text-muted flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4" /> Elite Achievements
+            </h3>
+            <div className="flex items-center gap-4">
+              {user.achievements && user.achievements.length < 6 && (
+                <span className="text-[10px] text-text-muted italic">Next Milestone: Keep exploring to unlock more...</span>
+              )}
+              <span className="text-[10px] text-accent-gold font-bold">{user.achievements?.length} / 6 Unlocked</span>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-4">
+            {user.achievements?.map((achievement) => (
+              <div 
+                key={achievement.id}
+                title={`${achievement.title}: ${achievement.description}`}
+                className="group relative"
+              >
+                <div className="w-12 h-12 rounded-xl bg-accent-gold/10 border border-accent-gold/20 flex items-center justify-center text-2xl transition-all hover:scale-110 hover:bg-accent-gold/20 cursor-help">
+                  {achievement.icon}
+                </div>
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 bg-bg-void border border-border rounded-lg text-[10px] text-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 shadow-xl">
+                  <div className="font-bold text-accent-gold">{achievement.title}</div>
+                  <div className="text-text-muted mt-1">{achievement.description}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      )}
+
+      {/* Insights and Projection Grid */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+        <div className="xl:col-span-2 card p-8 space-y-6">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-bold uppercase tracking-widest text-text-muted flex items-center gap-2">
+              <TrendingUp className="w-4 h-4" /> Strategic Wealth Pathing
+            </h3>
+            <div className="flex bg-bg-secondary p-1 rounded-lg border border-border">
+              <button className="px-3 py-1 text-[10px] font-bold bg-bg-primary rounded-md shadow-sm">6M Projection</button>
+            </div>
+          </div>
+          <WealthPathChart user={user} budget={budget} />
+        </div>
+        
+        <div className="space-y-8">
+          <MarketInsights />
+        </div>
+      </div>
 
       {/* Main Stats Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -313,6 +406,34 @@ export function WealthDashboard({ user, budget }: WealthDashboardProps) {
           </div>
         </motion.div>
       )}
+
+      {/* Quick Navigation / Mastery Modules */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {[
+          { title: "MacroPulse Engine", desc: "Economic simulator", icon: <BrainCircuit />, hash: "#macropulse", color: "text-accent-gold" },
+          { title: "TrendMarket", desc: "Pop-culture trading", icon: <TrendingUp />, hash: "#trendmarket", color: "text-accent-emerald" },
+          { title: "LiveOrLease", desc: "Rent vs Buy engine", icon: <PieChart />, hash: "#liveorlease", color: "text-accent-blue" },
+          { title: "MockYield DeFi", desc: "Staking mastery", icon: <Sparkles />, hash: "#mockyield", color: "text-accent-purple" },
+        ].map((item, i) => (
+          <motion.a
+            key={i}
+            href={item.hash}
+            whileHover={{ y: -5, backgroundColor: "var(--bg-card-hover)" }}
+            className="card p-6 flex flex-col gap-3 group border-border/40"
+          >
+            <div className={cn("w-12 h-12 rounded-xl bg-bg-secondary flex items-center justify-center group-hover:scale-110 transition-transform", item.color)}>
+              {item.icon}
+            </div>
+            <div>
+              <h4 className="font-bold text-sm">{item.title}</h4>
+              <p className="text-[10px] text-text-muted uppercase tracking-wider">{item.desc}</p>
+            </div>
+            <div className="pt-2 flex items-center text-[10px] font-bold text-accent-gold opacity-0 group-hover:opacity-100 transition-opacity">
+              ENTER MODULE <ChevronRight className="w-3 h-3 ml-1" />
+            </div>
+          </motion.a>
+        ))}
+      </div>
 
       {/* Quick Navigation / Next Steps */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

@@ -12,6 +12,7 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, T
 interface ScenarioSimulatorProps {
   user: UserProfile;
   budget: BudgetPlan | null;
+  onComplete?: () => void;
 }
 
 type Scenario = {
@@ -27,7 +28,7 @@ type Scenario = {
   };
 };
 
-export function ScenarioSimulator({ user, budget }: ScenarioSimulatorProps) {
+export function ScenarioSimulator({ user, budget, onComplete }: ScenarioSimulatorProps) {
   const currency = CURRENCIES[user.currency] || CURRENCIES.USD;
   const [selectedScenarios, setSelectedScenarios] = useState<string[]>([]);
   const [years, setYears] = useState(10);
@@ -68,9 +69,11 @@ export function ScenarioSimulator({ user, budget }: ScenarioSimulatorProps) {
   }, [user.goals, budget?.income, user.currency, currency.locale]);
 
   const toggleScenario = (id: string) => {
-    setSelectedScenarios(prev => 
-      prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id]
-    );
+    setSelectedScenarios(prev => {
+      const isSelecting = !prev.includes(id);
+      if (isSelecting && onComplete) onComplete();
+      return isSelecting ? [...prev, id] : prev.filter(s => s !== id);
+    });
   };
 
   const projectionData = useMemo(() => {

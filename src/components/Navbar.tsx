@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Menu, X, Globe, ChevronRight, Sun, Moon } from "lucide-react";
+import { Menu, X, Globe, ChevronRight, Sun, Moon, Flame, Sparkles } from "lucide-react";
 import { Logo } from "./Logo";
 import { CURRENCIES } from "../constants";
 
@@ -26,20 +26,20 @@ export function Navbar({ currentHash, currency, onCurrencyClick, theme, onToggle
 
   const navLinks = [
     { name: "Dashboard", hash: "#dashboard" },
-    { name: "Portfolio", hash: "#portfolio" },
-    { name: "Budget Architect", hash: "#budget" },
-    { name: "Strategic Projection", hash: "#scenarios" },
-    { name: "Investment Simulator", hash: "#simulator" },
+    { name: "MacroPulse", hash: "#macropulse" },
+    { name: "TrendMarket", hash: "#trendmarket" },
+    { name: "LiveOrLease", hash: "#liveorlease" },
+    { name: "MockYield", hash: "#mockyield" },
+    { name: "Badges", hash: "#badges" },
+    { name: "Docs", hash: "#docs" },
     { name: "Wealth Quiz", hash: "#quiz" },
-    { name: "AI Advisor", hash: "#advisor" },
-    { name: "Learn", hash: "#resources" },
   ];
 
   return (
     <nav className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${isScrolled ? "glass py-3" : "py-6"}`}>
       <div className="container mx-auto px-6 flex items-center justify-between">
         <a href="#home" className="hover:opacity-80 transition-opacity">
-          <Logo />
+          <Logo size="sm" />
         </a>
 
         {/* Desktop Nav */}
@@ -56,6 +56,18 @@ export function Navbar({ currentHash, currency, onCurrencyClick, theme, onToggle
         </div>
 
         <div className="flex items-center gap-4">
+          <div className="hidden lg:flex items-center gap-1 px-2.5 py-1.5 bg-accent-gold/10 border border-accent-gold/20 rounded-full text-accent-gold mr-2 animate-pulse">
+            <Flame className="w-4 h-4 fill-accent-gold" />
+            <span className="text-[10px] font-black tracking-tighter">7 DAY STREAK</span>
+          </div>
+
+          <button
+            onClick={() => window.dispatchEvent(new CustomEvent('start-judge-tour'))}
+            className="hidden sm:flex items-center gap-2 px-4 py-2 bg-bg-secondary border border-accent-gold/30 rounded-xl text-accent-gold text-[10px] font-bold uppercase tracking-widest hover:border-accent-gold transition-all"
+          >
+            <Sparkles className="w-3 h-3" /> Judge Mode
+          </button>
+
           <button
             onClick={onToggleTheme}
             className="p-2 rounded-full hover:bg-bg-secondary transition-colors text-text-primary"
@@ -88,8 +100,8 @@ export function Navbar({ currentHash, currency, onCurrencyClick, theme, onToggle
               </button>
             </div>
           ) : (
-            <a href="#dashboard" className="hidden sm:flex btn-primary !py-2 !px-4 text-sm">
-              Get Started <ChevronRight className="w-4 h-4 ml-1" />
+            <a href="#dashboard" className="hidden sm:flex px-5 py-2.5 bg-bg-secondary border border-border text-text-primary text-xs font-bold uppercase tracking-widest rounded-xl hover:bg-bg-primary transition-all">
+              Sign In
             </a>
           )}
 

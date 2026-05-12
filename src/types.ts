@@ -23,8 +23,18 @@ export interface UserProfile {
     assets: number;
     liabilities: number;
   };
+  achievements?: Achievement[];
   portfolio?: Portfolio;
   goals?: FinancialGoal[];
+}
+
+export interface Achievement {
+  id: string;
+  title: string;
+  description: string;
+  icon: string;
+  dateIcon?: string;
+  unlockedAt?: string;
 }
 
 export interface Portfolio {

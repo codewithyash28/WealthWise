@@ -50,16 +50,26 @@ import { WealthDashboard } from "./components/WealthDashboard";
 import { BudgetPlanner } from "./components/BudgetPlanner";
 import { InvestmentSimulator } from "./components/InvestmentSimulator";
 import { FinancialQuiz } from "./components/FinancialQuiz";
-import { AIAdvisor } from "./components/AIAdvisor";
 import { ScenarioSimulator } from "./components/ScenarioSimulator";
 import { Resources } from "./components/Resources";
 import { AssetAllocation } from "./components/AssetAllocation";
 import { CurrencySelector, NameInput } from "./components/Modals";
-import { UserProfile, BudgetPlan, FinancialGoal } from "./types";
-import { CURRENCIES } from "./constants";
+import { Onboarding } from "./components/Onboarding";
+import { Badges } from "./components/Badges";
+import { CaseStudy } from "./components/CaseStudy";
+import { JudgeTour } from "./components/JudgeTour";
+import { Logo } from "./components/Logo";
+import { UserProfile, BudgetPlan, FinancialGoal, Achievement } from "./types";
+import { CURRENCIES, ACHIEVEMENTS } from "./constants";
 import { Tutorial } from "./components/Tutorial";
+import { MacroPulse } from "./components/mastery/MacroPulse";
+import { TrendMarket } from "./components/mastery/TrendMarket";
+import { LiveOrLease } from "./components/mastery/LiveOrLease";
+import { MockYield } from "./components/mastery/MockYield";
+import { PulseAlert } from "./components/mastery/PulseAlert";
 import { PortfolioOverview } from "./components/PortfolioOverview";
 import { Skeleton } from "./components/ui/Skeleton";
+import { motion, AnimatePresence } from "motion/react";
 
 interface LocalUser {
   uid: string;
@@ -83,6 +93,30 @@ function AppContent() {
   const [currentHash, setCurrentHash] = useState(window.location.hash || "#dashboard");
   const [isAuthReady, setIsAuthReady] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [unlockedAchievement, setUnlockedAchievement] = useState<Achievement | null>(null);
+  const [alerts, setAlerts] = useState<any[]>([
+    { id: 'welcome', type: 'market', title: 'WealthWise Mastery Active', message: 'Inflation trends are shifting. Check the MacroPulse engine.', timestamp: 'Just now' }
+  ]);
+
+  useEffect(() => {
+    const nudges = [
+      { type: 'info', title: 'Macro Tip', message: 'Did you know? High inflation erodes purchasing power. Use the MacroPulse to see how.' },
+      { type: 'achievement', title: 'Step Closer', message: 'You are on your way to Diamond Tier! Complete more modules to rise.' },
+      { type: 'market', title: 'MockYield Update', message: 'Eth Staking APY just simulated a 0.5% increase. Check MockYield.' },
+      { type: 'risk', title: 'Diversification Alert', message: 'Relying on one asset is risky. TrendMarket simulates these impacts.' },
+    ];
+
+    const interval = setInterval(() => {
+      const nudge = nudges[Math.floor(Math.random() * nudges.length)];
+      setAlerts(prev => [
+        { id: Math.random().toString(), ...nudge, timestamp: 'Now' },
+        ...prev.slice(0, 2)
+      ]);
+    }, 45000); // Every 45 seconds a new nudge
+
+    return () => clearInterval(interval);
+  }, []);
+
   const [theme, setTheme] = useState<"light" | "dark">(() => {
     const saved = localStorage.getItem("ww_theme");
     if (saved) return saved as "light" | "dark";
@@ -105,7 +139,21 @@ function AppContent() {
   const [showCurrencySelector, setShowCurrencySelector] = useState(false);
   const [showNameInput, setShowNameInput] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
+  const [showExpertOnboarding, setShowExpertOnboarding] = useState(false);
+  const [showJudgeTour, setShowJudgeTour] = useState(false);
+  const [showSplash, setShowSplash] = useState(true);
   const [tempCurrency, setTempCurrency] = useState<string | null>(null);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setShowSplash(false), 2500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    const handleStartTour = () => setShowJudgeTour(true);
+    window.addEventListener('start-judge-tour', handleStartTour);
+    return () => window.removeEventListener('start-judge-tour', handleStartTour);
+  }, []);
 
   useEffect(() => {
     const handleHashChange = () => setCurrentHash(window.location.hash || "#home");
@@ -170,9 +218,36 @@ function AppContent() {
     window.location.hash = "#dashboard";
   };
 
+  const unlockAchievement = useCallback((id: string) => {
+    if (!profile) return;
+    const existingAchievements = profile.achievements || [];
+    if (existingAchievements.find(a => a.id === id)) return;
+
+    const achievementDef = ACHIEVEMENTS.find(a => a.id === id);
+    if (!achievementDef) return;
+
+    const newAchievement = {
+      ...achievementDef,
+      unlockedAt: new Date().toISOString()
+    };
+
+    const updatedProfile = {
+      ...profile,
+      achievements: [...existingAchievements, newAchievement]
+    };
+
+    setProfile(updatedProfile);
+    localStorage.setItem("ww_profile", JSON.stringify(updatedProfile));
+    setUnlockedAchievement(newAchievement);
+    
+    // Auto-hide achievement notification
+    setTimeout(() => setUnlockedAchievement(null), 5000);
+  }, [profile]);
+
   const handleSaveBudget = (plan: BudgetPlan) => {
     setBudget(plan);
     localStorage.setItem("ww_budget", JSON.stringify(plan));
+    unlockAchievement('first_budget');
   };
 
   const handleUpdateNetWorth = (assets: number, liabilities: number) => {
@@ -183,6 +258,7 @@ function AppContent() {
     };
     setProfile(updatedProfile);
     localStorage.setItem("ww_profile", JSON.stringify(updatedProfile));
+    if (assets > liabilities) unlockAchievement('networth_positive');
   };
 
   const handleQuizComplete = (score: number) => {
@@ -192,10 +268,17 @@ function AppContent() {
       setProfile(updatedProfile);
       localStorage.setItem("ww_profile", JSON.stringify(updatedProfile));
     }
+    if (score > 100) unlockAchievement('quiz_master');
   };
 
   const handleSignIn = () => {
+    setShowExpertOnboarding(true);
+  };
+
+  const handleStartFullOnboarding = (targetHash: string) => {
+    setShowExpertOnboarding(false);
     setShowCurrencySelector(true);
+    // After currency and name input, it will auto-route to the dashboard or target
   };
 
   const handleSignOut = () => {
@@ -213,6 +296,7 @@ function AppContent() {
     const updatedProfile = { ...profile, goals };
     setProfile(updatedProfile);
     localStorage.setItem("ww_profile", JSON.stringify(updatedProfile));
+    if (goals.length > 0) unlockAchievement('goal_setter');
   };
 
   const getWelcomeMessage = () => {
@@ -262,14 +346,19 @@ function AppContent() {
     }
 
     switch (currentHash) {
-      case "#dashboard": return <WealthDashboard user={profile} budget={budget} />;
+      case "#dashboard": return <WealthDashboard user={profile} budget={budget} onUnlockAchievement={unlockAchievement} />;
+      case "#macropulse": return <div className="container mx-auto px-6 py-12"><MacroPulse /></div>;
+      case "#trendmarket": return <div className="container mx-auto px-6 py-12"><TrendMarket /></div>;
+      case "#liveorlease": return <div className="container mx-auto px-6 py-12"><LiveOrLease /></div>;
+      case "#mockyield": return <div className="container mx-auto px-6 py-12"><MockYield /></div>;
+      case "#badges": return <div className="container mx-auto px-6 py-12"><Badges unlockedAchievements={profile.achievements || []} /></div>;
+      case "#docs": return <div className="container mx-auto px-6 py-12"><CaseStudy /></div>;
       case "#portfolio": return <PortfolioOverview user={profile} />;
       case "#networth": return <Dashboard user={profile} budget={budget} onUpdateNetWorth={handleUpdateNetWorth} />;
       case "#budget": return <BudgetPlanner user={profile} onSave={handleSaveBudget} initialPlan={budget} />;
       case "#simulator": return <InvestmentSimulator user={profile} onUpdateGoals={handleUpdateGoals} />;
       case "#quiz": return <FinancialQuiz onComplete={handleQuizComplete} bestScore={profile.highScore} />;
-      case "#scenarios": return <ScenarioSimulator user={profile} budget={budget} />;
-      case "#advisor": return <AIAdvisor user={profile} />;
+      case "#scenarios": return <ScenarioSimulator user={profile} budget={budget} onComplete={() => unlockAchievement('simulation_expert')} />;
       case "#resources": return <Resources />;
       case "#allocation": return <AssetAllocation />;
       default: return <LandingPage />;
@@ -281,6 +370,65 @@ function AppContent() {
       <div className="aurora-1 top-[-100px] left-[-100px]" />
       <div className="aurora-2 bottom-[-100px] right-[-100px]" />
       <div className="grid-overlay" />
+
+      <PulseAlert 
+        alerts={alerts} 
+        onClose={(id) => setAlerts(prev => prev.filter(a => a.id !== id))} 
+        onClearAll={() => setAlerts([])}
+      />
+
+      {/* Splash Screen */}
+      <AnimatePresence>
+        {showSplash && (
+          <motion.div
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0, scale: 1.1, filter: "blur(20px)" }}
+            transition={{ duration: 1, ease: "easeInOut" }}
+            className="fixed inset-0 z-[500] bg-bg-void flex items-center justify-center pointer-events-auto"
+          >
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
+              className="flex flex-col items-center gap-8"
+            >
+              <Logo size="xl" />
+              <div className="flex flex-col items-center gap-2">
+                 <div className="h-1 w-48 bg-bg-secondary rounded-full overflow-hidden border border-border">
+                   <motion.div 
+                     initial={{ width: 0 }}
+                     animate={{ width: "100%" }}
+                     transition={{ duration: 2, ease: "easeInOut" }}
+                     className="h-full bg-accent-gold"
+                   />
+                 </div>
+                 <span className="text-[10px] font-bold text-accent-gold uppercase tracking-[0.3em]">Initializing Elite Workspace</span>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Achievement Toast */}
+      <AnimatePresence>
+        {unlockedAchievement && (
+          <motion.div
+            initial={{ opacity: 0, y: 50, x: "-50%" }}
+            animate={{ opacity: 1, y: 0, x: "-50%" }}
+            exit={{ opacity: 0, y: 50, x: "-50%" }}
+            className="fixed bottom-8 left-1/2 z-[200] max-w-sm w-full"
+          >
+            <div className="card p-4 border-accent-gold bg-bg-void/90 backdrop-blur-md shadow-[0_0_30px_rgba(240,180,41,0.3)] flex items-center gap-4">
+              <div className="text-3xl">{unlockedAchievement.icon}</div>
+              <div>
+                <div className="text-[10px] text-accent-gold font-bold uppercase tracking-widest">Achievement Unlocked!</div>
+                <div className="font-bold">{unlockedAchievement.title}</div>
+                <div className="text-xs text-text-muted">{unlockedAchievement.description}</div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <Navbar 
         currentHash={currentHash} 
@@ -297,6 +445,19 @@ function AppContent() {
       </main>
 
       <Footer />
+
+      {showJudgeTour && (
+        <JudgeTour onClose={() => setShowJudgeTour(false)} />
+      )}
+
+      {showExpertOnboarding && (
+        <Onboarding 
+          onComplete={(hash) => {
+            handleStartFullOnboarding(hash);
+          }} 
+          onClose={() => setShowExpertOnboarding(false)} 
+        />
+      )}
 
       <CurrencySelector 
         isOpen={showCurrencySelector} 
