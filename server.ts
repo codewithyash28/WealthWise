@@ -3,6 +3,31 @@ import path from "path";
 import fs from "fs";
 import { createServer as createViteServer } from "vite";
 import { MongoClient, Db } from "mongodb";
+import { GoogleGenAI } from "@google/genai";
+import dotenv from "dotenv";
+
+dotenv.config();
+
+// --- Gemini AI Config ---
+const apiKey = process.env.GEMINI_API_KEY;
+let ai: GoogleGenAI | null = null;
+if (apiKey && apiKey !== "undefined" && apiKey !== "null" && apiKey.length >= 10) {
+  try {
+    ai = new GoogleGenAI({
+      apiKey,
+      httpOptions: {
+        headers: {
+          'User-Agent': 'aistudio-build',
+        }
+      }
+    });
+    console.log("[Gemini Engine] Server-side client initialized successfully.");
+  } catch (err) {
+    console.error("[Gemini Engine] Failed to initialize GoogleGenAI client:", err);
+  }
+} else {
+  console.log("[Gemini Engine] Running in offline mode (API key not set up).");
+}
 
 // --- Database Configuration & Fallback Engine ---
 const PORT = 3000;
@@ -247,6 +272,88 @@ app.post("/api/auth/sync", async (req, res) => {
   } catch (error: any) {
     console.error("Sync Error:", error);
     res.status(500).json({ error: error.message || "Synchronization failure." });
+  }
+});
+
+
+// --- Server-Side Gemini AI proxy endpoints ---
+
+// Gemini Insight API
+app.post("/api/gemini/insight", async (req, res) => {
+  try {
+    const { prompt } = req.body;
+    if (!prompt) {
+      return res.status(400).json({ error: "Prompt is required." });
+    }
+
+    if (!ai) {
+      return res.json({
+        text: "I'm currently in 'offline mode' because the Gemini API key isn't set up. To enable my full AI capabilities, please add your GEMINI_API_KEY to the environment variables. In the meantime, remember that consistent saving and diversified investing are keys to long-term wealth!"
+      });
+    }
+
+    const response = await ai.models.generateContent({
+      model: "gemini-3.5-flash",
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      config: {
+        systemInstruction: "You are the WealthWise AI Advisor, a world-class personal finance expert. Provide clear, actionable, and encouraging financial advice. Use formatting like bolding and bullet points for readability. Always include a disclaimer that this is for educational purposes and not professional financial advice.",
+      }
+    });
+
+    res.json({ text: response.text || "" });
+  } catch (error: any) {
+    console.error("[Gemini Insight Endpoint Error]:", error);
+    res.status(500).json({ error: error.message || "An error occurred generating insights." });
+  }
+});
+
+// Gemini Wealth Audit API
+app.post("/api/gemini/audit", async (req, res) => {
+  try {
+    const { user, budget } = req.body;
+    if (!user) {
+      return res.status(400).json({ error: "User profile details are required." });
+    }
+
+    if (!ai) {
+      return res.json({
+        text: "AI Wealth Audit is currently offline. Please configure process.env.GEMINI_API_KEY to proceed securely."
+      });
+    }
+
+    const prompt = `
+      As a World-Class Personal Wealth Architect, perform a "One-Click AI Audit" for the following user:
+      Name: ${user.name}
+      Age: ${user.age}
+      Learning Goals: ${user.learningGoal}
+      Currency: ${user.currency}
+      Net Worth: Assets ${user.netWorth?.assets || 0}, Liabilities ${user.netWorth?.liabilities || 0}
+      Financial Literacy Score: ${user.highScore || 0}/150
+      Budget: ${budget ? JSON.stringify(budget) : "Not set up yet"}
+
+      Provide a concise, high-impact financial roadmap in 3 sections:
+      1. **Wealth Health Check**: A brutal but fair assessment of their current position, specifically considering their age group (${user.age}).
+      2. **The Golden Path**: 3 specific, actionable steps to increase their net worth by 20% in 12 months, aligned with their goal of learning about ${user.learningGoal}.
+      3. **Risk Mitigation**: One major blind spot they are currently ignoring based on their profile.
+
+      Keep the tone professional, elite, and encouraging. Use Markdown formatting.
+      Max 300 words.
+    `;
+
+    const response = await ai.models.generateContent({
+      model: "gemini-3.5-flash",
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      config: {
+        temperature: 0.7,
+        topP: 0.95,
+        topK: 40,
+      }
+    });
+
+    res.json({ text: response.text || "Unable to generate audit at this time." });
+  } catch (error: any) {
+    console.error("[Gemini Audit Endpoint Error]:", error);
+    res.status(500).json({ error: error.message || "An error occurred generating wealth audit." });
   }
 });
 
