@@ -1,6 +1,13 @@
+import { useState } from "react";
 import { motion } from "motion/react";
 import { BookOpen, Code2, Globe, Cpu, Zap, ShieldCheck, Sparkles, Trophy, GitBranch, Terminal, Brain, Users, Lock, Server, ShieldAlert } from "lucide-react";
 import { cn } from "../lib/utils";
+import { UserProfile } from "../types";
+
+interface CaseStudyProps {
+  user?: UserProfile | null;
+  onUpdateGitProvider?: (provider: "gitlab" | "github" | "bitbucket") => void;
+}
 
 const TIMELINE = [
   {
@@ -49,7 +56,89 @@ const SCENARIOS = [
   }
 ];
 
-export function CaseStudy() {
+export function CaseStudy({ user, onUpdateGitProvider }: CaseStudyProps) {
+  const [localProvider, setLocalProvider] = useState<"gitlab" | "github" | "bitbucket">("github");
+  
+  const activeProvider = user?.gitProvider || localProvider;
+  
+  const handleProviderChange = (p: "gitlab" | "github" | "bitbucket") => {
+    if (onUpdateGitProvider) {
+      onUpdateGitProvider(p);
+    } else {
+      setLocalProvider(p);
+    }
+  };
+
+  const providerDetails = {
+    github: {
+      name: "GitHub",
+      track: "GitHub Project GitOps",
+      apiName: "GitHub_MCP",
+      actionWord: "Pull Request",
+      actionMini: "PR",
+      issueWord: "GitHub Issue",
+      color: "text-white bg-zinc-900 border-zinc-800",
+      desc1: "Utilizes Gemini 3's high-fidelity reasoning capabilities to plan multi-step financial GitOps routes. Rather than simple text responses, the agent inspects active parameters and dispatches corresponding GitHub payloads to commit policy files, create repository issues, and manage branch releases.",
+      desc2: "Saves active user budget structures and target allocations directly into the user's GitHub repository (e.g., `/wealth-policies/user-profile.json`) via the GitHub MCP Server. Updates occur cleanly within Git, tracking historical financial plans via complete version control.",
+      desc3: "When running active user simulations (e.g., severe 7% global inflation devaluations or compounding DeFi staking), the agent automatically logs the audit report as a comprehensive markdown Issue on a linked GitHub project. Under user review, it can draft a Pull Request updating target budgeting laws.",
+      planLog: [
+        { text: 'user: "Stress-test my INR salary for 7% inflation & commit updated plan"', style: "text-accent-gold" },
+        { text: "1. [PLANNING] Engine identifies regional variables (INR, India profile).", style: "text-white" },
+        { text: "2. [TOOL_CALL] Querying local budget profiles & compounding inflation devaluations.", style: "text-white" },
+        { text: "   // Calculations complete: Simulated -7.14% purchasing power reduction.", style: "text-text-muted italic" },
+        { text: "3. [TOOL_CALL] Formatting a gorgeous markdown audit card.", style: "text-white" },
+        { text: "4. [GitHub_MCP] dispatching `create_issue` to repository for long-term tracking.", style: "text-white" },
+        { text: "5. [GitHub_MCP] dispatching `create_or_update_file` in branch \"wealth/inflation-mitigation\".", style: "text-white" },
+        { text: "> Plan submitted. GitHub PR #42 and Issue #119 recorded. Success.", style: "text-accent-emerald font-bold" }
+      ]
+    },
+    gitlab: {
+      name: "GitLab",
+      track: "GitLab Developer Platform",
+      apiName: "GitLab_MCP",
+      actionWord: "Merge Request",
+      actionMini: "MR",
+      issueWord: "GitLab Issue",
+      color: "text-accent-gold bg-amber-500/5 border-amber-500/20",
+      desc1: "Utilizes Gemini 3's high-fidelity reasoning capabilities to plan multi-step financial GitOps routes. Instead of plain chat responses, the agent inspects active parameters and dispatches corresponding GitLab payloads to commit policy files, create tracking issues, and manage financial configuration templates.",
+      desc2: "Saves active user budget structures and target allocations directly into the user's GitLab repository (e.g., `/wealth-policies/user-profile.json`) via the GitLab MCP Server. Updates occur cleanly within Git, tracking historical financial plans via complete version control.",
+      desc3: "When running active user simulations (e.g., severe 7% global inflation devaluations or compounding DeFi staking), the agent automatically logs the audit report as a comprehensive markdown Issue on a linked GitLab project. Under user review, it can draft a Merge Request updating target budgeting laws.",
+      planLog: [
+        { text: 'user: "Stress-test my INR salary for 7% inflation & commit updated plan"', style: "text-accent-gold" },
+        { text: "1. [PLANNING] Engine identifies regional variables (INR, India profile).", style: "text-white" },
+        { text: "2. [TOOL_CALL] Querying local budget profiles & compounding inflation devaluations.", style: "text-white" },
+        { text: "   // Calculations complete: Simulated -7.14% purchasing power reduction.", style: "text-text-muted italic" },
+        { text: "3. [TOOL_CALL] Formatting a gorgeous markdown audit card.", style: "text-white" },
+        { text: "4. [GitLab_MCP] dispatching `create_issue` to repository for long-term tracking.", style: "text-white" },
+        { text: "5. [GitLab_MCP] dispatching `create_or_update_file` in branch \"wealth/inflation-mitigation\".", style: "text-white" },
+        { text: "> Plan submitted. GitLab MR #42 and Issue #119 recorded. Success.", style: "text-accent-emerald font-bold" }
+      ]
+    },
+    bitbucket: {
+      name: "Bitbucket",
+      track: "Atlassian Workspace Ecosystem",
+      apiName: "Bitbucket_MCP",
+      actionWord: "Pull Request",
+      actionMini: "PR",
+      issueWord: "Jira / Bitbucket Issue",
+      color: "text-blue-400 bg-blue-500/5 border-blue-500/20",
+      desc1: "Utilizes Gemini 3's high-fidelity reasoning capabilities to plan multi-step financial GitOps routes. Rather than standard text chats, the agent inspects parameters and dispatches Bitbucket Workspace API requests to commit wealth policies, log task tickets, and create policy pipelines.",
+      desc2: "Saves active user budget structures and target allocations directly into the user's Bitbucket repository (e.g., `/wealth-policies/user-profile.json`) via the Bitbucket MCP Server. Updates occur cleanly within Git, tracking plans via full version control.",
+      desc3: "When running active user simulations (e.g., severe 7% global inflation devaluations or compounding DeFi staking), the agent logs details as a markdown Ticket. Under user oversight, it can draft a Bitbucket Pull Request updating target budgeting rules.",
+      planLog: [
+        { text: 'user: "Stress-test my INR salary for 7% inflation & commit updated plan"', style: "text-accent-gold" },
+        { text: "1. [PLANNING] Engine identifies regional variables (INR, India profile).", style: "text-white" },
+        { text: "2. [TOOL_CALL] Querying local budget profiles & compounding inflation devaluations.", style: "text-white" },
+        { text: "   // Calculations complete: Simulated -7.14% purchasing power reduction.", style: "text-text-muted italic" },
+        { text: "3. [TOOL_CALL] Formatting a gorgeous markdown audit card.", style: "text-white" },
+        { text: "4. [Bitbucket_MCP] dispatching `create_issue` to workspace tracker for audit logging.", style: "text-white" },
+        { text: "5. [Bitbucket_MCP] dispatching `create_or_update_file` in branch \"wealth/inflation-mitigation\".", style: "text-white" },
+        { text: "> Plan submitted. Bitbucket PR #42 and Jira Ticket #119 recorded. Success.", style: "text-accent-emerald font-bold" }
+      ]
+    }
+  };
+
+  const details = providerDetails[activeProvider];
   return (
     <div className="space-y-12 py-12">
       {/* Header */}
@@ -150,6 +239,89 @@ export function CaseStudy() {
          </div>
       </div>
 
+      {/* Git Provider Architecture and Mock Execution Integration Section */}
+      <div id="mcp-architecture" className="card p-8 bg-linear-to-b from-bg-secondary/40 to-bg-card border-border/80 space-y-8">
+         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-border/40 pb-6">
+            <div className="space-y-1">
+               <div className="inline-flex items-center gap-1.5 text-[10px] uppercase font-bold text-accent-emerald tracking-widest bg-accent-emerald/10 px-2.5 py-0.5 rounded-full border border-accent-emerald/20">
+                  🛡️ Hackathon Submission Architecture
+               </div>
+               <h3 className="text-2xl font-bold font-display">{details.name} MCP Agent Framework</h3>
+            </div>
+            
+            {/* Interactive Selector */}
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+               <span className="text-[10px] text-text-muted font-bold uppercase tracking-widest leading-none">Select Architecture:</span>
+               <div className="flex rounded-lg bg-bg-secondary p-1 border border-border">
+                  {(["github", "gitlab", "bitbucket"] as const).map((p) => {
+                     const active = activeProvider === p;
+                     return (
+                        <button
+                           key={p}
+                           onClick={() => handleProviderChange(p)}
+                           type="button"
+                           className={cn(
+                              "px-3 py-1 text-xs font-bold uppercase tracking-widest rounded-md transition-all cursor-pointer",
+                              active 
+                                 ? "bg-accent-emerald text-bg-void shadow-sm" 
+                                 : "text-text-secondary hover:text-text-primary"
+                           )}
+                        >
+                           {p}
+                        </button>
+                     );
+                  })}
+               </div>
+            </div>
+         </div>
+
+         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="space-y-4">
+               <div className="flex gap-3 items-start">
+                  <div className="w-8 h-8 rounded-lg bg-accent-emerald/10 text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/20 text-xs">🧠</div>
+                  <div>
+                     <h4 className="text-sm font-bold text-text-primary">Gemini 3 Multi-Step Reasoning Brain</h4>
+                     <p className="text-xs text-text-secondary leading-relaxed mt-1">
+                        {details.desc1}
+                     </p>
+                  </div>
+               </div>
+               <div className="flex gap-3 items-start">
+                  <div className="w-8 h-8 rounded-lg bg-accent-emerald/10 text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/20 text-xs">📂</div>
+                  <div>
+                     <h4 className="text-sm font-bold text-text-primary">Wealth-As-Code Policy Commits</h4>
+                     <p className="text-xs text-text-secondary leading-relaxed mt-1">
+                        Saves active user budget structures and target allocations directly into the user&apos;s {details.name} repository (e.g., <code>/wealth-policies/user-profile.json</code>) via the {details.name} MCP Server. Updates occur cleanly within Git, tracking historical financial plans via complete version control.
+                     </p>
+                  </div>
+               </div>
+               <div className="flex gap-3 items-start">
+                  <div className="w-8 h-8 rounded-lg bg-accent-emerald/10 text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/20 text-xs">🔗</div>
+                  <div>
+                     <h4 className="text-sm font-bold text-text-primary">Active Issue Tracking & {details.actionMini} Rebalancing</h4>
+                     <p className="text-xs text-text-secondary leading-relaxed mt-1">
+                        When running active user simulations (e.g., severe 7% global inflation devaluations or compounding DeFi staking), the agent automatically logs the audit report as a comprehensive markdown {details.issueWord} on a linked project. Under user review, it can draft a {details.actionWord} updating target budgeting laws.
+                     </p>
+                  </div>
+               </div>
+            </div>
+
+            <div className="space-y-4 bg-bg-void/80 p-6 rounded-2xl border border-border/80 font-mono text-[11px] leading-relaxed selection-none">
+               <div className="flex items-center justify-between border-b border-border/50 pb-2 text-[10px] text-text-muted uppercase font-bold">
+                  <span>Agent Execution Plan (Gemini 3 + {details.name} MCP)</span>
+                  <span className="text-accent-emerald">Status: Live</span>
+               </div>
+               <div className="space-y-2 text-text-secondary">
+                  {details.planLog.map((log, li) => (
+                    <div key={li} className={log.style}>
+                      {log.text.startsWith('user:') ? `> ${log.text}` : log.text}
+                    </div>
+                  ))}
+               </div>
+            </div>
+         </div>
+      </div>
+
       {/* Under the Hood */}
       <div className="card p-8 bg-linear-to-br from-bg-secondary to-bg-card border-border/50 text-center space-y-6">
          <div className="space-y-2">
@@ -170,15 +342,15 @@ export function CaseStudy() {
                <div className="w-10 h-10 rounded-full bg-bg-void border border-border flex items-center justify-center mx-auto text-accent-gold text-white">
                   <Server className="w-5 h-5" />
                </div>
-               <h5 className="font-bold text-sm">State Persistence</h5>
-               <p className="text-[10px] text-text-secondary leading-relaxed px-4">Uses specialized LocalStorage hooks for instant-load reactivity without the cost overhead of a database for prototype phase.</p>
+               <h5 className="font-bold text-sm">{details.name} MCP Integration</h5>
+               <p className="text-[10px] text-text-secondary leading-relaxed px-4">Utilizes the {details.name} Model Context Protocol server for version-controlled policy backups, secure state changes, and audited issue logs.</p>
             </div>
             <div className="space-y-2">
                <div className="w-10 h-10 rounded-full bg-bg-void border border-border flex items-center justify-center mx-auto text-accent-blue">
                   <Globe className="w-5 h-5" />
                </div>
                <h5 className="font-bold text-sm">API Context Control</h5>
-               <p className="text-[10px] text-text-secondary leading-relaxed px-4">Managed context windows for Gemini Pro ensure the 'Elite Mentor' maintains session memory without exceeding rate limits.</p>
+               <p className="text-[10px] text-text-secondary leading-relaxed px-4">Managed context windows for Gemini Pro ensure the &apos;Elite Mentor&apos; maintains session memory without exceeding rate limits.</p>
             </div>
          </div>
       </div>

@@ -6,8 +6,8 @@ import { CURRENCIES } from "../constants";
 import { UserProfile, BudgetPlan } from "../types";
 
 import { MarketInsights } from "./MarketInsights";
-
 import { Logo } from "./Logo";
+import { WealthPathChart } from "./WealthPathChart";
 
 interface DashboardProps {
   user: UserProfile;
@@ -130,8 +130,11 @@ export function Dashboard({ user, budget, onUpdateNetWorth }: DashboardProps) {
                 <span className="text-xs text-text-muted w-16">Assets:</span>
                 <input 
                   type="number" 
-                  value={assets} 
-                  onChange={(e) => setAssets(Number(e.target.value))}
+                  value={assets === 0 ? "" : assets} 
+                  onChange={(e) => {
+                    const parsed = Number(e.target.value);
+                    setAssets(isNaN(parsed) ? 0 : Math.max(0, parsed));
+                  }}
                   aria-label="Edit Assets"
                   className="bg-bg-secondary border border-border rounded px-2 py-1 text-xs w-full outline-none focus:border-accent-gold"
                 />
@@ -140,13 +143,16 @@ export function Dashboard({ user, budget, onUpdateNetWorth }: DashboardProps) {
                 <span className="text-xs text-text-muted w-16">Liabilities:</span>
                 <input 
                   type="number" 
-                  value={liabilities} 
-                  onChange={(e) => setLiabilities(Number(e.target.value))}
+                  value={liabilities === 0 ? "" : liabilities} 
+                  onChange={(e) => {
+                    const parsed = Number(e.target.value);
+                    setLiabilities(isNaN(parsed) ? 0 : Math.max(0, parsed));
+                  }}
                   aria-label="Edit Liabilities"
                   className="bg-bg-secondary border border-border rounded px-2 py-1 text-xs w-full outline-none focus:border-accent-gold"
                 />
               </div>
-              <button onClick={() => { onUpdateNetWorth(assets, liabilities); setIsEditingNetWorth(false); }} className="btn-primary !py-1 !px-3 text-[10px] w-full">Save Changes</button>
+              <button onClick={() => { onUpdateNetWorth(assets, liabilities); setIsEditingNetWorth(false); }} className="btn-primary !py-1 !px-3 text-[10px] w-full cursor-pointer">Save Changes</button>
             </motion.div>
           )}
         </div>
@@ -224,6 +230,24 @@ export function Dashboard({ user, budget, onUpdateNetWorth }: DashboardProps) {
             ))}
           </div>
         </div>
+      </div>
+
+      {/* Strategic Wealth Projections Chart */}
+      <div className="card p-8 space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h2 className="text-2xl font-display font-bold flex items-center gap-2 text-text-primary">
+              <TrendingUp className="w-6 h-6 text-accent-gold" /> Strategic Wealth Projections
+            </h2>
+            <p className="text-text-secondary text-xs mt-1">
+              Interactive 6-month predictive simulator. Toggle dynamic scenarios below to cross-evaluate performance trends.
+            </p>
+          </div>
+          <div className="px-3 py-1 rounded bg-bg-secondary border border-border/60 text-[10px] font-bold uppercase tracking-wider text-text-muted">
+            Baseline vs Scenario Comparison
+          </div>
+        </div>
+        <WealthPathChart user={user} budget={budget} />
       </div>
 
       {/* Financial Health Score */}

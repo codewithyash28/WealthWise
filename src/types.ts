@@ -26,6 +26,7 @@ export interface UserProfile {
   achievements?: Achievement[];
   portfolio?: Portfolio;
   goals?: FinancialGoal[];
+  gitProvider?: "gitlab" | "github" | "bitbucket";
 }
 
 export interface Achievement {

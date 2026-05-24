@@ -1,14 +1,45 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion } from "motion/react";
 import { Home, Key, TrendingUp, DollarSign, Calculator, Info, CheckCircle2 } from "lucide-react";
 import { cn } from "../../lib/utils";
 
 export function LiveOrLease() {
-  const [propertyPrice, setPropertyPrice] = useState(5000000);
-  const [monthlyRent, setMonthlyRent] = useState(25000);
-  const [downPaymentPct, setDownPaymentPct] = useState(20);
-  const [timeHorizon, setTimeHorizon] = useState(10);
-  const [appreciationRate, setAppreciationRate] = useState(5);
+  const [propertyPrice, setPropertyPrice] = useState(() => {
+    const saved = localStorage.getItem("ww_lol_property_price");
+    return saved ? Math.max(0, Number(JSON.parse(saved))) : 5000000;
+  });
+  const [monthlyRent, setMonthlyRent] = useState(() => {
+    const saved = localStorage.getItem("ww_lol_monthly_rent");
+    return saved ? Math.max(0, Number(JSON.parse(saved))) : 25000;
+  });
+  const [downPaymentPct, setDownPaymentPct] = useState(() => {
+    const saved = localStorage.getItem("ww_lol_down_payment_pct");
+    return saved ? Math.max(0, Math.min(100, Number(JSON.parse(saved)))) : 20;
+  });
+  const [timeHorizon, setTimeHorizon] = useState(() => {
+    const saved = localStorage.getItem("ww_lol_time_horizon");
+    return saved ? Math.max(1, Number(JSON.parse(saved))) : 10;
+  });
+  const [appreciationRate, setAppreciationRate] = useState(() => {
+    const saved = localStorage.getItem("ww_lol_appreciation_rate");
+    return saved ? Math.max(0, Number(JSON.parse(saved))) : 5;
+  });
+
+  useEffect(() => {
+    localStorage.setItem("ww_lol_property_price", JSON.stringify(propertyPrice));
+  }, [propertyPrice]);
+  useEffect(() => {
+    localStorage.setItem("ww_lol_monthly_rent", JSON.stringify(monthlyRent));
+  }, [monthlyRent]);
+  useEffect(() => {
+    localStorage.setItem("ww_lol_down_payment_pct", JSON.stringify(downPaymentPct));
+  }, [downPaymentPct]);
+  useEffect(() => {
+    localStorage.setItem("ww_lol_time_horizon", JSON.stringify(timeHorizon));
+  }, [timeHorizon]);
+  useEffect(() => {
+    localStorage.setItem("ww_lol_appreciation_rate", JSON.stringify(appreciationRate));
+  }, [appreciationRate]);
 
   const analysis = useMemo(() => {
     // Basic Buy Calculations
@@ -60,9 +91,15 @@ export function LiveOrLease() {
                  <span className="text-text-muted font-mono">₹</span>
                  <input 
                    type="number" 
-                   value={propertyPrice} 
-                   onChange={(e) => setPropertyPrice(parseInt(e.target.value) || 0)}
-                   className="w-full bg-bg-secondary border border-border p-2 rounded-xl font-mono font-bold"
+                   value={propertyPrice === 0 ? "" : propertyPrice} 
+                   onChange={(e) => {
+                     const val = parseInt(e.target.value);
+                     if (isNaN(val)) setPropertyPrice(0);
+                     else if (val < 0) setPropertyPrice(0);
+                     else if (val > 1000000000) setPropertyPrice(1000000000);
+                     else setPropertyPrice(val);
+                   }}
+                   className="w-full bg-bg-secondary border border-border p-2 rounded-xl font-mono font-bold focus:border-accent-gold outline-none"
                  />
               </div>
             </div>
@@ -73,9 +110,15 @@ export function LiveOrLease() {
                  <span className="text-text-muted font-mono">₹</span>
                  <input 
                    type="number" 
-                   value={monthlyRent} 
-                   onChange={(e) => setMonthlyRent(parseInt(e.target.value) || 0)}
-                   className="w-full bg-bg-secondary border border-border p-2 rounded-xl font-mono font-bold"
+                   value={monthlyRent === 0 ? "" : monthlyRent} 
+                   onChange={(e) => {
+                     const val = parseInt(e.target.value);
+                     if (isNaN(val)) setMonthlyRent(0);
+                     else if (val < 0) setMonthlyRent(0);
+                     else if (val > 10000000) setMonthlyRent(10000000);
+                     else setMonthlyRent(val);
+                   }}
+                   className="w-full bg-bg-secondary border border-border p-2 rounded-xl font-mono font-bold focus:border-accent-emerald outline-none"
                  />
               </div>
             </div>

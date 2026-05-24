@@ -257,18 +257,78 @@ export function BudgetPlanner({ user, onSave, initialPlan }: BudgetPlannerProps)
         {/* Input Form */}
         <div className="space-y-8">
           <div className="card p-8 space-y-6">
-            <h3 className="text-xl font-bold flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-accent-gold" /> Monthly Income
-            </h3>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <h3 className="text-xl font-bold flex items-center gap-2">
+                <TrendingUp className="w-5 h-5 text-accent-gold" /> Monthly Income
+              </h3>
+              <span className="text-xs text-text-muted">
+                Typical Average: <span className="font-mono text-accent-gold font-bold">{formatCurrency(currency.avgSalary, user.currency, currency.locale)}</span>
+              </span>
+            </div>
+            
             <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted font-mono">{currency.symbol}</span>
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted text-lg font-mono">{currency.symbol}</span>
               <input
                 type="number"
                 value={income || ""}
-                onChange={(e) => setIncome(Number(e.target.value))}
+                onChange={(e) => {
+                  const val = Number(e.target.value);
+                  setIncome(isNaN(val) ? 0 : Math.max(0, val));
+                }}
                 placeholder={`e.g. ${currency.avgSalary}`}
-                className="input-field w-full pl-10 text-xl font-mono"
+                className="input-field w-full pl-10 pr-4 py-3 text-2xl font-mono border-accent-gold/20 focus:border-accent-gold/100 outline-none transition-all"
               />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[10px] uppercase font-bold text-text-muted tracking-wider">Quick Adjust</label>
+              <input
+                type="range"
+                min={Math.round(currency.avgSalary * 0.1)}
+                max={Math.round(currency.avgSalary * 4)}
+                step={Math.round(currency.avgSalary * 0.05)}
+                value={income || 0}
+                onChange={(e) => {
+                  const val = Number(e.target.value);
+                  setIncome(isNaN(val) ? 0 : Math.max(0, val));
+                }}
+                className="w-full accent-accent-gold h-1.5 bg-bg-secondary rounded-lg appearance-none cursor-pointer"
+              />
+              <div className="flex justify-between text-[10px] text-text-muted font-mono">
+                <span>Min ({formatCurrency(Math.round(currency.avgSalary * 0.1), user.currency, currency.locale)})</span>
+                <span>Max ({formatCurrency(Math.round(currency.avgSalary * 4), user.currency, currency.locale)})</span>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <span className="text-[10px] uppercase font-bold text-text-muted tracking-wider block">Presets based on Currency profile</span>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {[
+                  { label: "Starter", factor: 0.5 },
+                  { label: "Nominal", factor: 1.0 },
+                  { label: "Senior", factor: 1.5 },
+                  { label: "Elite", factor: 2.5 },
+                ].map((preset) => {
+                  const targetVal = Math.round(currency.avgSalary * preset.factor);
+                  const isActive = income === targetVal;
+                  return (
+                    <button
+                      key={preset.label}
+                      type="button"
+                      onClick={() => setIncome(targetVal)}
+                      className={cn(
+                        "py-2 px-1 text-xs font-medium rounded-lg border transition-all text-center",
+                        isActive 
+                          ? "bg-accent-gold/20 border-accent-gold text-accent-gold font-bold shadow-sm" 
+                          : "bg-bg-secondary border-border/40 text-text-secondary hover:border-accent-gold/40 hover:text-text-primary"
+                      )}
+                    >
+                      <div className="text-[9px] opacity-70 uppercase tracking-tighter">{preset.label}</div>
+                      <div className="font-mono mt-0.5">{currency.symbol}{targetVal.toLocaleString()}</div>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
 
@@ -299,7 +359,10 @@ export function BudgetPlanner({ user, onSave, initialPlan }: BudgetPlannerProps)
                     <input
                       type="number"
                       value={expenses[cat.key as keyof typeof expenses] || ""}
-                      onChange={(e) => setExpenses({ ...expenses, [cat.key]: Number(e.target.value) })}
+                      onChange={(e) => {
+                        const val = Number(e.target.value);
+                        setExpenses({ ...expenses, [cat.key]: isNaN(val) ? 0 : Math.max(0, val) });
+                      }}
                       placeholder="0"
                       className="input-field w-full pl-8 py-2 text-sm font-mono"
                     />
@@ -390,7 +453,10 @@ export function BudgetPlanner({ user, onSave, initialPlan }: BudgetPlannerProps)
                     <input
                       type="number"
                       value={(goals as any)[key] || ""}
-                      onChange={(e) => setGoals({ ...goals, [key]: Number(e.target.value) })}
+                      onChange={(e) => {
+                        const val = Number(e.target.value);
+                        setGoals({ ...goals, [key]: isNaN(val) ? 0 : Math.max(0, val) });
+                      }}
                       placeholder="No limit set"
                       className={cn(
                         "input-field w-full pl-8 py-2 text-sm font-mono",

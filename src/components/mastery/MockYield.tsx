@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion } from "motion/react";
 import { Sparkles, ArrowRight, ShieldCheck, Wallet, Info, Activity, AlertCircle } from "lucide-react";
 import { cn } from "../../lib/utils";
@@ -19,9 +19,33 @@ const STAKING_OPTIONS: StakingOption[] = [
 ];
 
 export function MockYield() {
-  const [selectedOption, setSelectedOption] = useState<StakingOption>(STAKING_OPTIONS[0]);
-  const [investAmount, setInvestAmount] = useState(1000);
-  const [years, setYears] = useState(1);
+  const [selectedOption, setSelectedOption] = useState<StakingOption>(() => {
+    const saved = localStorage.getItem("ww_my_selected_option");
+    if (saved) {
+      const parsedId = JSON.parse(saved);
+      const match = STAKING_OPTIONS.find(o => o.id === parsedId);
+      if (match) return match;
+    }
+    return STAKING_OPTIONS[0];
+  });
+  const [investAmount, setInvestAmount] = useState(() => {
+    const saved = localStorage.getItem("ww_my_invest_amount");
+    return saved ? Math.max(0, Number(JSON.parse(saved))) : 1000;
+  });
+  const [years, setYears] = useState(() => {
+    const saved = localStorage.getItem("ww_my_years");
+    return saved ? Math.max(1, Number(JSON.parse(saved))) : 1;
+  });
+
+  useEffect(() => {
+    localStorage.setItem("ww_my_selected_option", JSON.stringify(selectedOption.id));
+  }, [selectedOption]);
+  useEffect(() => {
+    localStorage.setItem("ww_my_invest_amount", JSON.stringify(investAmount));
+  }, [investAmount]);
+  useEffect(() => {
+    localStorage.setItem("ww_my_years", JSON.stringify(years));
+  }, [years]);
 
   const projection = useMemo(() => {
     const total = investAmount * Math.pow(1 + selectedOption.apy / 100, years);
@@ -81,9 +105,15 @@ export function MockYield() {
                      <span className="text-text-muted font-mono">$</span>
                      <input 
                        type="number" 
-                       value={investAmount}
-                       onChange={(e) => setInvestAmount(parseInt(e.target.value) || 0)}
-                       className="w-full bg-bg-secondary border border-border p-3 rounded-xl font-mono text-xl"
+                       value={investAmount === 0 ? "" : investAmount}
+                       onChange={(e) => {
+                         const val = parseInt(e.target.value);
+                         if (isNaN(val)) setInvestAmount(0);
+                         else if (val < 0) setInvestAmount(0);
+                         else if (val > 100000000) setInvestAmount(100000000);
+                         else setInvestAmount(val);
+                       }}
+                       className="w-full bg-bg-secondary border border-border p-3 rounded-xl font-mono text-xl focus:border-accent-purple outline-none"
                      />
                    </div>
                  </div>
