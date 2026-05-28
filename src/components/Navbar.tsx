@@ -26,12 +26,12 @@ export function Navbar({ currentHash, currency, onCurrencyClick, theme, onToggle
 
   const navLinks = [
     { name: "Dashboard", hash: "#dashboard" },
+    { name: "Portfolio", hash: "#portfolio" },
+    { name: "Rebalancer", hash: "#rebalancer" },
+    { name: "Allocation", hash: "#allocation" },
     { name: "MacroPulse", hash: "#macropulse" },
     { name: "TrendMarket", hash: "#trendmarket" },
-    { name: "LiveOrLease", hash: "#liveorlease" },
-    { name: "MockYield", hash: "#mockyield" },
     { name: "Badges", hash: "#badges" },
-    { name: "Docs", hash: "#docs" },
     { name: "Wealth Quiz", hash: "#quiz" },
   ];
 

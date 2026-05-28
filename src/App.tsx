@@ -90,7 +90,7 @@ import { CurrencySelector, NameInput } from "./components/Modals";
 import { Onboarding } from "./components/Onboarding";
 import { JudgeTour } from "./components/JudgeTour";
 import { Logo } from "./components/Logo";
-import { UserProfile, BudgetPlan, FinancialGoal, Achievement } from "./types";
+import { UserProfile, BudgetPlan, FinancialGoal, Achievement, Portfolio } from "./types";
 import { CURRENCIES, ACHIEVEMENTS } from "./constants";
 import { Tutorial } from "./components/Tutorial";
 import { PulseAlert } from "./components/mastery/PulseAlert";
@@ -107,6 +107,7 @@ const FinancialQuiz = lazy(() => import("./components/FinancialQuiz").then(m => 
 const ScenarioSimulator = lazy(() => import("./components/ScenarioSimulator").then(m => ({ default: m.ScenarioSimulator })));
 const Resources = lazy(() => import("./components/Resources").then(m => ({ default: m.Resources })));
 const AssetAllocation = lazy(() => import("./components/AssetAllocation").then(m => ({ default: m.AssetAllocation })));
+const AssetRebalancer = lazy(() => import("./components/AssetRebalancer").then(m => ({ default: m.AssetRebalancer })));
 const Badges = lazy(() => import("./components/Badges").then(m => ({ default: m.Badges })));
 const CaseStudy = lazy(() => import("./components/CaseStudy").then(m => ({ default: m.CaseStudy })));
 const MacroPulse = lazy(() => import("./components/mastery/MacroPulse").then(m => ({ default: m.MacroPulse })));
@@ -430,6 +431,16 @@ function AppContent() {
     setProfile(updatedProfile);
     localStorage.setItem("ww_profile", JSON.stringify(updatedProfile));
     if (assets > liabilities) unlockAchievement('networth_positive');
+  };
+
+  const handleUpdatePortfolio = (portfolio: Portfolio) => {
+    if (!profile) return;
+    const updatedProfile = {
+      ...profile,
+      portfolio
+    };
+    setProfile(updatedProfile);
+    localStorage.setItem("ww_profile", JSON.stringify(updatedProfile));
   };
 
   const handleQuizComplete = (score: number) => {
@@ -937,6 +948,12 @@ function AppContent() {
               return (
                 <ModuleErrorBoundary moduleName="Dynamic Asset Rebalancing Engine">
                   <AssetAllocation />
+                </ModuleErrorBoundary>
+              );
+            case "#rebalancer": 
+              return (
+                <ModuleErrorBoundary moduleName="Dynamic Asset Rebalancing Engine">
+                  <AssetRebalancer user={profile} onUpdatePortfolio={handleUpdatePortfolio} onUnlockAchievement={unlockAchievement} />
                 </ModuleErrorBoundary>
               );
             default: return <LandingPage />;

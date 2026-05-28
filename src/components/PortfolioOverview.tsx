@@ -117,20 +117,28 @@ export function PortfolioOverview({ user }: PortfolioOverviewProps) {
           <h1 className="text-4xl font-display font-bold">Portfolio Overview</h1>
           <p className="text-text-secondary">Your global asset allocation and performance metrics</p>
         </div>
-        <div className="flex items-center gap-4">
-          <div className="text-right">
-            <div className="text-[10px] text-text-muted uppercase tracking-widest font-bold">Total Net Value</div>
-            <div className="text-2xl font-mono font-bold text-accent-gold">
-              {formatCurrency(portfolio.totalValue, user.currency, currency.locale)}
+        <div className="flex items-center gap-6">
+          <div className="flex items-center gap-4">
+            <div className="text-right">
+              <div className="text-[10px] text-text-muted uppercase tracking-widest font-bold">Total Net Value</div>
+              <div className="text-2xl font-mono font-bold text-accent-gold">
+                {formatCurrency(portfolio.totalValue, user.currency, currency.locale)}
+              </div>
+            </div>
+            <div className={cn(
+              "px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1",
+              portfolio.change24h >= 0 ? "bg-accent-emerald/10 text-accent-emerald" : "bg-accent-red/10 text-accent-red"
+            )}>
+              {portfolio.change24h >= 0 ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+              {Math.abs(portfolio.change24h)}%
             </div>
           </div>
-          <div className={cn(
-            "px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1",
-            portfolio.change24h >= 0 ? "bg-accent-emerald/10 text-accent-emerald" : "bg-accent-red/10 text-accent-red"
-          )}>
-            {portfolio.change24h >= 0 ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-            {Math.abs(portfolio.change24h)}%
-          </div>
+          <a 
+            href="#rebalancer" 
+            className="flex items-center justify-center px-4 py-2 bg-accent-gold/10 border border-accent-gold/25 text-accent-gold text-xs font-bold uppercase tracking-wider rounded-xl hover:bg-accent-gold/20 transition-all font-mono"
+          >
+            Rebalance Asset Mix
+          </a>
         </div>
       </div>
 
