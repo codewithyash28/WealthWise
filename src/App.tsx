@@ -158,7 +158,16 @@ function AppContent() {
   const [user, setUser] = useState<LocalUser | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [budget, setBudget] = useState<BudgetPlan | null>(null);
-  const [currentHash, setCurrentHash] = useState(window.location.hash || "#home");
+  const [currentHash, setCurrentHash] = useState("#home");
+
+  useEffect(() => {
+    // Standardize initial route
+    const initialHash = window.location.hash || "#home";
+    setCurrentHash(initialHash);
+    if (!window.location.hash) {
+      window.location.hash = "#home";
+    }
+  }, []);
   const [isAuthReady, setIsAuthReady] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [unlockedAchievement, setUnlockedAchievement] = useState<Achievement | null>(null);

@@ -107,30 +107,29 @@ export function WealthPathChart({ user, budget }: WealthPathChartProps) {
     if (marketBias === "bull") multiplier = 1.35; // Boost compound yields 35%
     if (marketBias === "bear") multiplier = 0.55; // Diminish interest rates by 45% due to systemic contraction
 
-    // 2. Future 6 months (Projections)
+    // 2. Future 6 months (Iterative Projections)
+    let baselineVal = netWorth;
+    let scenarioVal = netWorth;
+
     for (let i = 1; i <= 6; i++) {
       const monthIdx = (currentMonthIndex + i) % 12;
       labels.push(months[monthIdx]);
       historicalValues.push(null);
 
-      // Baseline Projection (standard passive bank savings or standard index investing rate)
-      const baselineVal = netWorth + (monthlySavings * i) * 1.008; // 0.8% organic monthly interest rate
+      // Baseline Projection: Standard 0.5% monthly growth + savings
+      baselineVal = (baselineVal + monthlySavings) * 1.005;
       baselineValues.push(baselineVal);
 
       // Selected Scenario Projection
-      let scenarioVal = netWorth;
       if (selectedScenario === "yield") {
-        // High Yield APY compound simulations (DeFi stable staking)
-        const yieldRate = 1 + (0.025 * multiplier);
-        scenarioVal = netWorth + (monthlySavings * i) * yieldRate; 
+        const yieldRate = 1 + (0.01 * multiplier); // ~12% APY base
+        scenarioVal = (scenarioVal + monthlySavings) * yieldRate;
       } else if (selectedScenario === "market") {
-        // Active Trend Trading growth projections
-        const marketRate = 1 + (0.045 * multiplier);
-        scenarioVal = netWorth + (monthlySavings * i) * marketRate; 
+        const marketRate = 1 + (0.018 * multiplier); // ~22% APY base
+        scenarioVal = (scenarioVal + monthlySavings) * marketRate;
       } else if (selectedScenario === "inflation") {
-        // High inflation hits even harder during bearing conditions
-        const inflationErosion = 0.012 * (marketBias === "bear" ? 1.4 : marketBias === "bull" ? 0.7 : 1.0);
-        scenarioVal = (netWorth + (monthlySavings * i)) * (1 - (inflationErosion * i)); 
+        const inflationErosion = 1 - (0.006 * (marketBias === "bear" ? 1.4 : marketBias === "bull" ? 0.7 : 1.0));
+        scenarioVal = (scenarioVal + monthlySavings) * inflationErosion;
       }
       scenarioValues.push(scenarioVal);
     }

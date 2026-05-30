@@ -123,7 +123,7 @@ export function BudgetPlanner({ user, onSave, initialPlan, gitProvider = "gitlab
 
   const insights = useMemo(() => {
     const list = [];
-    if (income === 0) return [];
+    if (income <= 0) return [];
 
     // Basic Savings Rate Insights
     if (savingsRate < 10) {
@@ -165,7 +165,7 @@ export function BudgetPlanner({ user, onSave, initialPlan, gitProvider = "gitlab
     }
 
     // Category Specific Insights
-    if (expenses.housing / income > 0.35) {
+    if (income > 0 && expenses.housing / income > 0.35) {
       list.push({
         type: "warning",
         icon: <Home className="w-5 h-5" />,
@@ -179,7 +179,7 @@ export function BudgetPlanner({ user, onSave, initialPlan, gitProvider = "gitlab
         icon: <CheckCircle2 className="w-5 h-5" />,
         text: "Debt-free! This gives you maximum flexibility to invest."
       });
-    } else if (expenses.loans / income > 0.15) {
+    } else if (income > 0 && expenses.loans / income > 0.15) {
       list.push({
         type: "danger",
         icon: <CreditCard className="w-5 h-5" />,

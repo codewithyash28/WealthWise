@@ -67,7 +67,7 @@ export function GitOpsControlCenter({ user, budget, gitProvider, onUnlockAchieve
       "leisure": 800
     },
     "complianceMetrics": {
-      "savingsRate": budget 
+      "savingsRate": (budget && budget.income > 0)
         ? `${Math.round(((budget.income - Object.values(budget.expenses).reduce((a, b) => a + b, 0)) / budget.income) * 100)}%` 
         : "23%",
       "debtToAssetRatio": user.netWorth?.assets > 0 

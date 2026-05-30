@@ -60,9 +60,10 @@ export function WealthDashboard({ user, budget, onUnlockAchievement, onUpdateGit
 
     // 4. Debt Management (Max 15 points)
     const debtRatio = user.netWorth.assets > 0 ? user.netWorth.liabilities / user.netWorth.assets : 0;
+    // Score decreases as debt ratio increases. Ratio of 0.5 or higher yields 0 points.
     score += Math.max(0, 15 - (debtRatio * 30));
 
-    return Math.round(score);
+    return Math.min(100, Math.round(score));
   }, [user, budget, currency]);
 
   const masteryTier = useMemo(() => {
@@ -449,7 +450,7 @@ export function WealthDashboard({ user, budget, onUnlockAchievement, onUpdateGit
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         {[
           { label: "Overall Mastery", value: `${healthScore}%`, color: "text-accent-gold" },
-          { label: "Savings Rate", value: budget ? `${Math.round(((budget.income - Object.values(budget.expenses).reduce((a, b) => a + b, 0)) / budget.income) * 100)}%` : "0%", color: "text-accent-emerald" },
+        { label: "Savings Rate", value: (budget && budget.income > 0) ? `${Math.round(((budget.income - Object.values(budget.expenses).reduce((a, b) => a + b, 0)) / budget.income) * 100)}%` : "0%", color: "text-accent-emerald" },
           { label: "Elite Tier", value: masteryTier.label, color: masteryTier.color },
           { label: "Achievements", value: `${user.achievements?.length || 0}/6`, color: "text-accent-blue" }
         ].map((stat, i) => (
