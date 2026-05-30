@@ -115,6 +115,8 @@ const TrendMarket = lazy(() => import("./components/mastery/TrendMarket").then(m
 const LiveOrLease = lazy(() => import("./components/mastery/LiveOrLease").then(m => ({ default: m.LiveOrLease })));
 const MockYield = lazy(() => import("./components/mastery/MockYield").then(m => ({ default: m.MockYield })));
 const PortfolioOverview = lazy(() => import("./components/PortfolioOverview").then(m => ({ default: m.PortfolioOverview })));
+const TaxEstimator = lazy(() => import("./components/TaxEstimator").then(m => ({ default: m.TaxEstimator })));
+const DebtPayoff = lazy(() => import("./components/DebtPayoff").then(m => ({ default: m.DebtPayoff })));
 
 function ModuleLoadingSkeleton() {
   return (
@@ -917,7 +919,7 @@ function AppContent() {
             case "#budget": 
               return (
                 <ModuleErrorBoundary moduleName="Interactive Budget Planner">
-                  <BudgetPlanner user={profile} onSave={handleSaveBudget} initialPlan={budget} />
+                  <BudgetPlanner user={profile} onSave={handleSaveBudget} initialPlan={budget} gitProvider={gitProvider} onUnlockAchievement={unlockAchievement} />
                 </ModuleErrorBoundary>
               );
             case "#simulator": 
@@ -954,6 +956,22 @@ function AppContent() {
               return (
                 <ModuleErrorBoundary moduleName="Dynamic Asset Rebalancing Engine">
                   <AssetRebalancer user={profile} onUpdatePortfolio={handleUpdatePortfolio} onUnlockAchievement={unlockAchievement} />
+                </ModuleErrorBoundary>
+              );
+            case "#tax-estimator":
+              return (
+                <ModuleErrorBoundary moduleName="Tax Estimator Suite">
+                  <div className="container mx-auto px-6 py-12">
+                    <TaxEstimator user={profile} />
+                  </div>
+                </ModuleErrorBoundary>
+              );
+            case "#debt-payoff":
+              return (
+                <ModuleErrorBoundary moduleName="Debt Acceleration Plan">
+                  <div className="container mx-auto px-6 py-12">
+                    <DebtPayoff user={profile} />
+                  </div>
                 </ModuleErrorBoundary>
               );
             default: return <LandingPage />;

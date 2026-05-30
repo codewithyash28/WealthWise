@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { DeleteConfirmationDialog } from "./DeleteConfirmationDialog";
 import { motion } from "motion/react";
 import { TrendingUp, DollarSign, Calendar, Target, Info, ArrowRight, ChevronRight, Calculator, PieChart, Plus, Trash2 } from "lucide-react";
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler } from 'chart.js';
@@ -17,6 +18,10 @@ interface InvestmentSimulatorProps {
 export function InvestmentSimulator({ user, onUpdateGoals }: InvestmentSimulatorProps) {
   const [activeTab, setActiveTab] = useState<"SIP" | "LUMP" | "GOAL">("SIP");
   const currency = CURRENCIES[user.currency] || CURRENCIES.USD;
+
+  // Deletion logic states
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [goalToDelete, setGoalToDelete] = useState<{ id: string; title: string } | null>(null);
 
   // SIP State
   const [sipMonthly, setSipMonthly] = useState(() => {
@@ -174,9 +179,18 @@ export function InvestmentSimulator({ user, onUpdateGoals }: InvestmentSimulator
   };
 
   const handleDeleteGoal = (id: string) => {
-    const updated = savedGoals.filter(g => g.id !== id);
+    const goal = savedGoals.find(g => g.id === id);
+    if (!goal) return;
+    setGoalToDelete({ id, title: goal.title });
+    setDeleteConfirmOpen(true);
+  };
+
+  const executeDeleteGoal = () => {
+    if (!goalToDelete) return;
+    const updated = savedGoals.filter(g => g.id !== goalToDelete.id);
     setSavedGoals(updated);
     onUpdateGoals?.(updated);
+    setGoalToDelete(null);
   };
 
   // Automatically check for completed goals
@@ -606,6 +620,14 @@ export function InvestmentSimulator({ user, onUpdateGoals }: InvestmentSimulator
           )}
         </div>
       </div>
+
+      <DeleteConfirmationDialog 
+        isOpen={deleteConfirmOpen}
+        onClose={() => setDeleteConfirmOpen(false)}
+        onConfirm={executeDeleteGoal}
+        itemName={goalToDelete?.title || ""}
+        itemType="financial goal"
+      />
     </div>
   );
 }

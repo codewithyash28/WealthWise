@@ -28,11 +28,11 @@ export function Navbar({ currentHash, currency, onCurrencyClick, theme, onToggle
     { name: "Dashboard", hash: "#dashboard" },
     { name: "Portfolio", hash: "#portfolio" },
     { name: "Rebalancer", hash: "#rebalancer" },
-    { name: "Allocation", hash: "#allocation" },
+    { name: "Debt Payoff", hash: "#debt-payoff" },
+    { name: "Tax Estimator", hash: "#tax-estimator" },
     { name: "MacroPulse", hash: "#macropulse" },
-    { name: "TrendMarket", hash: "#trendmarket" },
+    { name: "Quiz", hash: "#quiz" },
     { name: "Badges", hash: "#badges" },
-    { name: "Wealth Quiz", hash: "#quiz" },
   ];
 
   return (

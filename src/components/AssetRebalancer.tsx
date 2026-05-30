@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
+import { DeleteConfirmationDialog } from "./DeleteConfirmationDialog";
 import { motion, AnimatePresence } from "motion/react";
 import { 
   Scale, 
@@ -65,6 +66,10 @@ export function AssetRebalancer({ user, onUpdatePortfolio, onUnlockAchievement }
   // 1. Target Allocations State
   const [riskPreset, setRiskPreset] = useState<RiskPreset>("MODERATE");
   const [targets, setTargets] = useState<Record<keyof Portfolio["allocation"], number>>({ ...PRESETS.MODERATE });
+
+  // Deletion logic states
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [assetToDelete, setAssetToDelete] = useState<{ id: string; name: string } | null>(null);
 
   // 2. Custom Holdings State
   const [holdings, setHoldings] = useState<CustHolding[]>(() => {
@@ -282,11 +287,19 @@ export function AssetRebalancer({ user, onUpdatePortfolio, onUnlockAchievement }
   };
 
   const handleDeleteAsset = (id: string, name: string) => {
+    setAssetToDelete({ id, name });
+    setDeleteConfirmOpen(true);
+  };
+
+  const executeDeleteAsset = () => {
+    if (!assetToDelete) return;
+    const { id, name } = assetToDelete;
     setHoldings(prev => prev.filter(h => h.id !== id));
     const ev = new CustomEvent("ww-trigger-alert", {
       detail: { type: "info", title: "Asset Disposed", message: `Removed ${name} from active holdings ledger.` }
     });
     window.dispatchEvent(ev);
+    setAssetToDelete(null);
   };
 
   // Simulations & downloads
@@ -1032,6 +1045,13 @@ Provide a crisp, professional, high-performance financial commentary! Limit to e
         )}
       </AnimatePresence>
 
+      <DeleteConfirmationDialog 
+        isOpen={deleteConfirmOpen}
+        onClose={() => setDeleteConfirmOpen(false)}
+        onConfirm={executeDeleteAsset}
+        itemName={assetToDelete?.name || ""}
+        itemType="asset"
+      />
     </div>
   );
 }
