@@ -1,9 +1,13 @@
 import express from "express";
 import path from "path";
 import fs from "fs";
+import crypto from "crypto";
 import { createServer as createViteServer } from "vite";
 import { MongoClient, Db } from "mongodb";
 import { GoogleGenAI } from "@google/genai";
+import bcrypt from "bcryptjs";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -32,7 +36,26 @@ if (apiKey && apiKey !== "undefined" && apiKey !== "null" && apiKey.length >= 10
 // --- Database Configuration & Fallback Engine ---
 const PORT = 3000;
 const app = express();
-app.use(express.json());
+
+// Security headers
+if (process.env.NODE_ENV === "production") {
+  app.use(helmet());
+} else {
+  app.use(helmet({ contentSecurityPolicy: false }));
+}
+
+// Body size limit to prevent large-payload DoS
+app.use(express.json({ limit: "1mb" }));
+
+// Rate limiting for auth endpoints
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many requests from this IP, please try again after 15 minutes." }
+});
+app.use("/api/auth", authLimiter);
 
 // Environment variables configuration
 const MONGODB_URI = process.env.MONGODB_URI || process.env.MONGO_URL || "mongodb://localhost:27017/wealthwise_mcp";
@@ -49,7 +72,7 @@ if (!fs.existsSync(FALLBACK_DB_FILE)) {
 
 async function connectToDatabase() {
   try {
-    console.log("[MongoDB Engine] Connecting to:", MONGODB_URI);
+    console.log("[MongoDB Engine] Connecting to database...");
     mongoClient = new MongoClient(MONGODB_URI, { connectTimeoutMS: 5000 });
     await mongoClient.connect();
     mongoDb = mongoClient.db();
@@ -167,13 +190,13 @@ app.post("/api/auth/register", async (req, res) => {
       return res.status(409).json({ error: "An account with this email is already synchronized." });
     }
 
-    const uid = "ww_" + Math.random().toString(36).substring(2, 15);
+    const uid = "ww_" + crypto.randomUUID().replace(/-/g, "").substring(0, 13);
     
-    // Store user login info (production systems would hash, but simple secure persistence matches credentials intent)
+    const hashedPassword = await bcrypt.hash(password, 12);
     const userDoc = {
       uid,
       email,
-      password, // Simple pin/password verification
+      password: hashedPassword,
       createdAt: new Date().toISOString()
     };
     
@@ -214,7 +237,7 @@ app.post("/api/auth/register", async (req, res) => {
     });
   } catch (error: any) {
     console.error("Register Error:", error);
-    res.status(500).json({ error: error.message || "Internal registration error." });
+    res.status(500).json({ error: "Internal registration error." });
   }
 });
 
@@ -227,7 +250,12 @@ app.post("/api/auth/login", async (req, res) => {
     }
 
     const userDoc = await findUserByEmail(email);
-    if (!userDoc || userDoc.password !== password) {
+    if (!userDoc) {
+      return res.status(401).json({ error: "Invalid credentials. Double check your email and security PIN." });
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, userDoc.password);
+    if (!isPasswordValid) {
       return res.status(401).json({ error: "Invalid credentials. Double check your email and security PIN." });
     }
 
@@ -246,16 +274,21 @@ app.post("/api/auth/login", async (req, res) => {
     });
   } catch (error: any) {
     console.error("Login Error:", error);
-    res.status(500).json({ error: error.message || "Internal server error." });
+    res.status(500).json({ error: "Internal server error." });
   }
 });
 
 // Live Device Sync Push Updates
 app.post("/api/auth/sync", async (req, res) => {
   try {
-    const { uid, profile, budget } = req.body;
-    if (!uid) {
-      return res.status(400).json({ error: "Missing active session uid to synchronize." });
+    const { uid, email, profile, budget } = req.body;
+    if (!uid || !email) {
+      return res.status(400).json({ error: "Missing credentials for sync. Please provide uid and email." });
+    }
+
+    const userDoc = await findUserByEmail(email);
+    if (!userDoc || userDoc.uid !== uid) {
+      return res.status(401).json({ error: "Unauthorized sync attempt." });
     }
 
     if (profile) {
@@ -271,7 +304,7 @@ app.post("/api/auth/sync", async (req, res) => {
     });
   } catch (error: any) {
     console.error("Sync Error:", error);
-    res.status(500).json({ error: error.message || "Synchronization failure." });
+    res.status(500).json({ error: "Synchronization failure." });
   }
 });
 
@@ -303,7 +336,7 @@ app.post("/api/gemini/insight", async (req, res) => {
     res.json({ text: response.text || "" });
   } catch (error: any) {
     console.error("[Gemini Insight Endpoint Error]:", error);
-    res.status(500).json({ error: error.message || "An error occurred generating insights." });
+    res.status(500).json({ error: "An error occurred generating insights." });
   }
 });
 
@@ -353,7 +386,7 @@ app.post("/api/gemini/audit", async (req, res) => {
     res.json({ text: response.text || "Unable to generate audit at this time." });
   } catch (error: any) {
     console.error("[Gemini Audit Endpoint Error]:", error);
-    res.status(500).json({ error: error.message || "An error occurred generating wealth audit." });
+    res.status(500).json({ error: "An error occurred generating wealth audit." });
   }
 });
 
