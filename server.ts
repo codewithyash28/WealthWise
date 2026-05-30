@@ -50,7 +50,7 @@ if (!fs.existsSync(FALLBACK_DB_FILE)) {
 async function connectToDatabase() {
   try {
     console.log("[MongoDB Engine] Connecting to:", MONGODB_URI);
-    mongoClient = new MongoClient(MONGODB_URI, { connectTimeoutMS: 5000 });
+    mongoClient = new MongoClient(MONGODB_URI, { serverSelectionTimeoutMS: 2000 });
     await mongoClient.connect();
     mongoDb = mongoClient.db();
     isRealMongoActive = true;
@@ -297,9 +297,7 @@ app.post("/api/gemini/insight", async (req, res) => {
     const result = await ai.models.generateContent({
       model: "gemini-1.5-flash",
       contents,
-      config: {
-        systemInstruction: "You are the WealthWise AI Advisor, a world-class personal finance expert. Provide clear, actionable, and encouraging financial advice. Use formatting like bolding and bullet points for readability. Always include a disclaimer that this is for educational purposes and not professional financial advice.",
-      }
+      systemInstruction: "You are the WealthWise AI Advisor, a world-class personal finance expert. Provide clear, actionable, and encouraging financial advice. Use formatting like bolding and bullet points for readability. Always include a disclaimer that this is for educational purposes and not professional financial advice.",
     });
 
     res.json({ text: result.text || "" });
@@ -345,6 +343,7 @@ app.post("/api/gemini/audit", async (req, res) => {
     const result = await ai.models.generateContent({
       model: "gemini-1.5-flash",
       contents: [{ role: "user", parts: [{ text: prompt }] }],
+      systemInstruction: "You are a World-Class Personal Wealth Architect. Perform deep financial audits based on user profiles and budget parameters.",
       config: {
         temperature: 0.7,
         topP: 0.95,
