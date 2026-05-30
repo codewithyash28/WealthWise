@@ -162,6 +162,7 @@ Designed, engineered, and fine-tuned with extreme layout precision by **[Code wi
 
 ***Educational Suite Disclaimer:** WealthWise Elite is an interactive educational sandbox simulator. Projections, tax estimations, and wealth strategies calculated here are purely pedagogical model exercises and should not be construed as actual personal legal or financial advice.*
 
-```
+
+
 
 
