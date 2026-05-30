@@ -29,10 +29,9 @@ export function CurrencySelector({ isOpen, onSelect, currentCurrency }: Currency
           {Object.entries(CURRENCIES).map(([code, config]) => (
             <button
               key={code}
-              type="button"
               onClick={() => onSelect(code)}
               className={cn(
-                "flex flex-col items-center justify-center gap-2 p-4 rounded-xl border transition-all duration-200 relative",
+                "flex flex-col items-center justify-center gap-2 p-4 rounded-xl border transition-all duration-200",
                 currentCurrency === code 
                   ? "bg-accent-gold/10 border-accent-gold shadow-[0_0_15px_rgba(240,180,41,0.2)]" 
                   : "bg-bg-secondary border-border hover:border-border-active"
@@ -55,7 +54,6 @@ export function CurrencySelector({ isOpen, onSelect, currentCurrency }: Currency
         <button
           onClick={() => currentCurrency && onSelect(currentCurrency)}
           disabled={!currentCurrency}
-          type="button"
           className="btn-primary w-full flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Let's Go <ChevronRight className="w-5 h-5" />

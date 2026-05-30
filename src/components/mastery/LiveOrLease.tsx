@@ -1,20 +1,16 @@
 import { useState, useMemo, useEffect } from "react";
 import { motion } from "motion/react";
 import { Home, Key, TrendingUp, DollarSign, Calculator, Info, CheckCircle2 } from "lucide-react";
-import { cn, formatCurrency } from "../../lib/utils";
-import { UserProfile } from "../../types";
-import { CURRENCIES } from "../../constants";
+import { cn } from "../../lib/utils";
 
-export function LiveOrLease({ user }: { user: UserProfile }) {
-  const currency = CURRENCIES[user.currency] || CURRENCIES.USD;
-
+export function LiveOrLease() {
   const [propertyPrice, setPropertyPrice] = useState(() => {
     const saved = localStorage.getItem("ww_lol_property_price");
-    return saved ? Math.max(0, Number(JSON.parse(saved))) : currency.avgSalary * 50;
+    return saved ? Math.max(0, Number(JSON.parse(saved))) : 5000000;
   });
   const [monthlyRent, setMonthlyRent] = useState(() => {
     const saved = localStorage.getItem("ww_lol_monthly_rent");
-    return saved ? Math.max(0, Number(JSON.parse(saved))) : currency.avgRent;
+    return saved ? Math.max(0, Number(JSON.parse(saved))) : 25000;
   });
   const [downPaymentPct, setDownPaymentPct] = useState(() => {
     const saved = localStorage.getItem("ww_lol_down_payment_pct");
@@ -52,16 +48,10 @@ export function LiveOrLease({ user }: { user: UserProfile }) {
     const interestRate = 0.085; // Fixed for simulation
     const monthlyInterestRate = interestRate / 12;
     const n = 20 * 12; // 20 year mortgage
-
-    let monthlyEMI = 0;
-    if (monthlyInterestRate === 0) {
-      monthlyEMI = n > 0 ? loanAmount / n : 0;
-    } else {
-      const pow = Math.pow(1 + monthlyInterestRate, n);
-      monthlyEMI = loanAmount * (monthlyInterestRate * pow) / (pow - 1);
-    }
+    const monthlyEMI = loanAmount * (monthlyInterestRate * Math.pow(1 + monthlyInterestRate, n)) / (Math.pow(1 + monthlyInterestRate, n) - 1);
     
     const propertyValueAfterX = propertyPrice * Math.pow(1 + appreciationRate / 100, timeHorizon);
+    const totalPaidBuy = (monthlyEMI * 12 * timeHorizon) + downPayment;
     const netWealthBuy = propertyValueAfterX - (loanAmount * 0.5); // Simplified remaining principal
 
     // Basic Rent Calculations
@@ -71,14 +61,7 @@ export function LiveOrLease({ user }: { user: UserProfile }) {
     
     // Rent difference invested (if monthly rent < EMI)
     const monthlyDiff = Math.max(0, monthlyEMI - monthlyRent);
-    const r_inv = investmentReturn / 12;
-    const n_inv = timeHorizon * 12;
-    let diffGrowth = 0;
-    if (r_inv === 0) {
-      diffGrowth = monthlyDiff * n_inv;
-    } else {
-      diffGrowth = monthlyDiff * ((Math.pow(1 + r_inv, n_inv) - 1) / r_inv);
-    }
+    const diffGrowth = monthlyDiff * ((Math.pow(1 + investmentReturn / 12, timeHorizon * 12) - 1) / (investmentReturn / 12));
     
     const netWealthRent = investedGrowth + diffGrowth;
 
@@ -105,7 +88,7 @@ export function LiveOrLease({ user }: { user: UserProfile }) {
             <div className="space-y-3">
               <label className="text-xs font-bold text-text-muted uppercase tracking-wider">Property Price</label>
               <div className="flex items-center gap-2">
-                 <span className="text-text-muted font-mono">{currency.symbol}</span>
+                 <span className="text-text-muted font-mono">₹</span>
                  <input 
                    type="number" 
                    value={propertyPrice === 0 ? "" : propertyPrice} 
@@ -124,7 +107,7 @@ export function LiveOrLease({ user }: { user: UserProfile }) {
             <div className="space-y-3">
               <label className="text-xs font-bold text-text-muted uppercase tracking-wider">Monthly Rent</label>
               <div className="flex items-center gap-2">
-                 <span className="text-text-muted font-mono">{currency.symbol}</span>
+                 <span className="text-text-muted font-mono">₹</span>
                  <input 
                    type="number" 
                    value={monthlyRent === 0 ? "" : monthlyRent} 
@@ -182,7 +165,7 @@ export function LiveOrLease({ user }: { user: UserProfile }) {
                     </div>
                     <div>
                        <h3 className="text-2xl font-bold">Recommended Path: <span className={analysis.winner === "Buying" ? "text-accent-emerald" : "text-accent-blue"}>{analysis.winner}</span></h3>
-                       <p className="text-text-secondary text-sm">Based on a {timeHorizon} year projection, {analysis.winner.toLowerCase()} results in {formatCurrency(analysis.delta, user.currency, currency.locale)} more wealth.</p>
+                       <p className="text-text-secondary text-sm">Based on a {timeHorizon} year projection, {analysis.winner.toLowerCase()} results in ₹{Math.round(analysis.delta / 100000).toLocaleString()}L more wealth.</p>
                     </div>
                  </div>
 
@@ -194,15 +177,15 @@ export function LiveOrLease({ user }: { user: UserProfile }) {
                        <div className="space-y-3">
                           <div className="flex justify-between border-b border-border/50 pb-2">
                              <span className="text-text-secondary text-sm">Monthly EMI</span>
-                             <span className="font-mono font-bold">{formatCurrency(analysis.monthlyEMI, user.currency, currency.locale)}</span>
+                             <span className="font-mono font-bold">₹{Math.round(analysis.monthlyEMI).toLocaleString()}</span>
                           </div>
                           <div className="flex justify-between border-b border-border/50 pb-2">
                              <span className="text-text-secondary text-sm">Future Property Value</span>
-                             <span className="font-mono font-bold">{formatCurrency(analysis.propertyValueAfterX, user.currency, currency.locale)}</span>
+                             <span className="font-mono font-bold">₹{Math.round(analysis.propertyValueAfterX / 100000).toLocaleString()}L</span>
                           </div>
                           <div className="flex justify-between font-bold pt-2">
                              <span>Final Buy Wealth</span>
-                             <span className="text-accent-emerald">{formatCurrency(analysis.netWealthBuy, user.currency, currency.locale)}</span>
+                             <span className="text-accent-emerald">₹{Math.round(analysis.netWealthBuy / 100000).toLocaleString()}L</span>
                           </div>
                        </div>
                     </div>
@@ -214,15 +197,15 @@ export function LiveOrLease({ user }: { user: UserProfile }) {
                        <div className="space-y-3">
                           <div className="flex justify-between border-b border-border/50 pb-2">
                              <span className="text-text-secondary text-sm">Invested Down Payment</span>
-                             <span className="font-mono font-bold">{formatCurrency(propertyPrice * downPaymentPct / 100, user.currency, currency.locale)}</span>
+                             <span className="font-mono font-bold">₹{Math.round((propertyPrice * downPaymentPct / 100) / 100000).toLocaleString()}L</span>
                           </div>
                           <div className="flex justify-between border-b border-border/50 pb-2">
                              <span className="text-text-secondary text-sm">Investment Growth (12%)</span>
-                             <span className="font-mono font-bold">{formatCurrency(analysis.netWealthRent, user.currency, currency.locale)}</span>
+                             <span className="font-mono font-bold">₹{Math.round(analysis.netWealthRent / 100000).toLocaleString()}L</span>
                           </div>
                           <div className="flex justify-between font-bold pt-2">
                              <span>Final Rent Wealth</span>
-                             <span className="text-accent-blue">{formatCurrency(analysis.netWealthRent, user.currency, currency.locale)}</span>
+                             <span className="text-accent-blue">₹{Math.round(analysis.netWealthRent / 100000).toLocaleString()}L</span>
                           </div>
                        </div>
                     </div>

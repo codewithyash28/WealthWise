@@ -26,7 +26,7 @@ export function Dashboard({ user, budget, onUpdateNetWorth }: DashboardProps) {
   const calculateHealthScore = () => {
     let score = 0;
     if (budget) score += 20;
-    if (budget && budget.income > 0) {
+    if (budget) {
       const savingsRate = ((budget.income - Object.values(budget.expenses).reduce((a, b) => a + b, 0)) / budget.income) * 100;
       score += Math.min(20, (savingsRate / 20) * 20);
     }
@@ -49,7 +49,7 @@ export function Dashboard({ user, budget, onUpdateNetWorth }: DashboardProps) {
 
   const healthGrade = getHealthGrade(healthScore);
 
-  const savingsRate = (budget && budget.income > 0) ? Math.round(((budget.income - Object.values(budget.expenses).reduce((a, b) => a + b, 0)) / budget.income) * 100) : 0;
+  const savingsRate = budget ? Math.round(((budget.income - Object.values(budget.expenses).reduce((a, b) => a + b, 0)) / budget.income) * 100) : 0;
   const monthlyExpenses = budget ? Object.values(budget.expenses).reduce((a, b) => a + b, 0) : 0;
   const monthlySavings = budget ? budget.income - monthlyExpenses : 0;
   
