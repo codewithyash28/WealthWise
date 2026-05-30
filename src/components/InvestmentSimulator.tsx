@@ -99,10 +99,15 @@ export function InvestmentSimulator({ user, onUpdateGoals }: InvestmentSimulator
   const calculateSIP = () => {
     const r = sipReturn / 12 / 100;
     const n = sipPeriod * 12;
-    const fv = sipMonthly * ((Math.pow(1 + r, n) - 1) / r) * (1 + r);
+    let fv = 0;
+    if (r === 0) {
+      fv = sipMonthly * n;
+    } else {
+      fv = sipMonthly * ((Math.pow(1 + r, n) - 1) / r) * (1 + r);
+    }
     const totalInvested = sipMonthly * n;
     const returns = fv - totalInvested;
-    return { fv, totalInvested, returns, multiple: fv / totalInvested };
+    return { fv, totalInvested, returns, multiple: totalInvested > 0 ? fv / totalInvested : 1 };
   };
 
   const calculateLump = () => {
@@ -110,13 +115,18 @@ export function InvestmentSimulator({ user, onUpdateGoals }: InvestmentSimulator
     const fv = lumpAmount * Math.pow(1 + r, lumpPeriod);
     const totalInvested = lumpAmount;
     const returns = fv - totalInvested;
-    return { fv, totalInvested, returns, multiple: fv / totalInvested };
+    return { fv, totalInvested, returns, multiple: totalInvested > 0 ? fv / totalInvested : 1 };
   };
 
   const calculateGoal = () => {
     const r = goalReturn / 12 / 100;
     const n = goalPeriod * 12;
-    const monthlyNeeded = goalAmount * r / ((Math.pow(1 + r, n) - 1) * (1 + r));
+    let monthlyNeeded = 0;
+    if (r === 0) {
+      monthlyNeeded = goalAmount / n;
+    } else {
+      monthlyNeeded = (goalAmount * r) / ((Math.pow(1 + r, n) - 1) * (1 + r));
+    }
     const lumpNeeded = goalAmount / Math.pow(1 + goalReturn / 100, goalPeriod);
     return { monthlyNeeded, lumpNeeded };
   };
