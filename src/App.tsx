@@ -212,7 +212,7 @@ function AppContent() {
   const [tempCurrency, setTempCurrency] = useState<string | null>(null);
 
   useEffect(() => {
-    const timer = setTimeout(() => setShowSplash(false), 2500);
+    const timer = setTimeout(() => setShowSplash(false), 4000);
     return () => clearTimeout(timer);
   }, []);
 
@@ -998,7 +998,7 @@ function AppContent() {
                    <motion.div 
                      initial={{ width: 0 }}
                      animate={{ width: "100%" }}
-                     transition={{ duration: 2, ease: "easeInOut" }}
+                     transition={{ duration: 3.5, ease: "easeInOut" }}
                      className="h-full bg-accent-gold"
                    />
                  </div>
