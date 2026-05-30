@@ -1,152 +1,168 @@
-<div align="center">
 
-# 🛡️ WealthWise Elite
-### *The Next-Gen Multi-Agent Personal Wealth Architect*
 
-> **"Don't just save wealth—simulate its velocity. WealthWise Elite turns the complexity of global macroeconomics into your personal competitive advantage."**
+```markdown
+# 🛡️ WealthWise Elite 2.0
 
-[![Status](https://img.shields.io/badge/Product%20Status-Live%20Production-f0b429?style=for-the-badge&logo=shield)](https://wealth-wise-elite.vercel.app/#home)
-[![Tech Stack](https://img.shields.io/badge/Stack-React%2018%20%7C%20Gemini%203%20%7C%20Tailwind-blue?style=for-the-badge&logo=react)](https://reactjs.org/)
-[![Performance](https://img.shields.io/badge/UX-94%25%20Quiz%20Completion-emerald?style=for-the-badge&logo=sparkles)](#-key-metrics)
+### *The Next-Generation Multi-Agent Personal Wealth Architect & Macroeconomic Simulation Suite*
 
-**[🔥 Open Live Vercel Production Link](https://wealth-wise-elite.vercel.app/#home)** | **[📖 View Developer Case Study](#-project-evolution--docs)**
+> "Don't just track your wealth—simulate its velocity. WealthWise Elite 2.0 transforms complex global macroeconomics, progressive tax codes, and agentic workflows into your ultimate personal competitive financial advantage."
 
 ---
 
-### 🎨 Visual Architecture Mockup
-```
-┌────────────────────────────────────────────────────────┐
-│  🛡️ WealthWise Elite | [🌍 Macro] [💹 Market] [🏠 Buy]  │
-├────────────────────────────────────────────────────────┤
-│  ┌───────────────────────┐  ┌────────────────────────┐  │
-│  │  🌍 MACROPULSE        │  │  💹 TRENDMARKET       │  │
-│  │  CPI: +7.14%          │  │  Sentiment: Bullish    │  │
-│  │  [||||||||||.....]    │  │  Stag: Pop-Culture     │  │
-│  └───────────────────────┘  └────────────────────────┘  │
-│  ┌───────────────────────────────────────────────────┐  │
-│  │   👑 STRATEGIC WEALTH PROJECTIONS (Scenario-Match) │  │
-│  │   ▲ Net Worth Curve                               │  │
-│  │   [ DeFi APY compounding vs. High-Inflation ]      │  │
-│  └───────────────────────────────────────────────────┘  │
-│  ┌───────────────────────────────────────────────────┐  │
-│  │   🤖 AGENT DIRECTIVE: INR Salary Stress Test       │  │
-│  │   [PLAN] Check CPI ➔ Poll Portfolio ➔ Compound LTV  │  │
-│  └───────────────────────────────────────────────────┘  │
-└────────────────────────────────────────────────────────┘
-```
+## 🎨 Visual Architecture Map
 
-</div>
+```text
+┌────────────────────────────────────────────────────────────────────────┐
+│  🛡️ WEALTHWISE ELITE 2.0  |  [🌍 Macro]  [💹 Market]  [🏠 Buy]  [📈 Tax]   │
+├────────────────────────────────────────────────────────────────────────┤
+│                                                                        │
+│  ┌───────────────────────┐  ┌────────────────────────┐  ┌──────────┐  │
+│  │  🌍 MACROPULSE        │  │  💹 TRENDMARKET       │  │  📈 TAX  │  │
+│  │  CPI: +7.14%          │  │  Sentiment: Bullish    │  │  Progress│  │
+│  │  [||||||||||.....]    │  │  Stag: Pop-Culture     │  │  Slabs   │  │
+│  └───────────────────────┘  └────────────────────────┘  └──────────┘  │
+│                                                                        │
+│  ┌──────────────────────────────────────────────────────────────────┐  │
+│  │   👑 STRATEGIC WEALTH PROJECTIONS (Scenario-Match Curve)          │  │
+│  │   ▲ Net Worth Curve                                              │  │
+│  │   [ DeFi APY Compounding vs. High-Inflation Debt Avalanche ]     │  │
+│  └──────────────────────────────────────────────────────────────────┘  │
+│                                                                        │
+│  ┌──────────────────────────────────────────────────────────────────┐  │
+│  │   🤖 AGENT DIRECTIVE: Regional Salary & Liability Stress Tests    │  │
+│  │   [PLAN] Check CPI ➔ Poll Portfolio ➔ Compare Snowball vs. Av     │  │
+│  └──────────────────────────────────────────────────────────────────┘  │
+└────────────────────────────────────────────────────────────────────────┘
+
+```
 
 ---
 
-## 🚀 The Multi-Step Mission (Agent-Driven Design)
-In modern fintech, data without action is just clutter. **WealthWise Elite** moves beyond traditional chatbot templates by deploying an active **Multi-Step Agent** powered by **Gemini 3** and structured on the official **GitLab MCP Server** protocol for secure system-level GitOps workflows.
+## 🛠️ Dynamic Multi-Step Agentic Intelligence
 
-```
+Data without action is just clutter. **WealthWise Elite 2.0** goes beyond standard conversational chatbots by deploying an active **Multi-Step Agent Reasoning Loop** backed by an advanced Model Context Protocol (MCP) pipeline for secure, developer-grade GitOps workflows and real-time state alignments.
+
+```text
 ┌─────────────────────────┐      1. User Query      ┌──────────────────────────┐
-│  High-Agency User Prompt ├─────────────────────────► Gemini 3 Reasoning Brain │
+│  High-Agency User Prompt ├─────────────────────────► Gemini 3.5 Reason Engine │
 └─────────────────────────┘                         └────────────┬─────────────┘
                                                                  │
                                                     2. Plans     │ 3. Dispatches
                                                     Steps        │ Tool Calls
                                                                  ▼
 ┌─────────────────────────┐   5. Returns Result     ┌──────────────────────────┐
-│ Interactive Dashboard   ◄─────────────────────────┤ GitLab MCP Server        │
-│ State Refreshed (D3/UI) │                         │ commits & issue tracking │
+│ Interactive Dashboard   ◄─────────────────────────┤ GitLab / MongoDB MCP     │
+│ State Refreshed (D3/UI) │                         │ Commits & Issue Tracking │
 └─────────────────────────┘                         └──────────────────────────┘
+
 ```
 
-### 🦊 GitLab Partner Alignment (Wealth-As-Code)
-By integrating our agent strategy directly with a **GitLab Model Context Protocol (MCP)** server, we grant our LLM brain "superpowers" to integrate financial rules right into the developer's workspace pipeline:
-1. **Manage Wealth-As-Code**: Draft, write, and update target wealth policy configurations directly in a personal repository (e.g., `/wealth-policies/user-profile.json`). Every micro-adjustment or scenario stress-test is tracked via Git's bulletproof history.
-2. **Issue-Driven Audits**: Instantly compiles multi-step regional inflation or high-CPI devaluations into professional, markdown-formatted GitLab Issues or Incident Tickets, ensuring perfect traceability.
-3. **Automated Rebalancing Merge Requests**: Under user oversight, the agent can initiate branch creations and code-based merge requests (MRs) to adjust target budget allocations when macro markers shift.
+* **Manage Wealth-As-Code:** Instantly drafts, optimizes, and updates target wealth policy configurations directly in your personal repository ecosystem (`/wealth-policies/user-profile.json`).
+* **Incident Dispatcher:** Bypasses casual chat dialogues to compile multi-step high-CPI devaluations into enterprise-grade tracking markers and automated issues.
+* **Auto-Calibration Controls:** Triggers real-time security thresholds during budget deficits, slicing variable spending limits by up to 70% to defend a strict target 20% baseline surplus.
 
 ---
 
-## 💎 Key Mastery Engines
+## 💎 The 7 Key Financial Mastery Engines
 
-WealthWise Elite houses five specialized simulators, each architected to handle complex financial variables in real-time:
+WealthWise Elite 2.0 houses an uncompromising suite of state-of-the-art calculators and predictive simulation matrices:
 
-| Module | Description | Key Tech |
-| :--- | :--- | :--- |
-| **🌍 MacroPulse** | Adjust GDP, Inflation, and Rates to see 10-year wealth erosion maps. | Framer Motion + D3 Viz |
-| **💹 TrendMarket** | Gamified sentiment-based trading mimicking real stock trendlines. | Custom State Engine |
-| **🏠 LiveOrLease** | High-precision Rent vs. Buy decision engine with 20-year outcome graphs. | Financial Math Primitives |
-| **💎 MockYield** | Simulate DeFi staking, stablecoin yields, and smart contract risks. | Protocol Logic Mocking |
-| **🔔 Mastery Alerts** | Real-time notification center for global risks and achievements. | Context-Aware Toast System |
-
----
-
-## 🤖 Elite AI Pedagogy
-The internal **Mastery Mentor** is a specialized agent following a strict **5-Part Knowledge Transfer** structure to ensure high-impact learning:
-
-1. **📢 Quick Answer:** Rapid, energetic direct resolution to the query.
-2. **🔍 Deep Dive:** Technical analysis of the "Why" and "How" of variables.
-3. **💡 Interactive Question:** A thought-provoker to test user financial intuition.
-4. **✨ Key Insight:** The high-performance takeaway of the session.
-5. **🚀 Next Step:** direct routing to one of the 5 Mastery Modules for hands-on application.
+| Engine Suite | Key Core Features | Target Visual Metric |
+| --- | --- | --- |
+| **🌍 MacroPulse** | Simulates live GDP, CPI variations, and changing interest rates over a 10-year outlook. | Dynamic Inflation Erosion Graphs |
+| **💹 TrendMarket** | Interactive, gamified trading hub mimicking real-world stock cycles and bull/bear trends. | Real-Time Sentiment Indicators |
+| **🏠 LiveOrLease** | Deep-dive real estate Buy-vs-Rent decision matrix with localized tax structural benefits. | 20-Year Net-Value Comparison Bars |
+| **📈 Tax Estimator** | Complete progressive tax schedules matching localized US, India, UK, and European slabs. | Annual Take-Home Distribution Gauges |
+| **⚖️ Debt Payoff** | Comparative simulations tracking mathematical *Avalanche* vs. psychological *Snowball*. | Net Worth Compound Acceleration Slope |
+| **💎 MockYield** | Secure sandbox simulating Decentralized Finance (DeFi) optimization and smart compounding. | Interactive Staking APY Sliders |
+| **🔔 Mastery Alerts** | Context-aware toast warning matrix tracking risk violations and benchmark achievements. | High-Priority Flashing Banner |
 
 ---
 
-## 🕹️ Submission-Grade Highlights
-Optimized for elite evaluation with dedicated hackathon flows:
+## 🏆 Engagement & Gamification Blueprint
 
-*   **🎓 Goal-Based Onboarding:** Custom profile routing based on risk appetite (Wealth Shield, Capital Growth, or Passive Pulse).
-*   **🏆 Achievement Engine & QuickTips:** Real-time tracking of "Financial Milestones" with visual badges, supported by an interactive floating pedagogy system walkthrough.
-*   **📊 Dynamic Projections & Framer Motion:** Beautiful orchestrated chart entries mapping historical performance next to compounding scenarios that dynamically scale and fade in on mount.
-*   **📈 Simulated Market Bias (Bull/Bear):** A high-fidelity toggle inside Global Market Intel to switch between live feed simulations, Bull Run momentum (+35% yields), and Bear Stress Tests (-45% contraction), directly routing changes system-wide to alter future wealth path projections.
-*   **🛡️ Multi-Asset Alarm Guards:** Configurable drop alarms that automatically trigger instant notifications if any portfolio holdings plunge below user safety limits.
-*   **📥 Dual Audit Exporters (PDF + JSON):** Instant client-side compiling of standard, portable PDF Executive summary documents paired with raw, structured JSON profile and simulation data downloads for complete offline analysis.
-*   **🔗 Corporate Share Hub:** Copyable inviter credentials snippets and Twitter/LinkedIn share actions with micro card previews to show off overall mastery scores and level status.
-*   **💾 Database Integration:** Choice of **MongoDB** as our core MCP database system to store user settings, target logs, audit recommendations, and simulation inputs securely.
-*   **🛠️ Judge Mode Walkthrough & embedded Developer Case Study:** Direct guidance highlighting architectural decisions seamlessly.
+* **Duolingo-Inspired Streak Matrix:** Keeps users strictly consistent with beautiful visual streaks, visit counters, and financial habit building loops.
+* **NFT-Style Achievement Badges:** Unlocks beautifully styled technical badges and milestones directly on the core dashboard as simulation modules are conquered.
+* **Judge Walkthrough Guides:** Seamless, embedded interactive layout tours built directly into the UI to demonstrate elite design flows instantly.
 
 ---
 
-## 🛠️ App Stack Details
+## 📂 Project Structure
 
-*   **Framework:** React 18 (Vite) + TypeScript (Strict Type Safety)
-*   **Styling:** Luxe-Modern "Elite" UI (Tailwind CSS + Obsidian/Gold Contrast Variable Palette)
-*   **Motion:** Fluid layout transitions via `framer-motion`
-*   **AI Engine:** Gemini Pro Model Logic (`@google/genai` Integration)
-*   **State Control:** Robust state hooks for profile settings, badges, and real-time simulator values.
-
----
-
-## 📊 Key Metrics
-> *Designed for professional evaluation of UX performance*
-*   **50,000+** Active Financial Learners
-*   **$2M+** Total Assets Simulated
-*   **94%** Quiz Completion Rate
-*   **2.4s** Average Time to First Simulation
-
----
-
-## 📂 Project Navigation
-```bash
+```text
 src/
 ├── components/
-│   ├── mastery/         # ⚙️ Core Simulator Engines (Macro, Yield, Real Estate)
-│   ├── Notification.tsx # 🔔 Real-time PulseAlert System
-│   ├── Onboarding.tsx   # 🎯 Goal-Oriented Entry Flow
-│   ├── CaseStudy.tsx    # 📖 Full Project Documentation & MCP Architecture
-│   └── WealthPathChart.tsx # 📈 Rich Baseline vs. Scenario Projection Curves
-└── App.tsx              # 🏗️ Main State Orchestrator
+│   ├── mastery/             # Core Simulation Engines (MacroPulse, TrendMarket, LiveOrLease, MockYield)
+│   ├── TaxEstimator.tsx     # 📈 Progressive brackets, deductible analysis (USD, INR, EUR, GBP)
+│   ├── DebtPayoff.tsx       # ⚖️ Avalanche vs. Snowball payoff curves & net worth delta calculators
+│   ├── DeleteConfirmation.tsx# 🚨 Guardrail locking verification on asset/goal disposal
+│   ├── Dashboard.tsx        # 📊 Viewport-entering metrics, net-worth curves, learning milestones
+│   └── CaseStudy.tsx        # 📖 Full interactive developer documentation & GitOps MCP console
+├── lib/
+│   └── gemini.ts            # 🤖 @google/genai SDK initializing multi-step system prompts
+
 ```
 
 ---
 
-## 🎗️ Credits & Vision
-**Developed with ❤️ by [Code with Yash](https://yash-choubey-student-developer-port.vercel.app/)**
+## ⚡ Tech Stack & Performance Metrics
 
-> **Note:** This project is a submission-ready educational suite. It emphasizes long-term financial safety, economic intuition, and high-quality software craftsmanship.
+* **Frontend Architecture:** React 18 (Vite) + TypeScript (Strict Type Safety Guaranteed)
+* **Premium Styling:** Luxe-Modern "Elite" Theme (Tailwind CSS utilizing an Obsidian Charcoal & Metallic Gold palette)
+* **Fluid Animations:** Orchestrated viewport entrances and micro-interactions via `motion/react`
+* **Data Visualizers:** Custom D3-infused SVG renderers & Recharts-rendered responsive mathematical curves
+* **AI Engine Blueprint:** Gemini Pro Model Logic utilizing the modern, native `@google/genai` TypeScript SDK
+
+### 📊 Performance Baselines
+
+* **Average Time to First Simulation:** `2.4 seconds`
+* **User Engagement Index:** `94% Quiz completion rate`
+* **Simulated Capital Tracked:** `$2M+ Assets & Liabilities`
 
 ---
 
-<div align="center">
-  <p align="center">
-    <a href="#-wealthwise-elite">Back to Top</a>
-  </p>
-  <sub><b>Legal Disclaimer:</b> WealthWise Elite is a simulated educational tool. No real trades or financial advisory services are provided. Use for learning purposes only.</sub>
-</div>
+## ⚙️ Quickstart Installation
+
+1. **Clone the Repository:**
+```bash
+git clone [https://github.com/codewithyash28/WealthWise.git](https://github.com/codewithyash28/WealthWise.git)
+cd WealthWise
+
+```
+
+
+2. **Install Dependencies:**
+```bash
+npm install
+
+```
+
+
+3. **Configure Environment Variables:**
+Create a `.env` file in the root directory:
+```env
+VITE_GEMINI_API_KEY=your_gemini_api_key_here
+
+```
+
+
+4. **Launch Local Server:**
+```bash
+npm run dev
+
+```
+
+
+
+---
+
+## 🎀 Credits & Attribution
+
+Designed, engineered, and fine-tuned with extreme layout precision by **[Code with Yash](https://github.com/codewithyash28)**.
+
+***Educational Suite Disclaimer:** WealthWise Elite is an interactive educational sandbox simulator. Projections, tax estimations, and wealth strategies calculated here are purely pedagogical model exercises and should not be construed as actual personal legal or financial advice.*
+
+
+
+
+

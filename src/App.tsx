@@ -331,6 +331,7 @@ function AppContent() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           uid: u.uid,
+          email: u.email,
           profile: currentProfile,
           budget: currentBudget
         })

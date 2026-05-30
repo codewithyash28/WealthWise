@@ -640,7 +640,7 @@ export function BudgetPlanner({ user, onSave, initialPlan, gitProvider = "gitlab
                     <h4 className="text-text-primary font-bold uppercase text-[9px] tracking-widest text-accent-gold mb-1">
                       4. [GITOPS CONFIGURATION ACTIONS]
                     </h4>
-                    <p className="pl-2 border-l border-accent-gold/20">
+                    <div className="pl-2 border-l border-accent-gold/20">
                       Changes executed in repository config path: `wealth-policies/budget-laws.json` in branch `incidents/medical-crunch`.
                       New limits applied:
                       <pre className="bg-bg-void text-accent-gold p-2 mt-2 rounded border border-border/50 text-[10px] text-left">
@@ -656,7 +656,7 @@ export function BudgetPlanner({ user, onSave, initialPlan, gitProvider = "gitlab
   "status": "EMERGENCY_OVERRIDE_ENABLED"
 }`}
                       </pre>
-                    </p>
+                    </div>
                   </div>
 
                   <div>
