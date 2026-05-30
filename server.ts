@@ -314,7 +314,7 @@ app.post("/api/auth/sync", async (req, res) => {
 // Gemini Insight API
 app.post("/api/gemini/insight", async (req, res) => {
   try {
-    const { prompt } = req.body;
+    const { prompt, history = [] } = req.body;
     if (!prompt) {
       return res.status(400).json({ error: "Prompt is required." });
     }
@@ -325,15 +325,17 @@ app.post("/api/gemini/insight", async (req, res) => {
       });
     }
 
-    const response = await ai.models.generateContent({
-      model: "gemini-3.5-flash",
-      contents: [{ role: "user", parts: [{ text: prompt }] }],
+    const contents = [...history, { role: "user", parts: [{ text: prompt }] }];
+
+    const result = await ai.models.generateContent({
+      model: "gemini-1.5-flash",
+      contents,
       config: {
         systemInstruction: "You are the WealthWise AI Advisor, a world-class personal finance expert. Provide clear, actionable, and encouraging financial advice. Use formatting like bolding and bullet points for readability. Always include a disclaimer that this is for educational purposes and not professional financial advice.",
       }
     });
 
-    res.json({ text: response.text || "" });
+    res.json({ text: result.text || "" });
   } catch (error: any) {
     console.error("[Gemini Insight Endpoint Error]:", error);
     res.status(500).json({ error: "An error occurred generating insights." });
@@ -373,8 +375,8 @@ app.post("/api/gemini/audit", async (req, res) => {
       Max 300 words.
     `;
 
-    const response = await ai.models.generateContent({
-      model: "gemini-3.5-flash",
+    const result = await ai.models.generateContent({
+      model: "gemini-1.5-flash",
       contents: [{ role: "user", parts: [{ text: prompt }] }],
       config: {
         temperature: 0.7,
@@ -383,7 +385,7 @@ app.post("/api/gemini/audit", async (req, res) => {
       }
     });
 
-    res.json({ text: response.text || "Unable to generate audit at this time." });
+    res.json({ text: result.text || "Unable to generate audit at this time." });
   } catch (error: any) {
     console.error("[Gemini Audit Endpoint Error]:", error);
     res.status(500).json({ error: "An error occurred generating wealth audit." });
