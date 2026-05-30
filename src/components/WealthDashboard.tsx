@@ -58,11 +58,11 @@ export function WealthDashboard({ user, budget, onUnlockAchievement }: WealthDas
   }, [user, budget, currency]);
 
   const masteryTier = useMemo(() => {
-    if (healthScore >= 80) return { label: 'Diamond', color: 'text-[#b9f2ff]', bg: 'bg-[#b9f2ff]/10', border: 'border-[#b9f2ff]/20' };
-    if (healthScore >= 60) return { label: 'Platinum', color: 'text-[#e5e4e2]', bg: 'bg-[#e5e4e2]/10', border: 'border-[#e5e4e2]/20' };
-    if (healthScore >= 40) return { label: 'Gold', color: 'text-accent-gold', bg: 'bg-accent-gold/10', border: 'border-accent-gold/20' };
-    if (healthScore >= 20) return { label: 'Silver', color: 'text-[#c0c0c0]', bg: 'bg-[#c0c0c0]/10', border: 'border-[#c0c0c0]/20' };
-    return { label: 'Bronze', color: 'text-[#cd7f32]', bg: 'bg-[#cd7f32]/10', border: 'border-[#cd7f32]/20' };
+    if (healthScore >= 80) return { label: 'Diamond', color: 'text-[#b9f2ff]', bg: 'bg-[#b9f2ff]/5', border: 'border-[#b9f2ff]/20' };
+    if (healthScore >= 60) return { label: 'Platinum', color: 'text-[#e5e4e2]', bg: 'bg-[#e5e4e2]/5', border: 'border-[#e5e4e2]/20' };
+    if (healthScore >= 40) return { label: 'Gold', color: 'text-accent-gold', bg: 'bg-accent-gold/5', border: 'border-accent-gold/20' };
+    if (healthScore >= 20) return { label: 'Silver', color: 'text-[#c0c0c0]', bg: 'bg-[#c0c0c0]/5', border: 'border-[#c0c0c0]/20' };
+    return { label: 'Bronze', color: 'text-[#cd7f32]', bg: 'bg-[#cd7f32]/5', border: 'border-[#cd7f32]/20' };
   }, [healthScore]);
 
   const handleRunAudit = async () => {
@@ -81,23 +81,24 @@ export function WealthDashboard({ user, budget, onUnlockAchievement }: WealthDas
   return (
     <div className="container mx-auto px-6 py-12 space-y-12">
       {/* Header Section */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <div className="space-y-2">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-4 border-b border-white/[0.04]">
+        <div className="space-y-2 text-left">
           <motion.h1 
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-5xl font-display font-bold tracking-tight"
+            className="text-4xl md:text-5xl font-display font-medium tracking-tight flex flex-wrap items-center gap-3"
           >
-            Welcome back, <span className="text-accent-gold">{user.name}</span>
-            <div className={cn("inline-flex items-center gap-1.5 ml-4 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border", masteryTier.bg, masteryTier.color, masteryTier.border)}>
+            <span>Welcome back,</span>
+            <span className="text-accent-gold italic font-semibold">{user.name}</span>
+            <div className={cn("inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-[0.15em] border backdrop-blur-md shadow-sm", masteryTier.bg, masteryTier.color, masteryTier.border)}>
               <Trophy className="w-3 h-3" /> {masteryTier.label} Tier
             </div>
           </motion.h1>
           <div className="flex items-center gap-4">
-            <p className="text-text-secondary text-lg">Your Personal Wealth Architect is ready.</p>
+            <p className="text-text-secondary text-sm md:text-base font-light">Your Personal Wealth Architect is active.</p>
             <button 
-              onClick={() => window.location.reload()} // Simple way to trigger tutorial if we add a check for it, or I can just add a state
-              className="text-xs text-accent-gold hover:underline font-bold uppercase tracking-widest"
+              onClick={() => window.location.reload()} 
+              className="text-[9px] text-accent-gold hover:underline font-bold uppercase tracking-widest"
             >
               Restart Tutorial
             </button>
@@ -105,23 +106,23 @@ export function WealthDashboard({ user, budget, onUnlockAchievement }: WealthDas
         </div>
         
         <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+          whileHover={{ scale: 1.02, y: -1 }}
+          whileTap={{ scale: 0.98 }}
           onClick={handleRunAudit}
           disabled={isAuditing}
-          className="btn-primary flex items-center gap-3 px-8 py-4 text-lg group"
+          className="btn-primary flex items-center gap-2.5 px-6 py-3.5 text-[10px] font-bold uppercase tracking-widest group"
         >
           {isAuditing ? (
-            <BrainCircuit className="w-6 h-6 animate-spin" />
+            <BrainCircuit className="w-4 h-4 animate-spin text-bg-void" />
           ) : (
-            <Sparkles className="w-6 h-6 text-bg-void group-hover:animate-pulse" />
+            <Sparkles className="w-4 h-4 text-bg-void group-hover:scale-110 transition-transform" />
           )}
           {isAuditing ? "Analyzing Wealth..." : "One-Click AI Audit"}
         </motion.button>
       </div>
 
       {/* Elite Status Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
         {[
           { label: "Overall Mastery", value: `${healthScore}%`, color: "text-accent-gold" },
           { label: "Savings Rate", value: budget ? `${Math.round(((budget.income - Object.values(budget.expenses).reduce((a, b) => a + b, 0)) / budget.income) * 100)}%` : "0%", color: "text-accent-emerald" },
@@ -130,13 +131,13 @@ export function WealthDashboard({ user, budget, onUnlockAchievement }: WealthDas
         ].map((stat, i) => (
           <motion.div
             key={i}
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.1 }}
-            className="card p-6 border-border/40 bg-bg-secondary/20 flex flex-col items-center text-center space-y-1"
+            transition={{ delay: i * 0.08 }}
+            className="card p-6 border-white/[0.04] bg-white/[0.01] hover:bg-white/[0.03] flex flex-col items-center text-center space-y-1 transition-all"
           >
-            <div className="text-[10px] text-text-muted font-bold uppercase tracking-widest">{stat.label}</div>
-            <div className={cn("text-2xl font-display font-bold", stat.color)}>{stat.value}</div>
+            <div className="text-[9px] text-text-muted font-bold uppercase tracking-[0.15em]">{stat.label}</div>
+            <div className={cn("text-2xl font-display font-semibold", stat.color)}>{stat.value}</div>
           </motion.div>
         ))}
       </div>
@@ -146,16 +147,16 @@ export function WealthDashboard({ user, budget, onUnlockAchievement }: WealthDas
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="card p-8 border-accent-gold/30 bg-accent-gold/5 space-y-6"
+          className="card p-8 border-accent-gold/10 bg-accent-gold/[0.02] space-y-6"
         >
-          <div className="flex items-center justify-between">
-            <div className="space-y-1">
-              <h2 className="text-2xl font-display font-bold flex items-center gap-2">
-                <Sparkles className="w-6 h-6 text-accent-gold" /> Your Path to Wealth Elite
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="space-y-1 text-left">
+              <h2 className="text-xl font-display font-medium flex items-center gap-2 text-text-primary">
+                <Sparkles className="w-5 h-5 text-accent-gold" /> Your Path to Wealth Elite
               </h2>
-              <p className="text-text-secondary text-sm">Complete these steps to unlock the full power of your Wealth Architect.</p>
+              <p className="text-text-secondary text-xs">Complete these baseline tasks to unlock your personalized financial audit recommendations.</p>
             </div>
-            <div className="hidden sm:block px-4 py-2 rounded-full bg-accent-gold/10 border border-accent-gold/20 text-accent-gold text-xs font-bold uppercase tracking-widest">
+            <div className="px-3.5 py-1.5 rounded-full bg-accent-gold/5 border border-accent-gold/15 text-accent-gold text-[9px] font-bold uppercase tracking-widest">
               {checklist.filter(i => i.completed).length} / {checklist.length} Completed
             </div>
           </div>
@@ -166,23 +167,23 @@ export function WealthDashboard({ user, budget, onUnlockAchievement }: WealthDas
                 key={item.id}
                 href={item.hash}
                 className={cn(
-                  "p-4 rounded-xl border transition-all flex flex-col gap-3 group",
+                  "p-5 rounded-2xl border transition-all flex flex-col gap-3 group text-left",
                   item.completed 
-                    ? "bg-accent-emerald/5 border-accent-emerald/20 opacity-80" 
-                    : "bg-bg-secondary border-border hover:border-accent-gold/50 hover:bg-accent-gold/5"
+                    ? "bg-accent-emerald/[0.02] border-accent-emerald/10 opacity-70 hover:opacity-100" 
+                    : "bg-white/[0.01] border-white/[0.04] hover:border-accent-gold/20 hover:bg-accent-gold/[0.03]"
                 )}
               >
                 <div className="flex items-center justify-between">
                   <div className={cn(
-                    "w-8 h-8 rounded-lg flex items-center justify-center",
-                    item.completed ? "bg-accent-emerald/20 text-accent-emerald" : "bg-bg-primary text-text-muted"
+                    "w-7 h-7 rounded-lg flex items-center justify-center transition-all",
+                    item.completed ? "bg-accent-emerald/10 text-accent-emerald" : "bg-bg-primary border border-white/[0.06] text-text-muted group-hover:border-accent-gold/30"
                   )}>
-                    {item.completed ? <CheckCircle2 className="w-5 h-5" /> : <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />}
+                    {item.completed ? <CheckCircle2 className="w-4 h-4" /> : <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />}
                   </div>
                 </div>
                 <div>
-                  <div className={cn("font-bold text-sm", item.completed && "line-through text-text-muted")}>{item.label}</div>
-                  <p className="text-[10px] text-text-muted uppercase tracking-wider mt-1">{item.desc}</p>
+                  <div className={cn("font-bold text-xs uppercase tracking-wide", item.completed ? "line-through text-text-muted" : "text-text-primary")}>{item.label}</div>
+                  <p className="text-[10px] text-text-secondary leading-relaxed mt-1">{item.desc}</p>
                 </div>
               </a>
             ))}
@@ -193,34 +194,34 @@ export function WealthDashboard({ user, budget, onUnlockAchievement }: WealthDas
       {/* Achievements Section */}
       {(user.achievements || []).length > 0 && (
         <motion.div 
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           className="space-y-4"
         >
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-bold uppercase tracking-widest text-text-muted flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4" /> Elite Achievements
+            <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-text-secondary flex items-center gap-1.5">
+              <ShieldCheck className="w-4 h-4 text-accent-gold" /> Elite Achievements
             </h3>
             <div className="flex items-center gap-4">
               {user.achievements && user.achievements.length < 6 && (
-                <span className="text-[10px] text-text-muted italic">Next Milestone: Keep exploring to unlock more...</span>
+                <span className="text-[9px] text-text-muted italic">Simulate more modules to unlock next achievements...</span>
               )}
-              <span className="text-[10px] text-accent-gold font-bold">{user.achievements?.length} / 6 Unlocked</span>
+              <span className="text-[10px] text-accent-gold font-bold">{user.achievements?.length} / 6 Earned</span>
             </div>
           </div>
-          <div className="flex flex-wrap gap-4">
+          <div className="flex flex-wrap gap-3">
             {user.achievements?.map((achievement) => (
               <div 
                 key={achievement.id}
                 title={`${achievement.title}: ${achievement.description}`}
                 className="group relative"
               >
-                <div className="w-12 h-12 rounded-xl bg-accent-gold/10 border border-accent-gold/20 flex items-center justify-center text-2xl transition-all hover:scale-110 hover:bg-accent-gold/20 cursor-help">
+                <div className="w-11 h-11 rounded-xl bg-white/[0.02] border border-white/[0.04] hover:border-accent-gold/30 flex items-center justify-center text-xl transition-all duration-300 hover:scale-105 hover:bg-accent-gold/5 cursor-help shadow-sm">
                   {achievement.icon}
                 </div>
-                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 bg-bg-void border border-border rounded-lg text-[10px] text-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 shadow-xl">
-                  <div className="font-bold text-accent-gold">{achievement.title}</div>
-                  <div className="text-text-muted mt-1">{achievement.description}</div>
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-3 bg-bg-secondary border border-white/[0.06] rounded-xl text-[10px] text-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-10 shadow-xl">
+                  <div className="font-bold text-accent-gold uppercase tracking-wider">{achievement.title}</div>
+                  <div className="text-text-secondary mt-1 text-[9px] leading-relaxed">{achievement.description}</div>
                 </div>
               </div>
             ))}
@@ -230,13 +231,13 @@ export function WealthDashboard({ user, budget, onUnlockAchievement }: WealthDas
 
       {/* Insights and Projection Grid */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-        <div className="xl:col-span-2 card p-8 space-y-6">
+        <div className="xl:col-span-2 card p-8 space-y-6 text-left">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-bold uppercase tracking-widest text-text-muted flex items-center gap-2">
-              <TrendingUp className="w-4 h-4" /> Strategic Wealth Pathing
+            <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-text-secondary flex items-center gap-1.5">
+              <TrendingUp className="w-4 h-4 text-accent-gold" /> Strategic Wealth Pathing
             </h3>
-            <div className="flex bg-bg-secondary p-1 rounded-lg border border-border">
-              <button className="px-3 py-1 text-[10px] font-bold bg-bg-primary rounded-md shadow-sm">6M Projection</button>
+            <div className="flex bg-white/[0.02] p-1 rounded-lg border border-white/[0.04]">
+              <button className="px-3 py-1 text-[9px] font-bold bg-white/[0.04] text-accent-gold rounded-md shadow-sm uppercase tracking-wider">6M Projection</button>
             </div>
           </div>
           <WealthPathChart user={user} budget={budget} />
@@ -251,117 +252,123 @@ export function WealthDashboard({ user, budget, onUnlockAchievement }: WealthDas
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Health Score Card */}
         <motion.div 
-          initial={{ opacity: 0, scale: 0.9 }}
+          initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           className="card p-8 flex flex-col items-center justify-center text-center space-y-6 relative overflow-hidden"
         >
           <div className="absolute top-0 right-0 p-4">
-            <ShieldCheck className="w-6 h-6 text-accent-gold opacity-20" />
+            <ShieldCheck className="w-6 h-6 text-accent-gold opacity-10" />
           </div>
           
-          <h3 className="text-sm font-bold uppercase tracking-[0.2em] text-text-muted">Financial Health Score</h3>
+          <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-text-secondary">Financial Health Score</h3>
           
           <div className="relative w-48 h-48 flex items-center justify-center">
             <svg className="w-full h-full transform -rotate-90">
+              <defs>
+                <linearGradient id="goldGaugeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#E2C9A1" />
+                  <stop offset="100%" stopColor="#9F8259" />
+                </linearGradient>
+              </defs>
               <circle
                 cx="96"
                 cy="96"
-                r="88"
+                r="84"
                 stroke="currentColor"
-                strokeWidth="8"
+                strokeWidth="4.5"
                 fill="transparent"
-                className="text-border"
+                className="text-white/[0.02]"
               />
               <circle
                 cx="96"
                 cy="96"
-                r="88"
-                stroke="currentColor"
-                strokeWidth="8"
+                r="84"
+                stroke="url(#goldGaugeGrad)"
+                strokeWidth="5"
                 fill="transparent"
-                strokeDasharray={552.92}
-                strokeDashoffset={552.92 - (552.92 * healthScore) / 100}
-                className="text-accent-gold transition-all duration-1000 ease-out"
+                strokeDasharray={527.7}
+                strokeDashoffset={527.7 - (527.7 * healthScore) / 100}
+                className="transition-all duration-1000 ease-out"
                 strokeLinecap="round"
               />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-6xl font-display font-bold">{healthScore}</span>
-              <span className="text-xs text-text-muted uppercase tracking-widest">Out of 100</span>
+              <span className="text-6xl font-display font-light text-text-primary tracking-tighter">{healthScore}</span>
+              <span className="text-[8px] text-text-muted uppercase tracking-[0.2em] font-bold">Out of 100</span>
             </div>
           </div>
 
-          <p className="text-sm text-text-secondary max-w-[200px]">
-            {healthScore > 80 ? "Excellent! You're in the top 5% of financial planners." : 
-             healthScore > 60 ? "Good progress. A few tweaks could boost your score." :
-             "Let's focus on building your foundation."}
+          <p className="text-xs text-text-secondary max-w-[200px] leading-relaxed">
+            {healthScore > 80 ? "Outstanding architecture! You operate in the top decile of structured financial planners." : 
+             healthScore > 60 ? "Solid framework. Fine-tuning your allocation rates could elevate your score." :
+             "Let's focus on defining a budget baseline to strengthen your core foundation."}
           </p>
         </motion.div>
 
         {/* Wealth Summary Card */}
-        <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
           <div className="card p-8 space-y-6 relative group overflow-hidden">
-            <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:scale-110 transition-transform">
-              <Wallet className="w-12 h-12" />
+            <div className="absolute top-0 right-0 p-6 opacity-[0.02] group-hover:scale-105 group-hover:opacity-[0.05] transition-all duration-300">
+              <Wallet className="w-14 h-14" />
             </div>
-            <h3 className="text-sm font-bold uppercase tracking-widest text-text-muted">Net Worth</h3>
+            <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-text-secondary">Net Worth</h3>
             <div className="space-y-1">
-              <div className="text-4xl font-display font-bold">
+              <div className="text-4xl font-display font-light text-text-primary tracking-tight">
                 {formatCurrency(user.netWorth.assets - user.netWorth.liabilities, user.currency, currency.locale)}
               </div>
               {budget && budget.history && budget.history.length > 1 && (
                 <div className={cn(
-                  "flex items-center gap-2 text-sm font-medium",
-                  budget.history[budget.history.length - 1].total < budget.history[budget.history.length - 2].total ? "text-accent-emerald" : "text-accent-red"
+                  "flex items-center gap-1 text-xs font-semibold uppercase tracking-wider",
+                  budget.history[budget.history.length - 1].total < budget.history[budget.history.length - 2].total ? "text-accent-emerald" : "text-[#FF6B6B]"
                 )}>
-                  {budget.history[budget.history.length - 1].total < budget.history[budget.history.length - 2].total ? <TrendingUp className="w-4 h-4" /> : <ArrowDownRight className="w-4 h-4" />}
+                  {budget.history[budget.history.length - 1].total < budget.history[budget.history.length - 2].total ? <TrendingUp className="w-3.5 h-3.5" /> : <ArrowDownRight className="w-3.5 h-3.5" />}
                   <span>
                     {Math.abs(Math.round(((budget.history[budget.history.length - 1].total - budget.history[budget.history.length - 2].total) / budget.history[budget.history.length - 2].total) * 100))}% vs last month
                   </span>
                 </div>
               )}
             </div>
-            <div className="pt-6 border-t border-border grid grid-cols-2 gap-4">
+            <div className="pt-6 border-t border-white/[0.04] grid grid-cols-2 gap-4">
               <div>
-                <div className="text-[10px] text-text-muted uppercase tracking-wider">Assets</div>
-                <div className="text-lg font-mono font-bold">{formatCurrency(user.netWorth.assets, user.currency, currency.locale)}</div>
+                <div className="text-[9px] text-text-muted uppercase tracking-wider font-bold">Total Assets</div>
+                <div className="text-base font-mono font-bold text-text-primary">{formatCurrency(user.netWorth.assets, user.currency, currency.locale)}</div>
               </div>
               <div>
-                <div className="text-[10px] text-text-muted uppercase tracking-wider">Liabilities</div>
-                <div className="text-lg font-mono font-bold text-accent-red">{formatCurrency(user.netWorth.liabilities, user.currency, currency.locale)}</div>
+                <div className="text-[9px] text-text-muted uppercase tracking-wider font-bold">Total Liabilities</div>
+                <div className="text-base font-mono font-bold text-[#FF6B6B]">{formatCurrency(user.netWorth.liabilities, user.currency, currency.locale)}</div>
               </div>
             </div>
           </div>
 
-          <div className="card p-8 space-y-6 relative group overflow-hidden cursor-pointer" onClick={() => window.location.hash = "#portfolio"}>
-            <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:scale-110 transition-transform">
-              <PieChart className="w-12 h-12" />
+          <div className="card p-8 space-y-6 relative group overflow-hidden cursor-pointer hover:border-accent-gold/20" onClick={() => window.location.hash = "#portfolio"}>
+            <div className="absolute top-0 right-0 p-6 opacity-[0.02] group-hover:scale-105 group-hover:opacity-[0.05] transition-all duration-300">
+              <PieChart className="w-14 h-14" />
             </div>
-            <h3 className="text-sm font-bold uppercase tracking-widest text-text-muted">Portfolio Performance</h3>
+            <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-text-secondary">Portfolio Allocation</h3>
             <div className="space-y-1">
-              <div className="text-4xl font-display font-bold text-accent-gold">
+              <div className="text-4xl font-display font-light text-accent-gold tracking-tight">
                 {formatCurrency(user.portfolio?.totalValue || 0, user.currency, currency.locale)}
               </div>
               {user.portfolio && (
                 <div className={cn(
-                  "flex items-center gap-2 text-sm font-medium",
-                  user.portfolio.change24h >= 0 ? "text-accent-emerald" : "text-accent-red"
+                  "flex items-center gap-1 text-xs font-semibold uppercase tracking-wider",
+                  user.portfolio.change24h >= 0 ? "text-accent-emerald" : "text-[#FF6B6B]"
                 )}>
-                  {user.portfolio.change24h >= 0 ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownRight className="w-4 h-4" />}
+                  {user.portfolio.change24h >= 0 ? <ArrowUpRight className="w-3.5 h-3.5" /> : <ArrowDownRight className="w-3.5 h-3.5" />}
                   <span>{user.portfolio.change24h >= 0 ? "+" : ""}{user.portfolio.change24h}% (24h)</span>
                 </div>
               )}
             </div>
-            <div className="pt-6 border-t border-border flex items-center justify-between">
-              <div className="space-y-1">
-                <div className="text-xs text-text-muted uppercase tracking-widest font-bold">Alpha</div>
-                <div className="text-xl font-mono font-bold text-accent-emerald">
+            <div className="pt-6 border-t border-white/[0.04] flex items-center justify-between">
+              <div className="space-y-0.5">
+                <div className="text-[9px] text-text-muted uppercase tracking-wider font-bold">Simulated Alpha</div>
+                <div className="text-base font-mono font-bold text-accent-emerald">
                   {user.portfolio && user.portfolio.holdings.length > 0 ? "+4.2%" : "--"}
                 </div>
               </div>
-              <div className="space-y-1 text-right">
-                <div className="text-xs text-text-muted uppercase tracking-widest font-bold">Sharpe</div>
-                <div className="text-xl font-mono font-bold text-accent-gold">
+              <div className="space-y-0.5 text-right">
+                <div className="text-[9px] text-text-muted uppercase tracking-wider font-bold">Sharpe Ratio</div>
+                <div className="text-base font-mono font-bold text-accent-gold">
                   {user.portfolio && user.portfolio.holdings.length > 0 ? "1.85" : "--"}
                 </div>
               </div>
@@ -373,94 +380,102 @@ export function WealthDashboard({ user, budget, onUnlockAchievement }: WealthDas
       {/* Audit Result / Action Items */}
       {auditResult && (
         <motion.div 
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 25 }}
           animate={{ opacity: 1, y: 0 }}
-          className="card p-8 border-accent-gold/20 bg-accent-gold/5 space-y-8"
+          className="card p-8 border-accent-gold/15 bg-accent-gold/[0.01] space-y-8 text-left"
         >
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-accent-gold/20 flex items-center justify-center">
-                <Sparkles className="w-6 h-6 text-accent-gold" />
+              <div className="w-11 h-11 rounded-2xl bg-accent-gold/10 flex items-center justify-center shadow-inner">
+                <Sparkles className="w-5 h-5 text-accent-gold" />
               </div>
               <div>
-                <h2 className="text-2xl font-display font-bold">AI Wealth Audit Results</h2>
-                <p className="text-text-secondary text-sm">Generated just now based on your real-time data.</p>
+                <h2 className="text-xl font-display font-medium text-text-primary">AI Wealth Audit Insights</h2>
+                <p className="text-text-secondary text-xs">Generated based on your local device datasets.</p>
               </div>
             </div>
-            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-bg-secondary border border-border text-[10px] font-bold uppercase tracking-widest text-text-muted">
-              <Info className="w-3 h-3" /> Educational Only
+            <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/[0.02] border border-white/[0.04] text-[9px] font-bold uppercase tracking-widest text-text-muted">
+              <Info className="w-3 h-3" /> Technical Audit
             </div>
           </div>
           
-          <div className="prose prose-invert max-w-none prose-p:text-text-secondary prose-strong:text-accent-gold prose-headings:text-text-primary">
+          <div className="prose prose-invert max-w-none prose-p:text-text-secondary prose-p:text-xs prose-p:leading-relaxed prose-strong:text-accent-gold prose-headings:text-text-primary">
             {auditResult.split('\n').map((line, i) => (
-              <p key={i} className="mb-2">{line}</p>
+              <p key={i} className="mb-2.5 font-light">{line}</p>
             ))}
           </div>
 
-          <div className="pt-6 border-t border-border/50">
-            <p className="text-[10px] text-text-muted italic text-center">
-              Disclaimer: This audit is generated by AI for educational purposes only and does not constitute professional financial advice. 
-              WealthWise Elite does not store your sensitive financial documents.
+          <div className="pt-6 border-t border-white/[0.04]">
+            <p className="text-[8px] text-text-muted italic text-center uppercase tracking-widest">
+              Educational projection only. Not financial advice. Device local verification layer.
             </p>
           </div>
         </motion.div>
       )}
 
       {/* Quick Navigation / Mastery Modules */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {[
-          { title: "MacroPulse Engine", desc: "Economic simulator", icon: <BrainCircuit />, hash: "#macropulse", color: "text-accent-gold" },
-          { title: "TrendMarket", desc: "Pop-culture trading", icon: <TrendingUp />, hash: "#trendmarket", color: "text-accent-emerald" },
-          { title: "LiveOrLease", desc: "Rent vs Buy engine", icon: <PieChart />, hash: "#liveorlease", color: "text-accent-blue" },
-          { title: "MockYield DeFi", desc: "Staking mastery", icon: <Sparkles />, hash: "#mockyield", color: "text-accent-purple" },
-        ].map((item, i) => (
-          <motion.a
-            key={i}
-            href={item.hash}
-            whileHover={{ y: -5, backgroundColor: "var(--bg-card-hover)" }}
-            className="card p-6 flex flex-col gap-3 group border-border/40"
-          >
-            <div className={cn("w-12 h-12 rounded-xl bg-bg-secondary flex items-center justify-center group-hover:scale-110 transition-transform", item.color)}>
-              {item.icon}
-            </div>
-            <div>
-              <h4 className="font-bold text-sm">{item.title}</h4>
-              <p className="text-[10px] text-text-muted uppercase tracking-wider">{item.desc}</p>
-            </div>
-            <div className="pt-2 flex items-center text-[10px] font-bold text-accent-gold opacity-0 group-hover:opacity-100 transition-opacity">
-              ENTER MODULE <ChevronRight className="w-3 h-3 ml-1" />
-            </div>
-          </motion.a>
-        ))}
-      </div>
-
-      {/* Quick Navigation / Next Steps */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {[
-          { title: "Portfolio Overview", desc: "Track your global asset allocation.", icon: <PieChart />, hash: "#portfolio" },
-          { title: "Budget Architect", desc: "Find hidden savings in your expenditures.", icon: <TrendingUp />, hash: "#budget" },
-          { title: "Test Literacy", desc: "Boost your score with a quick quiz.", icon: <Target />, hash: "#quiz" },
-          { title: "Strategic Projection", desc: "See how your wealth grows over time.", icon: <BrainCircuit />, hash: "#simulator" },
-        ].map((item, i) => (
-          <motion.a
-            key={i}
-            href={item.hash}
-            whileHover={{ x: 5, backgroundColor: "var(--bg-card-hover)" }}
-            className="card p-6 flex items-center justify-between group"
-          >
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-xl bg-bg-secondary flex items-center justify-center text-accent-gold group-hover:scale-110 transition-transform">
+      <div className="space-y-4 text-left">
+        <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-text-secondary flex items-center gap-1.5">
+          <BrainCircuit className="w-4 h-4 text-accent-gold" /> Core Mastery Modules
+        </h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[
+            { title: "MacroPulse Engine", desc: "Economic simulator", icon: <BrainCircuit />, hash: "#macropulse", color: "text-accent-gold" },
+            { title: "TrendMarket", desc: "Pop-culture trading", icon: <TrendingUp />, hash: "#trendmarket", color: "text-accent-emerald" },
+            { title: "LiveOrLease", desc: "Rent vs Buy engine", icon: <PieChart />, hash: "#liveorlease", color: "text-accent-blue" },
+            { title: "MockYield DeFi", desc: "Staking mastery", icon: <Sparkles />, hash: "#mockyield", color: "text-[#E2C9A1]" },
+          ].map((item, i) => (
+            <motion.a
+              key={i}
+              href={item.hash}
+              whileHover={{ y: -3, backgroundColor: "var(--color-bg-card-hover)" }}
+              className="card p-6 flex flex-col gap-4 group border-white/[0.03] transition-all text-left"
+            >
+              <div className={cn("w-10 h-10 rounded-xl bg-white/[0.02] border border-white/[0.04] flex items-center justify-center group-hover:scale-105 transition-transform", item.color)}>
                 {item.icon}
               </div>
               <div>
-                <h4 className="font-bold text-sm">{item.title}</h4>
-                <p className="text-xs text-text-muted">{item.desc}</p>
+                <h4 className="font-bold text-xs uppercase tracking-wide text-text-primary">{item.title}</h4>
+                <p className="text-[9px] text-text-secondary uppercase tracking-widest mt-1">{item.desc}</p>
               </div>
-            </div>
-            <ChevronRight className="w-5 h-5 text-text-muted group-hover:text-accent-gold transition-colors" />
-          </motion.a>
-        ))}
+              <div className="pt-2 flex items-center text-[9px] font-bold text-accent-gold opacity-0 group-hover:opacity-100 transition-opacity">
+                ENTER MODULE <ChevronRight className="w-3 h-3 ml-0.5" />
+              </div>
+            </motion.a>
+          ))}
+        </div>
+      </div>
+
+      {/* Quick Navigation / Next Steps */}
+      <div className="space-y-4 text-left">
+        <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-text-secondary flex items-center gap-1.5">
+          <Target className="w-4 h-4 text-accent-gold" /> Strategic Management
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {[
+            { title: "Portfolio Allocation", desc: "Balance your baseline assets and alpha triggers.", icon: <PieChart />, hash: "#portfolio" },
+            { title: "Budget Architect", desc: "Optimize savings and trim redundant expenditures.", icon: <TrendingUp />, hash: "#budget" },
+            { title: "Academic Quizzes", desc: "Complete literacy exercises to lift your health score.", icon: <Target />, hash: "#quiz" },
+          ].map((item, i) => (
+            <motion.a
+              key={i}
+              href={item.hash}
+              whileHover={{ x: 3, backgroundColor: "var(--color-bg-card-hover)" }}
+              className="card p-6 flex items-center justify-between group border-white/[0.03] transition-all text-left"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-9 h-9 rounded-xl bg-white/[0.02] border border-white/[0.04] flex items-center justify-center text-accent-gold group-hover:scale-105 transition-transform">
+                  {item.icon}
+                </div>
+                <div>
+                  <h4 className="font-bold text-xs uppercase tracking-wide text-text-primary">{item.title}</h4>
+                  <p className="text-[11px] text-text-secondary mt-0.5 font-light">{item.desc}</p>
+                </div>
+              </div>
+              <ChevronRight className="w-4 h-4 text-text-muted group-hover:text-accent-gold transition-colors" />
+            </motion.a>
+          ))}
+        </div>
       </div>
     </div>
   );

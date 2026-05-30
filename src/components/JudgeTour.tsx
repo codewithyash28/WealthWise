@@ -81,7 +81,7 @@ export function JudgeTour({ onClose }: JudgeTourProps) {
         initial={{ opacity: 0, y: 50, scale: 0.9 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: 50, scale: 0.9 }}
-        className="w-full max-w-xl bg-bg-card border border-accent-gold/50 shadow-[0_0_50px_rgba(240,180,41,0.2)] rounded-3xl p-8 pointer-events-auto relative overflow-hidden"
+        className="w-full max-w-xl bg-bg-card border border-accent-gold/50 shadow-[0_0_50px_rgba(197,168,128,0.15)] rounded-3xl p-8 pointer-events-auto relative overflow-hidden"
       >
         <div className="absolute top-0 right-0 p-8 opacity-5">
            {step.icon}

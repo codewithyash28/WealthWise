@@ -52,8 +52,8 @@ export function WealthPathChart({ user, budget }: WealthPathChartProps) {
         {
           label: 'Historical Net Worth',
           data: values,
-          borderColor: '#f0b429',
-          backgroundColor: 'rgba(240, 180, 41, 0.1)',
+          borderColor: '#C5A880',
+          backgroundColor: 'rgba(197, 168, 128, 0.1)',
           fill: true,
           tension: 0.4,
           pointRadius: 4,
@@ -62,9 +62,9 @@ export function WealthPathChart({ user, budget }: WealthPathChartProps) {
         {
           label: 'AI Projection',
           data: projections,
-          borderColor: '#10b981',
+          borderColor: '#10D9A0',
           borderDash: [5, 5],
-          backgroundColor: 'rgba(16, 185, 129, 0.05)',
+          backgroundColor: 'rgba(16, 217, 160, 0.08)',
           fill: true,
           tension: 0.4,
           pointRadius: 4,
@@ -90,10 +90,10 @@ export function WealthPathChart({ user, budget }: WealthPathChartProps) {
       tooltip: {
         mode: 'index' as const,
         intersect: false,
-        backgroundColor: '#1c1c1e',
-        titleColor: '#f0b429',
-        bodyColor: '#ffffff',
-        borderColor: '#3a3a3c',
+        backgroundColor: '#1a1a1e',
+        titleColor: '#C5A880',
+        bodyColor: '#F3F3F5',
+        borderColor: 'rgba(255,255,255,0.04)',
         borderWidth: 1,
         padding: 12,
         callbacks: {

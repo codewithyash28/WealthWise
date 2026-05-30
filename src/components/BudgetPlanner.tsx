@@ -66,7 +66,7 @@ export function BudgetPlanner({ user, onSave, initialPlan }: BudgetPlannerProps)
     datasets: [{
       data: Object.values(expenses),
       backgroundColor: [
-        '#F0B429', '#10D9A0', '#3B82F6', '#EF4444', '#7C3AED', '#F97316', '#475569', '#94A3B8'
+        '#C5A880', '#10D9A0', '#4A89FF', '#E85D5D', '#8B7BBF', '#D4A050', '#51545E', '#8E919A'
       ],
       borderWidth: 0,
       hoverOffset: 10,
@@ -79,10 +79,10 @@ export function BudgetPlanner({ user, onSave, initialPlan }: BudgetPlannerProps)
     plugins: {
       legend: { display: false },
       tooltip: {
-        backgroundColor: '#111827',
-        titleFont: { family: 'Syne', size: 14 },
+        backgroundColor: '#1a1a1e',
+        titleFont: { family: 'Outfit', size: 14 },
         bodyFont: { family: 'Outfit', size: 12 },
-        borderColor: 'rgba(240,180,41,0.2)',
+        borderColor: 'rgba(197,168,128,0.2)',
         borderWidth: 1,
         padding: 12,
         callbacks: {
@@ -511,16 +511,16 @@ export function BudgetPlanner({ user, onSave, initialPlan }: BudgetPlannerProps)
                     {
                       label: 'Your Spending',
                       data: Object.values(expenses),
-                      backgroundColor: '#F0B429',
+                      backgroundColor: '#C5A880',
                     },
                     {
                       label: 'Local Average',
                       data: Object.keys(expenses).map(k => {
                         if (k === 'housing') return currency.avgRent;
                         if (k === 'food') return currency.avgFood;
-                        return currency.avgSalary * 0.05; // Dummy average for others
+                        return currency.avgSalary * 0.05;
                       }),
-                      backgroundColor: '#94A3B8',
+                      backgroundColor: '#51545E',
                     }
                   ]
                 }}
@@ -552,10 +552,11 @@ export function BudgetPlanner({ user, onSave, initialPlan }: BudgetPlannerProps)
                     label: 'Monthly Expenses',
                     data: history.map(h => h.total),
                     borderColor: '#10D9A0',
-                    backgroundColor: 'rgba(16, 217, 160, 0.1)',
+                    backgroundColor: 'rgba(16, 217, 160, 0.08)',
                     fill: true,
                     tension: 0.4,
                     pointBackgroundColor: '#10D9A0',
+                    pointBorderColor: '#10D9A0',
                   }]
                 }}
                 options={{

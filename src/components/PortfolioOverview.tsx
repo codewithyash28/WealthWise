@@ -39,7 +39,7 @@ export function PortfolioOverview({ user }: PortfolioOverviewProps) {
         portfolio.allocation.cash,
         portfolio.allocation.realEstate
       ],
-      backgroundColor: ['#F0B429', '#3B82F6', '#10D9A0', '#94A3B8', '#F97316'],
+      backgroundColor: ['#C5A880', '#4A89FF', '#10D9A0', '#8E919A', '#D4A050'],
       borderWidth: 0,
       hoverOffset: 15,
     }],
@@ -51,10 +51,10 @@ export function PortfolioOverview({ user }: PortfolioOverviewProps) {
     plugins: {
       legend: { display: false },
       tooltip: {
-        backgroundColor: '#111827',
-        titleFont: { family: 'Syne', size: 14 },
+        backgroundColor: '#1a1a1e',
+        titleFont: { family: 'Outfit', size: 14 },
         bodyFont: { family: 'Outfit', size: 12 },
-        borderColor: 'rgba(240,180,41,0.2)',
+        borderColor: 'rgba(197,168,128,0.2)',
         borderWidth: 1,
         padding: 12,
       }

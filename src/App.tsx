@@ -186,39 +186,109 @@ function AppContent() {
     setShowNameInput(true);
   };
 
-  const handleOnboardingComplete = (name: string, age: string, learningGoal: string) => {
-    const uid = Math.random().toString(36).substring(2, 15);
-    const newUser: LocalUser = {
-      uid,
-      displayName: name,
-      email: null,
-      photoURL: null
-    };
+  const handleGoogleCredentialResponse = async (response: any) => {
+    setIsLoading(true);
+    try {
+      const res = await fetch("/api/auth/google", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ credential: response.credential }),
+      });
+      
+      const data = await res.json();
+      if (data.success) {
+        setUser(data.user);
+        setProfile(data.profile);
+        setBudget(data.budget);
+        
+        localStorage.setItem("ww_user", JSON.stringify(data.user));
+        localStorage.setItem("ww_profile", JSON.stringify(data.profile));
+        localStorage.setItem("ww_uid", data.user.uid);
+        if (data.budget) {
+          localStorage.setItem("ww_budget", JSON.stringify(data.budget));
+        } else {
+          localStorage.removeItem("ww_budget");
+        }
+        
+        if (data.isNewUser || !data.profile.learningGoal) {
+          setShowExpertOnboarding(true);
+        } else {
+          window.location.hash = "#dashboard";
+        }
+      } else {
+        console.error("Sign-in verification failed on server:", data.error);
+      }
+    } catch (err) {
+      console.error("Failed to sign in with Google:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    const newProfile: UserProfile = {
-      uid,
-      name,
+  useEffect(() => {
+    if (typeof window !== "undefined" && !user) {
+      const initGoogle = () => {
+        const google = (window as any).google;
+        if (google && google.accounts && google.accounts.id) {
+          google.accounts.id.initialize({
+            client_id: (process.env as any).GOOGLE_CLIENT_ID || "1047114487770-testclientid.apps.googleusercontent.com",
+            callback: handleGoogleCredentialResponse,
+          });
+          
+          const btn = document.getElementById("google-signin-btn");
+          if (btn) {
+            google.accounts.id.renderButton(btn, {
+              theme: "filled_blue",
+              size: "large",
+              shape: "pill",
+            });
+          }
+        } else {
+          setTimeout(initGoogle, 500);
+        }
+      };
+      initGoogle();
+    }
+  }, [user]);
+
+  const handleOnboardingComplete = async (name: string, age: string, learningGoal: string) => {
+    const activeUid = user?.uid || Math.random().toString(36).substring(2, 15);
+    
+    const updatedProfile: UserProfile = {
+      uid: activeUid,
+      name: name || user?.displayName || "Wealth Architect",
       age,
       learningGoal,
-      currency: tempCurrency || "USD",
-      joinDate: new Date().toISOString(),
+      currency: tempCurrency || profile?.currency || "USD",
+      joinDate: profile?.joinDate || new Date().toISOString(),
       lastVisit: new Date().toISOString(),
-      visitDates: [new Date().toISOString().split('T')[0]],
-      highScore: 0,
-      netWorth: { assets: 0, liabilities: 0 }
+      visitDates: profile?.visitDates ? [...profile.visitDates, new Date().toISOString().split('T')[0]] : [new Date().toISOString().split('T')[0]],
+      highScore: profile?.highScore || 0,
+      netWorth: profile?.netWorth || { assets: 0, liabilities: 0 },
+      achievements: profile?.achievements || []
     };
 
-    setUser(newUser);
-    setProfile(newProfile);
-    localStorage.setItem("ww_user", JSON.stringify(newUser));
-    localStorage.setItem("ww_profile", JSON.stringify(newProfile));
+    if (user?.uid) {
+      try {
+        await fetch(`/api/profile/${user.uid}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(updatedProfile)
+        });
+      } catch (err) {
+        console.error("Failed to sync profile to server:", err);
+      }
+    }
+
+    setProfile(updatedProfile);
+    localStorage.setItem("ww_profile", JSON.stringify(updatedProfile));
     
     setShowNameInput(false);
     setShowTutorial(true);
     window.location.hash = "#dashboard";
   };
 
-  const unlockAchievement = useCallback((id: string) => {
+  const unlockAchievement = useCallback(async (id: string) => {
     if (!profile) return;
     const existingAchievements = profile.achievements || [];
     if (existingAchievements.find(a => a.id === id)) return;
@@ -240,17 +310,40 @@ function AppContent() {
     localStorage.setItem("ww_profile", JSON.stringify(updatedProfile));
     setUnlockedAchievement(newAchievement);
     
-    // Auto-hide achievement notification
     setTimeout(() => setUnlockedAchievement(null), 5000);
-  }, [profile]);
 
-  const handleSaveBudget = (plan: BudgetPlan) => {
+    if (user?.uid) {
+      try {
+        await fetch(`/api/profile/${user.uid}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ achievements: [...existingAchievements, newAchievement] })
+        });
+      } catch (err) {
+        console.error("Failed to sync achievement to server:", err);
+      }
+    }
+  }, [profile, user]);
+
+  const handleSaveBudget = async (plan: BudgetPlan) => {
     setBudget(plan);
     localStorage.setItem("ww_budget", JSON.stringify(plan));
     unlockAchievement('first_budget');
+
+    if (user?.uid) {
+      try {
+        await fetch(`/api/budget/${user.uid}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(plan)
+        });
+      } catch (err) {
+        console.error("Failed to sync budget to server:", err);
+      }
+    }
   };
 
-  const handleUpdateNetWorth = (assets: number, liabilities: number) => {
+  const handleUpdateNetWorth = async (assets: number, liabilities: number) => {
     if (!profile) return;
     const updatedProfile = {
       ...profile,
@@ -259,16 +352,42 @@ function AppContent() {
     setProfile(updatedProfile);
     localStorage.setItem("ww_profile", JSON.stringify(updatedProfile));
     if (assets > liabilities) unlockAchievement('networth_positive');
+
+    if (user?.uid) {
+      try {
+        await fetch(`/api/profile/${user.uid}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ netWorth: { assets, liabilities } })
+        });
+      } catch (err) {
+        console.error("Failed to sync net worth to server:", err);
+      }
+    }
   };
 
-  const handleQuizComplete = (score: number) => {
+  const handleQuizComplete = async (score: number) => {
     if (!profile) return;
+    let newHighScore = profile.highScore;
     if (score > profile.highScore) {
+      newHighScore = score;
       const updatedProfile = { ...profile, highScore: score };
       setProfile(updatedProfile);
       localStorage.setItem("ww_profile", JSON.stringify(updatedProfile));
     }
     if (score > 100) unlockAchievement('quiz_master');
+
+    if (user?.uid) {
+      try {
+        await fetch(`/api/profile/${user.uid}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ highScore: newHighScore })
+        });
+      } catch (err) {
+        console.error("Failed to sync quiz score to server:", err);
+      }
+    }
   };
 
   const handleSignIn = () => {
@@ -278,7 +397,6 @@ function AppContent() {
   const handleStartFullOnboarding = (targetHash: string) => {
     setShowExpertOnboarding(false);
     setShowCurrencySelector(true);
-    // After currency and name input, it will auto-route to the dashboard or target
   };
 
   const handleSignOut = () => {
@@ -288,22 +406,35 @@ function AppContent() {
     localStorage.removeItem("ww_user");
     localStorage.removeItem("ww_profile");
     localStorage.removeItem("ww_budget");
+    localStorage.removeItem("ww_uid");
     window.location.hash = "#home";
   };
 
-  const handleUpdateGoals = (goals: FinancialGoal[]) => {
+  const handleUpdateGoals = async (goals: FinancialGoal[]) => {
     if (!profile) return;
     const updatedProfile = { ...profile, goals };
     setProfile(updatedProfile);
     localStorage.setItem("ww_profile", JSON.stringify(updatedProfile));
     if (goals.length > 0) unlockAchievement('goal_setter');
+
+    if (user?.uid) {
+      try {
+        await fetch(`/api/profile/${user.uid}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ goals })
+        });
+      } catch (err) {
+        console.error("Failed to sync goals to server:", err);
+      }
+    }
   };
 
   const getWelcomeMessage = () => {
     const hour = new Date().getHours();
-    if (hour < 12) return "Good morning! Sign in to unlock your dashboard";
-    if (hour < 18) return "Good afternoon! Sign in to unlock your dashboard";
-    return "Good evening! Sign in to unlock your dashboard";
+    if (hour < 12) return "Good morning! Unlock your elite workspace";
+    if (hour < 18) return "Good afternoon! Unlock your elite workspace";
+    return "Good evening! Unlock your elite workspace";
   };
 
   const renderContent = () => {
@@ -313,8 +444,16 @@ function AppContent() {
       return (
         <div className="container mx-auto px-6 py-32 flex flex-col items-center justify-center text-center space-y-8">
           <h2 className="text-4xl font-display font-bold">{getWelcomeMessage()}</h2>
-          <p className="text-text-secondary max-w-md">Your financial data is securely stored locally on your device.</p>
-          <button onClick={handleSignIn} className="btn-primary text-lg px-10 py-4">Get Started</button>
+          <p className="text-text-secondary max-w-md">
+            Sign in securely to synchronize your progress to the MongoDB cloud database and activate our elite AI Advisor.
+          </p>
+          <div className="flex flex-col items-center gap-5 p-6 bg-white/[0.02] border border-white/[0.08] rounded-2xl max-w-sm w-full">
+            <div id="google-signin-btn" className="min-h-[44px] flex items-center justify-center"></div>
+            <div className="text-[10px] text-text-muted uppercase tracking-wider font-bold">Or keep it fully offline</div>
+            <button onClick={handleSignIn} className="w-full py-3 border border-dashed border-[#C5A880]/30 hover:border-accent-gold/60 text-accent-gold text-xs font-bold uppercase tracking-widest rounded-xl hover:bg-white/[0.02] transition-all">
+              Initialize Local Storage
+            </button>
+          </div>
         </div>
       );
     }
@@ -418,7 +557,7 @@ function AppContent() {
             exit={{ opacity: 0, y: 50, x: "-50%" }}
             className="fixed bottom-8 left-1/2 z-[200] max-w-sm w-full"
           >
-            <div className="card p-4 border-accent-gold bg-bg-void/90 backdrop-blur-md shadow-[0_0_30px_rgba(240,180,41,0.3)] flex items-center gap-4">
+            <div className="card p-4 border-accent-gold bg-bg-void/90 backdrop-blur-md shadow-[0_0_30px_rgba(197,168,128,0.15)] flex items-center gap-4">
               <div className="text-3xl">{unlockedAchievement.icon}</div>
               <div>
                 <div className="text-[10px] text-accent-gold font-bold uppercase tracking-widest">Achievement Unlocked!</div>
