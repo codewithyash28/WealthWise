@@ -1,6 +1,4 @@
-Here is a premium, beautifully structured `README.md` custom-tailored for **WealthWise Elite 2.0**. It uses an ultra-modern "Obsidian & Metallic Gold" aesthetic layout, crisp ASCII architecture diagrams, clear feature breakdowns, and gamified project highlights to make your repository look incredibly professional to judges and contributors.
 
-You can copy and paste the raw markdown block below directly into your `README.md` file:
 
 ```markdown
 # 🛡️ WealthWise Elite 2.0
