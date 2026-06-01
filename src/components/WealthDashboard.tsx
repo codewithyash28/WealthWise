@@ -1,22 +1,30 @@
 import { motion } from "motion/react";
-import { TrendingUp, ShieldCheck, Target, BrainCircuit, ChevronRight, Sparkles, Wallet, PieChart, ArrowUpRight, ArrowDownRight, CheckCircle2, Info, Trophy } from "lucide-react";
+import { TrendingUp, ShieldCheck, Target, BrainCircuit, ChevronRight, Sparkles, Wallet, PieChart, ArrowUpRight, ArrowDownRight, CheckCircle2, Info, Trophy, Settings, ChevronDown, Check, GitBranch, Download, Share2, FileJson, Copy, X } from "lucide-react";
 import { UserProfile, BudgetPlan } from "../types";
 import { formatCurrency, cn } from "../lib/utils";
+import { jsPDF } from "jspdf";
 import { CURRENCIES } from "../constants";
 import { useMemo, useState } from "react";
 import { generateWealthAudit } from "../lib/gemini";
 import { WealthPathChart } from "./WealthPathChart";
 import { MarketInsights } from "./MarketInsights";
+import { GitOpsControlCenter } from "./GitOpsControlCenter";
 
 interface WealthDashboardProps {
   user: UserProfile;
   budget: BudgetPlan | null;
   onUnlockAchievement: (id: string) => void;
+  onUpdateGitProvider?: (provider: "gitlab" | "github" | "bitbucket") => void;
+  gitProvider?: "gitlab" | "github" | "bitbucket";
 }
 
-export function WealthDashboard({ user, budget, onUnlockAchievement }: WealthDashboardProps) {
+export function WealthDashboard({ user, budget, onUnlockAchievement, onUpdateGitProvider, gitProvider = "github" }: WealthDashboardProps) {
   const [isAuditing, setIsAuditing] = useState(false);
   const [auditResult, setAuditResult] = useState<string | null>(null);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [isGitDropdownOpen, setIsGitDropdownOpen] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [copiedShareLink, setCopiedShareLink] = useState(false);
 
   const currency = CURRENCIES[user.currency] || CURRENCIES.USD;
 
@@ -78,6 +86,213 @@ export function WealthDashboard({ user, budget, onUnlockAchievement }: WealthDas
     }
   };
 
+  const handleDownloadPDF = () => {
+    const doc = new jsPDF();
+    
+    // Core document theme & header band
+    doc.setFillColor(17, 24, 39); // Deep space dark
+    doc.rect(0, 0, 210, 42, "F");
+    
+    // Header title
+    doc.setFont("Helvetica", "bold");
+    doc.setFontSize(22);
+    doc.setTextColor(234, 179, 8); // Golden sun
+    doc.text("WEALTHWISE ELITE", 20, 25);
+    
+    doc.setFont("Helvetica", "normal");
+    doc.setFontSize(10);
+    doc.setTextColor(156, 163, 175);
+    doc.text("PORTABLE INTUITIVE FINANCIAL REPORT & WEALTH TRAJECTORY", 20, 33);
+    
+    // Section 1: Client Metadata & Portfolio Scores
+    doc.setFont("Helvetica", "bold");
+    doc.setFontSize(13);
+    doc.setTextColor(17, 24, 39);
+    doc.text("1. EXECUTIVE SUMMARY PROFILE", 20, 56);
+    doc.line(20, 59, 190, 59);
+    
+    // Text rows
+    doc.setFont("Helvetica", "normal");
+    doc.setFontSize(9.5);
+    doc.setTextColor(55, 65, 81);
+    
+    doc.text(`Client Full Name: ${user.name}`, 20, 68);
+    doc.text(`Recorded Age: ${user.age} Years Old`, 20, 75);
+    doc.text(`Reporting Currency: ${user.currency} (${currency.name})`, 20, 82);
+    doc.text(`Platform Entry Date: ${new Date(user.joinDate).toLocaleDateString()}`, 20, 89);
+    
+    doc.text(`Financial Score: ${healthScore} / 100`, 110, 68);
+    doc.text(`Verified Tier Rank: ${masteryTier.label} Status`, 110, 75);
+    doc.text(`Core Learning Focus: ${user.learningGoal}`, 110, 82);
+    
+    // Section 2: Budget Policies
+    if (budget) {
+      doc.setFont("Helvetica", "bold");
+      doc.setFontSize(13);
+      doc.text("2. ACTIVE MONTHLY BUDGET CONFIGURATION", 20, 105);
+      doc.line(20, 108, 190, 108);
+      
+      doc.setFont("Helvetica", "normal");
+      doc.setFontSize(9.5);
+      doc.text(`Allocated Monthly Income: ${currency.symbol} ${budget.income.toLocaleString()}`, 20, 118);
+      
+      let y = 125;
+      Object.entries(budget.expenses).forEach(([category, val]) => {
+        if (typeof val === 'number') {
+          doc.text(`- ${category.toUpperCase()}: ${currency.symbol} ${val.toLocaleString()}`, 25, y);
+          y += 7;
+        }
+      });
+    }
+
+    // Section 3: Registered Financial Goals
+    const userGoals = user.goals || [];
+    if (userGoals.length > 0) {
+      doc.setFont("Helvetica", "bold");
+      doc.setFontSize(13);
+      doc.text("3. ACTIVE SAVINGS & COMPOUND GOALS", 20, 185);
+      doc.line(20, 188, 190, 188);
+
+      doc.setFont("Helvetica", "normal");
+      doc.setFontSize(9.5);
+      let gY = 196;
+      userGoals.slice(0, 5).forEach((goal, idx) => {
+        doc.text(`${idx + 1}. ${goal.title} (${goal.category})`, 20, gY);
+        doc.text(`Target: ${currency.symbol} ${goal.targetAmount.toLocaleString()} | Deadline: ${new Date(goal.deadline).toLocaleDateString()}`, 25, gY + 5);
+        gY += 13;
+      });
+    }
+    
+    // Page 2: Generative Artificial Audit advice (if present)
+    if (auditResult) {
+      doc.addPage();
+      
+      // Page 2 Brand header
+      doc.setFillColor(17, 24, 39);
+      doc.rect(0, 0, 210, 20, "F");
+      
+      doc.setFont("Helvetica", "bold");
+      doc.setFontSize(11);
+      doc.setTextColor(234, 179, 8);
+      doc.text("WEALTHWISE ELITE - COMPREHENSIVE FINANCIAL AUDIT REPORT", 20, 13);
+      
+      doc.setFontSize(13);
+      doc.setTextColor(17, 24, 39);
+      doc.text("4. DEEP GENERATIVE ARTIFICIAL AUDIT", 20, 32);
+      doc.line(20, 35, 190, 35);
+      
+      doc.setFont("Helvetica", "normal");
+      doc.setFontSize(9.5);
+      doc.setTextColor(55, 65, 81);
+      
+      // Clean up audit text and split to sizes
+      const cleanAudit = auditResult.replace(/[\*\#\`\-\_]/g, "");
+      const lines = doc.splitTextToSize(cleanAudit, 170);
+      
+      let lineY = 44;
+      lines.forEach((line: string) => {
+        if (lineY > 280) {
+          doc.addPage();
+          
+          doc.setFillColor(17, 24, 39);
+          doc.rect(0, 0, 210, 20, "F");
+          doc.setFont("Helvetica", "bold");
+          doc.setFontSize(11);
+          doc.setTextColor(234, 179, 8);
+          doc.text("WEALTHWISE ELITE - COMPREHENSIVE FINANCIAL AUDIT REPORT", 20, 13);
+          
+          doc.setFont("Helvetica", "normal");
+          doc.setFontSize(9.5);
+          doc.setTextColor(55, 65, 81);
+          lineY = 32;
+        }
+        doc.text(line, 20, lineY);
+        lineY += 6.5;
+      });
+    }
+    
+    // Save generated PDF
+    doc.save(`${user.name.replace(/\s+/g, "_")}_WealthWise_Executive_Audit.pdf`);
+    
+    // Trigger success achievement check
+    onUnlockAchievement('pdf_downloaded');
+  };
+
+  const handleDownloadJSON = () => {
+    const rawBias = localStorage.getItem("ww_market_bias") || "neutral";
+    const dataToExport = {
+      exportedAt: new Date().toISOString(),
+      clientProfile: {
+        name: user.name,
+        age: user.age,
+        currency: user.currency,
+        joinDate: user.joinDate,
+        learningFocus: user.learningGoal,
+        netWorth: user.netWorth,
+        netWorthHealthScore: healthScore,
+        masteryTier: masteryTier.label
+      },
+      activeBudget: budget ? {
+        monthlyIncome: budget.income,
+        allocatedExpenses: budget.expenses,
+        monthlyNetSurplus: budget.income - Object.values(budget.expenses).reduce((a, b) => a + b, 0)
+      } : null,
+      financialGoals: user.goals || [],
+      simulationSettings: {
+        activeMarketBias: rawBias,
+        portfolioSafetyAlarmThreshold: parseFloat(localStorage.getItem("ww_portfolio_drop_threshold") || "5.0")
+      },
+      auditRecommendation: auditResult || "No active audit. Run One-Click AI Audit to generate expert analysis."
+    };
+
+    const jsonString = `data:text/json;charset=utf-8,${encodeURIComponent(
+      JSON.stringify(dataToExport, null, 2)
+    )}`;
+    const downloadAnchor = document.createElement("a");
+    downloadAnchor.setAttribute("href", jsonString);
+    downloadAnchor.setAttribute(
+      "download",
+      `${user.name.replace(/\s+/g, "_")}_WealthWise_Portfolio_Audit.json`
+    );
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
+
+    // Trigger local Alert message for copy action consistency
+    const event = new CustomEvent("ww-trigger-alert", {
+      detail: {
+        type: "success",
+        title: "Simulation Data Exported",
+        message: "Your current financial parameters, dynamic thresholds, and offline auditing metrics have been downloaded inside a structured JSON successfully."
+      }
+    });
+    window.dispatchEvent(event);
+    onUnlockAchievement("json_downloaded");
+  };
+
+  const shareSnippet = `I just analyzed my wealth statistics on WealthWise Elite! I scored a ${healthScore}/100 Financial Health score and achieved status of ${masteryTier.label} Status Tier! Check out your dynamic investment and budget roadmap rules:`;
+  const shareLink = `${window.location.origin}/?invite=true&score=${healthScore}&tier=${masteryTier.label.toLowerCase()}&name=${encodeURIComponent(user.name)}`;
+
+  const handleCopyShare = async () => {
+    const fullSnippet = `${shareSnippet}\n👉 ${shareLink}`;
+    try {
+      await navigator.clipboard.writeText(fullSnippet);
+      setCopiedShareLink(true);
+      setTimeout(() => setCopiedShareLink(false), 2500);
+
+      const event = new CustomEvent("ww-trigger-alert", {
+        detail: {
+          type: "success",
+          title: "Share Snippet Copied",
+          message: "The invitation snippet and net worth achievements score card have been copied, ready for the user offline."
+        }
+      });
+      window.dispatchEvent(event);
+    } catch (err) {
+      console.error("Clipboard copy failed", err);
+    }
+  };
+
   return (
     <div className="container mx-auto px-6 py-12 space-y-12">
       {/* Header Section */}
@@ -94,8 +309,77 @@ export function WealthDashboard({ user, budget, onUnlockAchievement }: WealthDas
               <Trophy className="w-3 h-3" /> {masteryTier.label} Tier
             </div>
           </motion.h1>
-          <div className="flex items-center gap-4">
-            <p className="text-text-secondary text-sm md:text-base font-light">Your Personal Wealth Architect is active.</p>
+          <div className="flex flex-wrap items-center gap-6">
+            <p className="text-text-secondary text-lg">Your Personal Wealth Architect is ready.</p>
+            
+            {/* Custom GitOps Dropdown Selector */}
+            <div className="relative z-40">
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] text-text-muted font-bold uppercase tracking-widest">Active GitOps Engine</span>
+                <div className="relative">
+                  <button
+                    onClick={() => setIsGitDropdownOpen(!isGitDropdownOpen)}
+                    type="button"
+                    className="flex items-center gap-2 bg-bg-secondary border border-border/80 rounded-xl px-3 py-1.5 text-xs font-mono font-bold uppercase text-text-primary hover:border-accent-gold/40 transition-colors cursor-pointer select-none"
+                  >
+                    <GitBranch className="w-3.5 h-3.5 text-accent-gold" />
+                    <span>{gitProvider}</span>
+                    <ChevronDown className={cn("w-3.5 h-3.5 text-text-muted transition-transform duration-200", isGitDropdownOpen ? "rotate-180" : "")} />
+                  </button>
+
+                  {isGitDropdownOpen && (
+                    <>
+                      <div className="fixed inset-0" onClick={() => setIsGitDropdownOpen(false)} />
+                      <div className="absolute top-full mt-2 left-0 w-64 bg-bg-void border border-border rounded-xl shadow-2xl p-2 space-y-1 backdrop-blur-md z-50">
+                        <div className="px-2 py-1.5 text-[9px] uppercase font-bold text-text-muted tracking-wider border-b border-border/40 mb-1">
+                          Select Version Control Engine
+                        </div>
+                        {(["github", "gitlab", "bitbucket"] as const).map((p) => {
+                          const active = gitProvider === p;
+                          const labels = {
+                            github: { title: "GitHub", desc: "Fast imports & open-source sync." },
+                            gitlab: { title: "GitLab", desc: "Strict policy compliance audits." },
+                            bitbucket: { title: "Bitbucket", desc: "Corporate-grade policy tracking." }
+                          };
+                          return (
+                            <button
+                              key={p}
+                              type="button"
+                              onClick={() => {
+                                onUpdateGitProvider?.(p);
+                                setIsGitDropdownOpen(false);
+                              }}
+                              className={cn(
+                                "w-full text-left p-2 rounded-lg flex items-center justify-between transition-colors cursor-pointer",
+                                active 
+                                  ? "bg-accent-gold/10 text-accent-gold font-bold" 
+                                  : "text-text-secondary hover:bg-bg-secondary hover:text-text-primary"
+                              )}
+                            >
+                              <div>
+                                <span className="text-xs">{labels[p].title}</span>
+                                <p className="text-[9px] text-text-muted leading-tight mt-0.5">{labels[p].desc}</p>
+                              </div>
+                              {active && <Check className="w-3.5 h-3.5 text-accent-gold" />}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                {/* Settings Gear Toggle Button */}
+                <button
+                  onClick={() => setShowSettingsModal(true)}
+                  type="button"
+                  title="Configure Wealth-As-Code Settings"
+                  className="bg-bg-secondary hover:bg-bg-secondary/80 border border-border/80 rounded-xl p-1.5 text-text-secondary hover:text-accent-gold transition-colors cursor-pointer"
+                >
+                  <Settings className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
             <button 
               onClick={() => window.location.reload()} 
               className="text-[9px] text-accent-gold hover:underline font-bold uppercase tracking-widest"
@@ -105,20 +389,60 @@ export function WealthDashboard({ user, budget, onUnlockAchievement }: WealthDas
           </div>
         </div>
         
-        <motion.button
-          whileHover={{ scale: 1.02, y: -1 }}
-          whileTap={{ scale: 0.98 }}
-          onClick={handleRunAudit}
-          disabled={isAuditing}
-          className="btn-primary flex items-center gap-2.5 px-6 py-3.5 text-[10px] font-bold uppercase tracking-widest group"
-        >
-          {isAuditing ? (
-            <BrainCircuit className="w-4 h-4 animate-spin text-bg-void" />
-          ) : (
-            <Sparkles className="w-4 h-4 text-bg-void group-hover:scale-110 transition-transform" />
-          )}
-          {isAuditing ? "Analyzing Wealth..." : "One-Click AI Audit"}
-        </motion.button>
+        <div className="flex flex-wrap items-center gap-3 shrink-0 self-start sm:self-auto w-full sm:w-auto">
+          {/* Share score card button */}
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => {
+              setShowShareModal(true);
+              onUnlockAchievement("share_elite");
+            }}
+            type="button"
+            title="Share Achievement Card"
+            className="flex items-center justify-center h-12 w-12 border border-border/80 hover:border-accent-blue/40 text-text-secondary hover:text-accent-blue transition-all cursor-pointer rounded-xl bg-bg-secondary/20"
+          >
+            <Share2 className="w-5 h-5 text-accent-blue" />
+          </motion.button>
+
+          {/* New Offline JSON Download button */}
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={handleDownloadJSON}
+            type="button"
+            title="Export Simulation Inputs & Results (JSON)"
+            className="flex items-center justify-center h-12 w-12 border border-border/80 hover:border-accent-gold/40 text-text-secondary hover:text-accent-gold transition-all cursor-pointer rounded-xl bg-bg-secondary/20"
+          >
+            <FileJson className="w-5 h-5 text-accent-gold" />
+          </motion.button>
+
+          {/* Export Report PDF */}
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={handleDownloadPDF}
+            className="btn-secondary flex items-center justify-center gap-2 px-5 py-3 text-xs font-bold border border-border hover:border-accent-gold/40 hover:text-accent-gold transition-all cursor-pointer rounded-xl bg-bg-secondary/20 text-text-secondary h-12"
+          >
+            <Download className="w-4 h-4 text-accent-gold" />
+            <span>Export Report</span>
+          </motion.button>
+
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={handleRunAudit}
+            disabled={isAuditing}
+            className="btn-primary flex items-center justify-center gap-2.5 px-6 py-3 text-xs group text-bg-void font-extrabold cursor-pointer h-12"
+          >
+            {isAuditing ? (
+              <BrainCircuit className="w-4 h-4 animate-spin text-bg-void" />
+            ) : (
+              <Sparkles className="w-4 h-4 text-bg-void group-hover:animate-pulse" />
+            )}
+            {isAuditing ? "Analyzing..." : "One-Click AI Audit"}
+          </motion.button>
+        </div>
       </div>
 
       {/* Elite Status Summary */}
@@ -231,7 +555,13 @@ export function WealthDashboard({ user, budget, onUnlockAchievement }: WealthDas
 
       {/* Insights and Projection Grid */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-        <div className="xl:col-span-2 card p-8 space-y-6 text-left">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95, y: 15 }}
+          whileInView={{ opacity: 1, scale: 1, y: 0 }}
+          viewport={{ once: true, margin: "-80px" }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+          className="xl:col-span-2 card p-8 space-y-6"
+        >
           <div className="flex items-center justify-between">
             <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-text-secondary flex items-center gap-1.5">
               <TrendingUp className="w-4 h-4 text-accent-gold" /> Strategic Wealth Pathing
@@ -241,11 +571,17 @@ export function WealthDashboard({ user, budget, onUnlockAchievement }: WealthDas
             </div>
           </div>
           <WealthPathChart user={user} budget={budget} />
-        </div>
+        </motion.div>
         
-        <div className="space-y-8">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95, y: 15 }}
+          whileInView={{ opacity: 1, scale: 1, y: 0 }}
+          viewport={{ once: true, margin: "-80px" }}
+          transition={{ duration: 0.6, ease: "easeOut", delay: 0.15 }}
+          className="space-y-8"
+        >
           <MarketInsights />
-        </div>
+        </motion.div>
       </div>
 
       {/* Main Stats Grid */}
@@ -377,6 +713,14 @@ export function WealthDashboard({ user, budget, onUnlockAchievement }: WealthDas
         </div>
       </div>
 
+      {/* GitOps Policy Control Center */}
+      <GitOpsControlCenter 
+        user={user}
+        budget={budget}
+        gitProvider={gitProvider}
+        onUnlockAchievement={onUnlockAchievement}
+      />
+
       {/* Audit Result / Action Items */}
       {auditResult && (
         <motion.div 
@@ -394,8 +738,26 @@ export function WealthDashboard({ user, budget, onUnlockAchievement }: WealthDas
                 <p className="text-text-secondary text-xs">Generated based on your local device datasets.</p>
               </div>
             </div>
-            <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/[0.02] border border-white/[0.04] text-[9px] font-bold uppercase tracking-widest text-text-muted">
-              <Info className="w-3 h-3" /> Technical Audit
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                onClick={handleDownloadPDF}
+                type="button"
+                className="btn-secondary py-1.5 px-3.5 flex items-center gap-2 text-xs font-semibold text-text-primary bg-bg-secondary hover:bg-bg-secondary/80 rounded-xl border border-border/80 hover:border-accent-gold/30 hover:text-accent-gold transition-all cursor-pointer"
+              >
+                <Download className="w-3.5 h-3.5 text-accent-gold" />
+                <span>Export to PDF</span>
+              </button>
+              <button
+                onClick={handleDownloadJSON}
+                type="button"
+                className="btn-secondary py-1.5 px-3.5 flex items-center gap-2 text-xs font-semibold text-text-primary bg-bg-secondary hover:bg-bg-secondary/80 rounded-xl border border-border/80 hover:border-accent-gold/30 hover:text-accent-gold transition-all cursor-pointer"
+              >
+                <FileJson className="w-3.5 h-3.5 text-accent-gold" />
+                <span>Export to JSON</span>
+              </button>
+              <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-bg-secondary border border-border text-[10px] font-bold uppercase tracking-widest text-text-muted">
+                <Info className="w-3 h-3" /> Educational Only
+              </div>
             </div>
           </div>
           
@@ -477,6 +839,164 @@ export function WealthDashboard({ user, budget, onUnlockAchievement }: WealthDas
           ))}
         </div>
       </div>
+
+      {/* GitOps Settings Modal */}
+      {showSettingsModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-bg-void/90 backdrop-blur-md">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            className="card max-w-lg w-full p-8 space-y-6 relative border-accent-gold/30 shadow-[0_0_50px_rgba(234,179,8,0.1)] text-left"
+          >
+            <div className="flex items-start justify-between">
+              <div className="space-y-1">
+                <div className="inline-flex items-center gap-1.5 text-[9px] uppercase font-bold text-accent-gold tracking-widest bg-accent-gold/10 px-2.5 py-0.5 rounded-full border border-accent-gold/20">
+                  <Settings className="w-3 h-3 text-accent-gold" /> Wealth-As-Code Engine
+                </div>
+                <h3 className="text-2xl font-bold font-display text-text-primary">GitOps Configuration</h3>
+              </div>
+              <button
+                onClick={() => setShowSettingsModal(false)}
+                className="text-text-secondary hover:text-text-primary text-2xl font-normal leading-none cursor-pointer"
+                type="button"
+              >
+                &times;
+              </button>
+            </div>
+
+            <p className="text-text-secondary text-xs leading-relaxed">
+              WealthWise Elite allows you to compile and track your entire wealth architecture (portfolios, simulations, budget laws, inflation buffers) using Git version control rules. Select your preferred provider below to dynamically adjust the AI agent's tracking logic.
+            </p>
+
+            <div className="grid grid-cols-1 gap-3">
+              {[
+                { id: "github" as const, name: "GitHub", subtitle: "Public Cloud Repos", desc: "Leverage standard GitHub workflows. The AI agent commits target system rules and log issues directly into your codebase.", color: "text-white border-white/10 bg-zinc-900/50 hover:bg-zinc-900" },
+                { id: "gitlab" as const, name: "GitLab", subtitle: "DevOps & MCP Pipelines", desc: "Integrate into strict corporate Git plans. Features continuous deployment, compliance merge request reviews, and auditing.", color: "text-accent-gold border-accent-gold/20 bg-amber-500/5 hover:bg-amber-500/10" },
+                { id: "bitbucket" as const, name: "Bitbucket", subtitle: "Atlassian Workspace", desc: "Align with professional enterprise policy databases. Secure and integrated directly with Atlassian task tracking.", color: "text-blue-400 border-blue-400/20 bg-blue-500/10 hover:bg-blue-500/20" }
+              ].map((provider) => {
+                const isSelected = gitProvider === provider.id;
+                return (
+                  <button
+                    key={provider.id}
+                    onClick={() => onUpdateGitProvider?.(provider.id)}
+                    type="button"
+                    className={cn(
+                      "p-4 rounded-xl border text-left flex items-start justify-between transition-all relative cursor-pointer",
+                      isSelected 
+                        ? `${provider.color} border border-accent-gold shadow-[0_0_15px_rgba(234,179,8,0.05)]`
+                        : "bg-bg-secondary border-border/40 hover:bg-bg-secondary/80 text-text-secondary"
+                    )}
+                  >
+                    <div className="space-y-1 pr-4">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-bold">{provider.name}</span>
+                        <span className="text-[8px] font-mono uppercase tracking-wider text-text-muted font-bold">({provider.subtitle})</span>
+                      </div>
+                      <p className="text-[10px] text-text-muted leading-relaxed">{provider.desc}</p>
+                    </div>
+                    {isSelected ? (
+                      <div className="w-5 h-5 rounded-full bg-accent-gold text-bg-void flex items-center justify-center border border-accent-gold/40 shrink-0">
+                        <Check className="w-3 h-3 stroke-[2.5]" />
+                      </div>
+                    ) : (
+                      <div className="w-5 h-5 rounded-full border border-border flex items-center justify-center shrink-0" />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="flex justify-end pt-2">
+              <button
+                type="button"
+                onClick={() => setShowSettingsModal(false)}
+                className="btn-primary py-2 px-6 text-xs font-bold uppercase tracking-widest cursor-pointer"
+              >
+                Apply & Close
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Share Score Card Dialog */}
+      {showShareModal && (
+        <div className="fixed inset-0 bg-bg-void/85 backdrop-blur-md flex items-center justify-center p-4 z-50">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9, y: 30 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            className="bg-bg-primary border border-border p-8 rounded-2xl max-w-lg w-full space-y-6 shadow-[0_0_50px_rgba(59,130,246,0.1)] relative"
+          >
+            <div className="flex items-center justify-between border-b border-border/40 pb-4">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-accent-blue/10 flex items-center justify-center text-accent-blue">
+                  <Share2 className="w-4 h-4" />
+                </div>
+                <h3 className="text-sm font-bold uppercase tracking-widest text-text-primary">Corporate Share Center</h3>
+              </div>
+              <button
+                onClick={() => setShowShareModal(false)}
+                className="text-text-secondary hover:text-text-primary cursor-pointer transition-colors p-1"
+                type="button"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <p className="text-text-secondary text-xs leading-relaxed text-left">
+              Generate credentials verification invites and show off your elite performance directly to other professionals or clients. Anyone who uses this custom invite can baseline their models relative to your success indicators.
+            </p>
+
+            {/* Achievement Card Preview */}
+            <div className="border border-accent-blue/20 bg-accent-blue/5 p-5 rounded-xl space-y-4 text-left">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-mono uppercase tracking-wider text-accent-blue font-bold">Credential Summary</span>
+                <span className={cn("text-[9px] font-bold px-2 py-0.5 rounded uppercase font-mono border", masteryTier.border, masteryTier.bg, masteryTier.color)}>
+                  {masteryTier.label} Status
+                </span>
+              </div>
+              <div className="space-y-1">
+                <h4 className="text-xl font-display font-black text-text-primary tracking-tight">{user.name}</h4>
+                <p className="text-xs text-text-secondary">Overall Mastery Rating: <strong className="text-accent-gold">{healthScore}% / 100%</strong></p>
+              </div>
+              <p className="text-[11px] text-text-muted italic bg-bg-void/40 p-2.5 border border-border/40 rounded-lg select-all">
+                "{shareSnippet}"
+              </p>
+            </div>
+
+            {/* Action Group */}
+            <div className="flex flex-col gap-2.5 pt-2">
+              <button
+                onClick={handleCopyShare}
+                type="button"
+                className="btn-primary w-full flex items-center justify-center gap-2 py-3 px-4 font-bold text-xs uppercase tracking-widest cursor-pointer text-bg-void"
+              >
+                {copiedShareLink ? <Check className="w-4 h-4 text-bg-void" /> : <Copy className="w-4 h-4 text-bg-void" />}
+                <span>{copiedShareLink ? "Verified Snippet Copied!" : "Copy Snippet & Invite Link"}</span>
+              </button>
+              
+              <div className="grid grid-cols-2 gap-2 font-sans font-bold">
+                <a
+                  href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`${shareSnippet} ${shareLink}`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-secondary flex items-center justify-center gap-2 border border-border py-2.5 text-[10px] font-bold uppercase tracking-wider hover:border-accent-blue/30 hover:text-accent-blue rounded-xl select-none cursor-pointer bg-bg-secondary/10"
+                >
+                  Share on Twitter
+                </a>
+                <a
+                  href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareLink)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-secondary flex items-center justify-center gap-2 border border-border py-2.5 text-[10px] font-bold uppercase tracking-wider hover:border-accent-blue/30 hover:text-accent-blue rounded-xl select-none cursor-pointer bg-bg-secondary/10"
+                >
+                  Share on LinkedIn
+                </a>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }

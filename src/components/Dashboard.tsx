@@ -6,8 +6,8 @@ import { CURRENCIES } from "../constants";
 import { UserProfile, BudgetPlan } from "../types";
 
 import { MarketInsights } from "./MarketInsights";
-
 import { Logo } from "./Logo";
+import { WealthPathChart } from "./WealthPathChart";
 
 interface DashboardProps {
   user: UserProfile;
@@ -93,7 +93,13 @@ export function Dashboard({ user, budget, onUpdateNetWorth }: DashboardProps) {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div className="card p-6 space-y-4">
+        <motion.div 
+          initial={{ scale: 0.97, opacity: 0, y: 15 }}
+          whileInView={{ scale: 1, opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.4, delay: 0.05 }}
+          className="card p-6 space-y-4 hover:border-border-active hover:shadow-[0_0_20px_rgba(240,180,41,0.05)]"
+        >
           <div className="flex items-center justify-between">
             <div className="text-text-secondary text-sm font-medium">Monthly Savings Rate</div>
             <div className="w-8 h-8 rounded-lg bg-accent-emerald/10 flex items-center justify-center text-accent-emerald">
@@ -109,12 +115,18 @@ export function Dashboard({ user, budget, onUpdateNetWorth }: DashboardProps) {
           <div className="h-1 bg-border rounded-full overflow-hidden">
             <motion.div initial={{ width: 0 }} animate={{ width: `${savingsRate}%` }} className="h-full bg-accent-emerald" />
           </div>
-        </div>
+        </motion.div>
 
-        <div className="card p-6 space-y-4">
+        <motion.div 
+          initial={{ scale: 0.97, opacity: 0, y: 15 }}
+          whileInView={{ scale: 1, opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.4, delay: 0.1 }}
+          className="card p-6 space-y-4 hover:border-border-active hover:shadow-[0_0_20px_rgba(240,180,41,0.05)]"
+        >
           <div className="flex items-center justify-between">
             <div className="text-text-secondary text-sm font-medium">Net Worth Tracker</div>
-            <button onClick={() => setIsEditingNetWorth(!isEditingNetWorth)} className="w-8 h-8 rounded-lg bg-accent-gold/10 flex items-center justify-center text-accent-gold hover:bg-accent-gold/20 transition-colors">
+            <button onClick={() => setIsEditingNetWorth(!isEditingNetWorth)} className="w-8 h-8 rounded-lg bg-accent-gold/10 flex items-center justify-center text-accent-gold hover:bg-accent-gold/20 transition-colors cursor-pointer">
               <Plus className="w-4 h-4" />
             </button>
           </div>
@@ -130,8 +142,11 @@ export function Dashboard({ user, budget, onUpdateNetWorth }: DashboardProps) {
                 <span className="text-xs text-text-muted w-16">Assets:</span>
                 <input 
                   type="number" 
-                  value={assets} 
-                  onChange={(e) => setAssets(Number(e.target.value))}
+                  value={assets === 0 ? "" : assets} 
+                  onChange={(e) => {
+                    const parsed = Number(e.target.value);
+                    setAssets(isNaN(parsed) ? 0 : Math.max(0, parsed));
+                  }}
                   aria-label="Edit Assets"
                   className="bg-bg-secondary border border-border rounded px-2 py-1 text-xs w-full outline-none focus:border-accent-gold"
                 />
@@ -140,18 +155,27 @@ export function Dashboard({ user, budget, onUpdateNetWorth }: DashboardProps) {
                 <span className="text-xs text-text-muted w-16">Liabilities:</span>
                 <input 
                   type="number" 
-                  value={liabilities} 
-                  onChange={(e) => setLiabilities(Number(e.target.value))}
+                  value={liabilities === 0 ? "" : liabilities} 
+                  onChange={(e) => {
+                    const parsed = Number(e.target.value);
+                    setLiabilities(isNaN(parsed) ? 0 : Math.max(0, parsed));
+                  }}
                   aria-label="Edit Liabilities"
                   className="bg-bg-secondary border border-border rounded px-2 py-1 text-xs w-full outline-none focus:border-accent-gold"
                 />
               </div>
-              <button onClick={() => { onUpdateNetWorth(assets, liabilities); setIsEditingNetWorth(false); }} className="btn-primary !py-1 !px-3 text-[10px] w-full">Save Changes</button>
+              <button onClick={() => { onUpdateNetWorth(assets, liabilities); setIsEditingNetWorth(false); }} className="btn-primary !py-1 !px-3 text-[10px] w-full cursor-pointer">Save Changes</button>
             </motion.div>
           )}
-        </div>
+        </motion.div>
 
-        <div className="card p-6 space-y-4">
+        <motion.div 
+          initial={{ scale: 0.97, opacity: 0, y: 15 }}
+          whileInView={{ scale: 1, opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.4, delay: 0.15 }}
+          className="card p-6 space-y-4 hover:border-border-active hover:shadow-[0_0_20px_rgba(240,180,41,0.05)]"
+        >
           <div className="flex items-center justify-between">
             <div className="text-text-secondary text-sm font-medium">Years to FI</div>
             <div className="w-8 h-8 rounded-lg bg-accent-purple/10 flex items-center justify-center text-accent-purple">
@@ -167,9 +191,15 @@ export function Dashboard({ user, budget, onUpdateNetWorth }: DashboardProps) {
           <div className="h-1 bg-border rounded-full overflow-hidden">
             <motion.div initial={{ width: 0 }} animate={{ width: yearsToFI !== null ? `${Math.max(5, 100 - (yearsToFI / 40) * 100)}%` : "0%" }} className="h-full bg-accent-purple" />
           </div>
-        </div>
+        </motion.div>
 
-        <div className="card p-6 space-y-4">
+        <motion.div 
+          initial={{ scale: 0.97, opacity: 0, y: 15 }}
+          whileInView={{ scale: 1, opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.4, delay: 0.2 }}
+          className="card p-6 space-y-4 hover:border-border-active hover:shadow-[0_0_20px_rgba(240,180,41,0.05)]"
+        >
           <div className="flex items-center justify-between">
             <div className="text-text-secondary text-sm font-medium">Debt-to-Income</div>
             <div className="w-8 h-8 rounded-lg bg-accent-red/10 flex items-center justify-center text-accent-red">
@@ -185,9 +215,15 @@ export function Dashboard({ user, budget, onUpdateNetWorth }: DashboardProps) {
           <div className="h-1 bg-border rounded-full overflow-hidden">
             <motion.div initial={{ width: 0 }} animate={{ width: `${Math.min(100, dtiRatio)}%` }} className={cn("h-full", dtiRatio <= 36 ? "bg-accent-emerald" : "bg-accent-red")} />
           </div>
-        </div>
+        </motion.div>
 
-        <div className="card p-6 space-y-4">
+        <motion.div 
+          initial={{ scale: 0.97, opacity: 0, y: 15 }}
+          whileInView={{ scale: 1, opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.4, delay: 0.25 }}
+          className="card p-6 space-y-4 hover:border-border-active hover:shadow-[0_0_20px_rgba(240,180,41,0.05)]"
+        >
           <div className="flex items-center justify-between">
             <div className="text-text-secondary text-sm font-medium">Quiz Best Score</div>
             <div className="w-8 h-8 rounded-lg bg-accent-blue/10 flex items-center justify-center text-accent-blue">
@@ -203,9 +239,15 @@ export function Dashboard({ user, budget, onUpdateNetWorth }: DashboardProps) {
           <div className="h-1 bg-border rounded-full overflow-hidden">
             <motion.div initial={{ width: 0 }} animate={{ width: `${(user.highScore / 250) * 100}%` }} className="h-full bg-accent-blue" />
           </div>
-        </div>
+        </motion.div>
 
-        <div className="card p-6 space-y-4">
+        <motion.div 
+          initial={{ scale: 0.97, opacity: 0, y: 15 }}
+          whileInView={{ scale: 1, opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.4, delay: 0.3 }}
+          className="card p-6 space-y-4 hover:border-border-active hover:shadow-[0_0_20px_rgba(240,180,41,0.05)]"
+        >
           <div className="flex items-center justify-between">
             <div className="text-text-secondary text-sm font-medium">Learning Streak</div>
             <div className="w-8 h-8 rounded-lg bg-accent-orange/10 flex items-center justify-center text-accent-orange">
@@ -223,7 +265,25 @@ export function Dashboard({ user, budget, onUpdateNetWorth }: DashboardProps) {
               <div key={i} className={cn("flex-1 h-1 rounded-full", i < user.visitDates.length ? "bg-accent-orange" : "bg-border")} />
             ))}
           </div>
+        </motion.div>
+      </div>
+
+      {/* Strategic Wealth Projections Chart */}
+      <div className="card p-8 space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h2 className="text-2xl font-display font-bold flex items-center gap-2 text-text-primary">
+              <TrendingUp className="w-6 h-6 text-accent-gold" /> Strategic Wealth Projections
+            </h2>
+            <p className="text-text-secondary text-xs mt-1">
+              Interactive 6-month predictive simulator. Toggle dynamic scenarios below to cross-evaluate performance trends.
+            </p>
+          </div>
+          <div className="px-3 py-1 rounded bg-bg-secondary border border-border/60 text-[10px] font-bold uppercase tracking-wider text-text-muted">
+            Baseline vs Scenario Comparison
+          </div>
         </div>
+        <WealthPathChart user={user} budget={budget} />
       </div>
 
       {/* Financial Health Score */}

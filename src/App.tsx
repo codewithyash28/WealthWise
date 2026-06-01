@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, Component, ErrorInfo, ReactNode } from "react";
+import { useState, useEffect, useCallback, useRef, Component, ErrorInfo, ReactNode, lazy, Suspense } from "react";
 
 class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean, error: Error | null }> {
   constructor(props: { children: ReactNode }) {
@@ -42,34 +42,102 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boole
     return this.props.children;
   }
 }
+
+class ModuleErrorBoundary extends Component<{ children: ReactNode, moduleName: string }, { hasError: boolean, error: Error | null }> {
+  constructor(props: { children: ReactNode, moduleName: string }) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error(`ModuleErrorBoundary [${this.props.moduleName}] caught an error:`, error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="card p-8 border-accent-red/20 bg-accent-red/5 space-y-4 text-center my-6">
+          <h3 className="text-xl font-bold text-accent-red">Engine Disconnected</h3>
+          <p className="text-sm text-text-secondary">
+            The <strong>{this.props.moduleName}</strong> component encountered an edge-case calculation or render error. Other modules and parameters are unaffected.
+          </p>
+          <div className="p-3 bg-bg-void/80 rounded-xl text-left overflow-auto max-h-24 mx-auto max-w-lg border border-border">
+            <code className="text-[10px] font-mono text-accent-red">
+              {this.state.error?.message || "Calculation/Rendering Error"}
+            </code>
+          </div>
+          <button 
+            onClick={() => this.setState({ hasError: false, error: null })}
+            className="px-4 py-2 bg-accent-gold text-bg-primary text-xs font-bold uppercase tracking-wider rounded-xl hover:opacity-90 transition-all font-mono cursor-pointer"
+          >
+            Reset Engine Sandbox
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 import { Navbar } from "./components/Navbar";
 import { Footer } from "./components/Footer";
 import { LandingPage } from "./components/LandingPage";
-import { Dashboard } from "./components/Dashboard";
 import { WealthDashboard } from "./components/WealthDashboard";
-import { BudgetPlanner } from "./components/BudgetPlanner";
-import { InvestmentSimulator } from "./components/InvestmentSimulator";
-import { FinancialQuiz } from "./components/FinancialQuiz";
-import { ScenarioSimulator } from "./components/ScenarioSimulator";
-import { Resources } from "./components/Resources";
-import { AssetAllocation } from "./components/AssetAllocation";
 import { CurrencySelector, NameInput } from "./components/Modals";
 import { Onboarding } from "./components/Onboarding";
-import { Badges } from "./components/Badges";
-import { CaseStudy } from "./components/CaseStudy";
 import { JudgeTour } from "./components/JudgeTour";
 import { Logo } from "./components/Logo";
-import { UserProfile, BudgetPlan, FinancialGoal, Achievement } from "./types";
+import { UserProfile, BudgetPlan, FinancialGoal, Achievement, Portfolio } from "./types";
 import { CURRENCIES, ACHIEVEMENTS } from "./constants";
 import { Tutorial } from "./components/Tutorial";
-import { MacroPulse } from "./components/mastery/MacroPulse";
-import { TrendMarket } from "./components/mastery/TrendMarket";
-import { LiveOrLease } from "./components/mastery/LiveOrLease";
-import { MockYield } from "./components/mastery/MockYield";
 import { PulseAlert } from "./components/mastery/PulseAlert";
-import { PortfolioOverview } from "./components/PortfolioOverview";
 import { Skeleton } from "./components/ui/Skeleton";
 import { motion, AnimatePresence } from "motion/react";
+import { QuickTips } from "./components/QuickTips";
+import { Database, RefreshCw, Cloud, ShieldCheck, Mail, Lock, Server, LogIn, ArrowRight, Activity, Globe, Wifi, KeyRound } from "lucide-react";
+
+// Lazy loaded heavy charting/simulator engines on demand to optimize Core Web Vitals
+const Dashboard = lazy(() => import("./components/Dashboard").then(m => ({ default: m.Dashboard })));
+const BudgetPlanner = lazy(() => import("./components/BudgetPlanner").then(m => ({ default: m.BudgetPlanner })));
+const InvestmentSimulator = lazy(() => import("./components/InvestmentSimulator").then(m => ({ default: m.InvestmentSimulator })));
+const FinancialQuiz = lazy(() => import("./components/FinancialQuiz").then(m => ({ default: m.FinancialQuiz })));
+const ScenarioSimulator = lazy(() => import("./components/ScenarioSimulator").then(m => ({ default: m.ScenarioSimulator })));
+const Resources = lazy(() => import("./components/Resources").then(m => ({ default: m.Resources })));
+const AssetAllocation = lazy(() => import("./components/AssetAllocation").then(m => ({ default: m.AssetAllocation })));
+const AssetRebalancer = lazy(() => import("./components/AssetRebalancer").then(m => ({ default: m.AssetRebalancer })));
+const Badges = lazy(() => import("./components/Badges").then(m => ({ default: m.Badges })));
+const CaseStudy = lazy(() => import("./components/CaseStudy").then(m => ({ default: m.CaseStudy })));
+const MacroPulse = lazy(() => import("./components/mastery/MacroPulse").then(m => ({ default: m.MacroPulse })));
+const TrendMarket = lazy(() => import("./components/mastery/TrendMarket").then(m => ({ default: m.TrendMarket })));
+const LiveOrLease = lazy(() => import("./components/mastery/LiveOrLease").then(m => ({ default: m.LiveOrLease })));
+const MockYield = lazy(() => import("./components/mastery/MockYield").then(m => ({ default: m.MockYield })));
+const PortfolioOverview = lazy(() => import("./components/PortfolioOverview").then(m => ({ default: m.PortfolioOverview })));
+const TaxEstimator = lazy(() => import("./components/TaxEstimator").then(m => ({ default: m.TaxEstimator })));
+const DebtPayoff = lazy(() => import("./components/DebtPayoff").then(m => ({ default: m.DebtPayoff })));
+
+function ModuleLoadingSkeleton() {
+  return (
+    <div className="container mx-auto px-6 py-12 space-y-12 animate-pulse">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div className="space-y-4">
+          <Skeleton className="h-10 w-64 bg-bg-secondary" />
+          <Skeleton className="h-5 w-48 bg-bg-secondary" />
+        </div>
+        <Skeleton className="h-12 w-48 rounded-xl bg-bg-secondary" />
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <Skeleton className="h-[350px] rounded-2xl bg-bg-secondary" />
+        <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Skeleton className="h-[160px] rounded-2xl bg-bg-secondary" />
+          <Skeleton className="h-[160px] rounded-2xl bg-bg-secondary" />
+        </div>
+      </div>
+    </div>
+  );
+}
 
 interface LocalUser {
   uid: string;
@@ -94,6 +162,9 @@ function AppContent() {
   const [isAuthReady, setIsAuthReady] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [unlockedAchievement, setUnlockedAchievement] = useState<Achievement | null>(null);
+  const [gitProvider, setGitProvider] = useState<"gitlab" | "github" | "bitbucket">("github");
+  const googleInitializedRef = useRef(false);
+  const googleButtonRenderedRef = useRef(false);
   const [alerts, setAlerts] = useState<any[]>([
     { id: 'welcome', type: 'market', title: 'WealthWise Mastery Active', message: 'Inflation trends are shifting. Check the MacroPulse engine.', timestamp: 'Just now' }
   ]);
@@ -145,7 +216,7 @@ function AppContent() {
   const [tempCurrency, setTempCurrency] = useState<string | null>(null);
 
   useEffect(() => {
-    const timer = setTimeout(() => setShowSplash(false), 2500);
+    const timer = setTimeout(() => setShowSplash(false), 4000);
     return () => clearTimeout(timer);
   }, []);
 
@@ -153,6 +224,33 @@ function AppContent() {
     const handleStartTour = () => setShowJudgeTour(true);
     window.addEventListener('start-judge-tour', handleStartTour);
     return () => window.removeEventListener('start-judge-tour', handleStartTour);
+  }, []);
+
+  useEffect(() => {
+    const handleTriggerAlert = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      if (customEvent.detail) {
+        const { type, title, message } = customEvent.detail;
+        setAlerts(prev => {
+          // Check for duplicate alerts to avoid spam
+          const isDuplicate = prev.some(a => a.title === title && a.message === message);
+          if (isDuplicate) return prev;
+          
+          return [
+            {
+              id: Math.random().toString(),
+              type: type || 'info',
+              title: title || 'System Notification',
+              message: message || '',
+              timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            },
+            ...prev.slice(0, 8)
+          ];
+        });
+      }
+    };
+    window.addEventListener('ww-trigger-alert', handleTriggerAlert);
+    return () => window.removeEventListener('ww-trigger-alert', handleTriggerAlert);
   }, []);
 
   useEffect(() => {
@@ -171,7 +269,11 @@ function AppContent() {
       setUser(JSON.parse(savedUser));
     }
     if (savedProfile) {
-      setProfile(JSON.parse(savedProfile));
+      const parsedProfile = JSON.parse(savedProfile);
+      setProfile(parsedProfile);
+      if (parsedProfile.gitProvider) {
+        setGitProvider(parsedProfile.gitProvider);
+      }
     }
     if (savedBudget) {
       setBudget(JSON.parse(savedBudget));
@@ -180,6 +282,68 @@ function AppContent() {
     setIsAuthReady(true);
   }, []);
 
+  // Sync state tracking variables
+  const [authEmail, setAuthEmail] = useState("");
+  const [authPassword, setAuthPassword] = useState("");
+  const [authMode, setAuthMode] = useState<"guest" | "mongodb_register" | "mongodb_login">("mongodb_login");
+  const [dbHealth, setDbHealth] = useState<{ status: string, database: string, connectionString?: string } | null>(null);
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
+  const [isDbChecking, setIsDbChecking] = useState(false);
+
+  const checkDbHealth = async () => {
+    setIsDbChecking(true);
+    try {
+      const res = await fetch("/api/db-health");
+      if (res.ok) {
+        const data = await res.json();
+        setDbHealth(data);
+      } else {
+        setDbHealth({ status: "failed", database: "Offline Sandbox Fallback" });
+      }
+    } catch {
+      setDbHealth({ status: "failed", database: "Offline Sandbox Fallback" });
+    } finally {
+      setIsDbChecking(false);
+    }
+  };
+
+  useEffect(() => {
+    checkDbHealth();
+  }, []);
+
+  const triggerSyncToCloud = async (currentProfile: UserProfile | null, currentBudget: BudgetPlan | null) => {
+    const isSyncEnabled = localStorage.getItem("ww_sync_enabled") === "true";
+    const savedUser = localStorage.getItem("ww_user");
+    if (!isSyncEnabled || !savedUser || !currentProfile) return;
+
+    try {
+      const u = JSON.parse(savedUser);
+      const res = await fetch("/api/auth/sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          uid: u.uid,
+          email: u.email,
+          profile: currentProfile,
+          budget: currentBudget
+        })
+      });
+      if (!res.ok) {
+        throw new Error("Cloud backing synchronizer reported an error.");
+      }
+    } catch (err) {
+      console.warn("[MongoDB Sync] Background backup failed (running in offline state):", err);
+    }
+  };
+
+  // Auto-sync when profile, budget or user updates
+  useEffect(() => {
+    if (user && profile) {
+      triggerSyncToCloud(profile, budget);
+    }
+  }, [profile, budget, user]);
+
   const handleCurrencySelect = (currency: string) => {
     setTempCurrency(currency);
     setShowCurrencySelector(false);
@@ -187,6 +351,7 @@ function AppContent() {
   };
 
   const handleGoogleCredentialResponse = async (response: any) => {
+    setAuthError(null);
     setIsLoading(true);
     try {
       const res = await fetch("/api/auth/google", {
@@ -200,10 +365,14 @@ function AppContent() {
         setUser(data.user);
         setProfile(data.profile);
         setBudget(data.budget);
+        if (data.profile?.gitProvider) {
+          setGitProvider(data.profile.gitProvider);
+        }
         
         localStorage.setItem("ww_user", JSON.stringify(data.user));
         localStorage.setItem("ww_profile", JSON.stringify(data.profile));
         localStorage.setItem("ww_uid", data.user.uid);
+        localStorage.setItem("ww_sync_enabled", "true");
         if (data.budget) {
           localStorage.setItem("ww_budget", JSON.stringify(data.budget));
         } else {
@@ -216,10 +385,11 @@ function AppContent() {
           window.location.hash = "#dashboard";
         }
       } else {
-        console.error("Sign-in verification failed on server:", data.error);
+        setAuthError(data.error || "Google sign-in verification failed.");
       }
     } catch (err) {
       console.error("Failed to sign in with Google:", err);
+      setAuthError("Google sign-in could not complete. Check the OAuth client ID and server connection.");
     } finally {
       setIsLoading(false);
     }
@@ -230,18 +400,22 @@ function AppContent() {
       const initGoogle = () => {
         const google = (window as any).google;
         if (google && google.accounts && google.accounts.id) {
-          google.accounts.id.initialize({
-            client_id: (process.env as any).GOOGLE_CLIENT_ID || "1047114487770-testclientid.apps.googleusercontent.com",
-            callback: handleGoogleCredentialResponse,
-          });
+          if (!googleInitializedRef.current) {
+            google.accounts.id.initialize({
+              client_id: (process.env as any).GOOGLE_CLIENT_ID || "1047114487770-testclientid.apps.googleusercontent.com",
+              callback: handleGoogleCredentialResponse,
+            });
+            googleInitializedRef.current = true;
+          }
           
           const btn = document.getElementById("google-signin-btn");
-          if (btn) {
+          if (btn && !googleButtonRenderedRef.current) {
             google.accounts.id.renderButton(btn, {
               theme: "filled_blue",
               size: "large",
               shape: "pill",
             });
+            googleButtonRenderedRef.current = true;
           }
         } else {
           setTimeout(initGoogle, 500);
@@ -251,8 +425,14 @@ function AppContent() {
     }
   }, [user]);
 
-  const handleOnboardingComplete = async (name: string, age: string, learningGoal: string) => {
+  const handleOnboardingComplete = (name: string, age: string, learningGoal: string, onboardingGitProvider: "gitlab" | "github" | "bitbucket" = "github") => {
     const activeUid = user?.uid || Math.random().toString(36).substring(2, 15);
+    const updatedUser: LocalUser = {
+      uid: activeUid,
+      displayName: name || user?.displayName || "Wealth Architect",
+      email: user?.email || null,
+      photoURL: user?.photoURL || null
+    };
     
     const updatedProfile: UserProfile = {
       uid: activeUid,
@@ -264,28 +444,31 @@ function AppContent() {
       lastVisit: new Date().toISOString(),
       visitDates: profile?.visitDates ? [...profile.visitDates, new Date().toISOString().split('T')[0]] : [new Date().toISOString().split('T')[0]],
       highScore: profile?.highScore || 0,
-      netWorth: profile?.netWorth || { assets: 0, liabilities: 0 },
-      achievements: profile?.achievements || []
+      netWorth: profile?.netWorth || { assets: user?.email ? 0 : 125000, liabilities: user?.email ? 0 : 45000 },
+      gitProvider: onboardingGitProvider,
+      achievements: profile?.achievements || [],
+      goals: profile?.goals || []
     };
 
-    if (user?.uid) {
-      try {
-        await fetch(`/api/profile/${user.uid}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(updatedProfile)
-        });
-      } catch (err) {
-        console.error("Failed to sync profile to server:", err);
-      }
-    }
-
+    setUser(updatedUser);
     setProfile(updatedProfile);
+    setGitProvider(onboardingGitProvider);
+    localStorage.setItem("ww_user", JSON.stringify(updatedUser));
     localStorage.setItem("ww_profile", JSON.stringify(updatedProfile));
+    localStorage.setItem("ww_uid", activeUid);
     
     setShowNameInput(false);
     setShowTutorial(true);
     window.location.hash = "#dashboard";
+  };
+
+  const handleUpdateGitProvider = (provider: "gitlab" | "github" | "bitbucket") => {
+    setGitProvider(provider);
+    if (profile) {
+      const updatedProfile = { ...profile, gitProvider: provider };
+      setProfile(updatedProfile);
+      localStorage.setItem("ww_profile", JSON.stringify(updatedProfile));
+    }
   };
 
   const unlockAchievement = useCallback(async (id: string) => {
@@ -366,6 +549,16 @@ function AppContent() {
     }
   };
 
+  const handleUpdatePortfolio = (portfolio: Portfolio) => {
+    if (!profile) return;
+    const updatedProfile = {
+      ...profile,
+      portfolio
+    };
+    setProfile(updatedProfile);
+    localStorage.setItem("ww_profile", JSON.stringify(updatedProfile));
+  };
+
   const handleQuizComplete = async (score: number) => {
     if (!profile) return;
     let newHighScore = profile.highScore;
@@ -407,6 +600,8 @@ function AppContent() {
     localStorage.removeItem("ww_profile");
     localStorage.removeItem("ww_budget");
     localStorage.removeItem("ww_uid");
+    localStorage.removeItem("ww_sync_enabled");
+    googleButtonRenderedRef.current = false;
     window.location.hash = "#home";
   };
 
@@ -432,9 +627,9 @@ function AppContent() {
 
   const getWelcomeMessage = () => {
     const hour = new Date().getHours();
-    if (hour < 12) return "Good morning! Unlock your elite workspace";
-    if (hour < 18) return "Good afternoon! Unlock your elite workspace";
-    return "Good evening! Unlock your elite workspace";
+    if (hour < 12) return "Good morning! Synchronize with MongoDB to sync your achievements";
+    if (hour < 18) return "Good afternoon! Synchronize with MongoDB to sync your achievements";
+    return "Good evening! Synchronize with MongoDB to sync your achievements";
   };
 
   const renderContent = () => {
@@ -442,17 +637,346 @@ function AppContent() {
     
     if (!user) {
       return (
-        <div className="container mx-auto px-6 py-32 flex flex-col items-center justify-center text-center space-y-8">
-          <h2 className="text-4xl font-display font-bold">{getWelcomeMessage()}</h2>
-          <p className="text-text-secondary max-w-md">
-            Sign in securely to synchronize your progress to the MongoDB cloud database and activate our elite AI Advisor.
-          </p>
-          <div className="flex flex-col items-center gap-5 p-6 bg-white/[0.02] border border-white/[0.08] rounded-2xl max-w-sm w-full">
-            <div id="google-signin-btn" className="min-h-[44px] flex items-center justify-center"></div>
-            <div className="text-[10px] text-text-muted uppercase tracking-wider font-bold">Or keep it fully offline</div>
-            <button onClick={handleSignIn} className="w-full py-3 border border-dashed border-[#C5A880]/30 hover:border-accent-gold/60 text-accent-gold text-xs font-bold uppercase tracking-widest rounded-xl hover:bg-white/[0.02] transition-all">
-              Initialize Local Storage
-            </button>
+        <div className="container mx-auto px-6 py-12 max-w-4xl space-y-10">
+          {/* Header section with brand message */}
+          <div className="text-center space-y-4">
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="inline-flex items-center gap-2 px-3 py-1 bg-accent-gold/10 border border-accent-gold/20 rounded-full text-accent-gold text-xs font-bold font-mono uppercase tracking-wider"
+            >
+              <Database className="w-3.5 h-3.5" />
+              <span>Multi-Device MCP Sessions Active</span>
+            </motion.div>
+            <h2 className="text-4xl md:text-5xl font-display font-black tracking-tight text-text-primary">
+              Access the Elite Wealth Simulator
+            </h2>
+            <p className="text-text-secondary max-w-2xl mx-auto text-sm md:text-base">
+              Synchronize your multi-asset portfolio, customized budgeting plans, and prestigious career badges across devices securely with MongoDB integration.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
+            {/* Left side info panel: Benefits of Sync / Health Monitor */}
+            <div className="md:col-span-5 space-y-6">
+              <div className="card p-6 border-border/80 space-y-5 text-left bg-bg-secondary/10">
+                <h3 className="text-xs font-bold uppercase tracking-widest text-text-primary flex items-center gap-2">
+                  <Server className="w-4 h-4 text-accent-gold" />
+                  Database Diagnostics
+                </h3>
+                
+                <div className="space-y-4 bg-bg-void/40 p-4 rounded-xl border border-border/40 font-mono text-[11px]">
+                  <div className="flex items-center justify-between">
+                    <span className="text-text-muted">Persistence Engine</span>
+                    {isDbChecking ? (
+                      <span className="text-accent-gold flex items-center gap-1">
+                        <RefreshCw className="w-3 h-3 animate-spin" /> Verifying...
+                      </span>
+                    ) : (
+                      <span className="font-extrabold text-accent-blue">{dbHealth?.database || "Sandbox Emulator"}</span>
+                    )}
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-text-muted">Access Protocol</span>
+                    <span className="font-semibold text-text-primary">MongoDB Native Drivers</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-text-muted">Cluster Response</span>
+                    <span className="text-accent-emerald flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-accent-emerald animate-pulse" /> Live & Healthy
+                    </span>
+                  </div>
+                </div>
+
+                <div className="space-y-3 pt-2 text-xs">
+                  <div className="flex items-start gap-3">
+                    <div className="w-5 h-5 rounded bg-accent-gold/10 flex items-center justify-center shrink-0 text-accent-gold font-bold">1</div>
+                    <p className="text-text-muted leading-relaxed"><strong>Restore Budgets:</strong> Log in on any phone, laptop, or desktop and recover your complex monthly cash flows instantly.</p>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="w-5 h-5 rounded bg-accent-emerald/10 flex items-center justify-center shrink-0 text-accent-emerald font-bold">2</div>
+                    <p className="text-text-muted leading-relaxed"><strong>Sync Prestigious Badges:</strong> Keep your high scores, career landmarks, and unlocked achievements safely in the cloud archive.</p>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="w-5 h-5 rounded bg-accent-blue/10 flex items-center justify-center shrink-0 text-accent-blue font-bold">3</div>
+                    <p className="text-text-muted leading-relaxed"><strong>Dynamic Rule Retention:</strong> Custom drop alarm thresholds and market coefficients remain anchored to your profile.</p>
+                  </div>
+                </div>
+
+                <button 
+                  onClick={checkDbHealth}
+                  className="w-full flex items-center justify-center gap-2 py-2 border border-border/80 hover:border-accent-gold/40 text-text-secondary hover:text-text-primary rounded-xl text-[10px] font-mono tracking-wider transition-all uppercase"
+                >
+                  <RefreshCw className="w-3 h-3 text-accent-gold" /> Pinpoint Connection Status
+                </button>
+              </div>
+            </div>
+
+            {/* Right side form card */}
+            <div className="md:col-span-7">
+              <div className="card p-8 border-border relative overflow-hidden space-y-6">
+                {/* Visual tabs to choose auth mechanism */}
+                <div className="flex border-b border-border/50">
+                  <button
+                    onClick={() => { setAuthMode("mongodb_login"); setAuthError(null); }}
+                    className={`flex-1 pb-3 text-xs uppercase tracking-wider font-extrabold transition-all border-b-2 ${authMode === "mongodb_login" ? "border-accent-gold text-accent-gold" : "border-transparent text-text-muted hover:text-text-primary"}`}
+                  >
+                    Restore Session
+                  </button>
+                  <button
+                    onClick={() => { setAuthMode("mongodb_register"); setAuthError(null); }}
+                    className={`flex-1 pb-3 text-xs uppercase tracking-wider font-extrabold transition-all border-b-2 ${authMode === "mongodb_register" ? "border-accent-gold text-accent-gold" : "border-transparent text-text-muted hover:text-text-primary"}`}
+                  >
+                    Create Backed Workspace
+                  </button>
+                  <button
+                    onClick={() => { setAuthMode("guest"); setAuthError(null); }}
+                    className={`flex-1 pb-3 text-xs uppercase tracking-wider font-extrabold transition-all border-b-2 ${authMode === "guest" ? "border-accent-gold text-accent-gold" : "border-transparent text-text-muted hover:text-text-primary"}`}
+                  >
+                    Offline Guest
+                  </button>
+                </div>
+
+                <div className="space-y-3">
+                  <div id="google-signin-btn" className="min-h-[44px] flex items-center justify-center"></div>
+                  <div className="flex items-center gap-3">
+                    <div className="h-px flex-1 bg-border/60" />
+                    <span className="text-[9px] text-text-muted uppercase tracking-widest font-bold">or use email backup</span>
+                    <div className="h-px flex-1 bg-border/60" />
+                  </div>
+                </div>
+
+                {authError && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="p-4 rounded-xl border border-accent-red/20 bg-accent-red/5 text-xs text-accent-red text-left font-mono"
+                  >
+                    ✖ {authError}
+                  </motion.div>
+                )}
+
+                <AnimatePresence mode="wait">
+                  {authMode === "guest" ? (
+                    <motion.div
+                      key="guest-card"
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="space-y-4 text-left py-4"
+                    >
+                      <h4 className="text-md font-bold text-text-primary flex items-center gap-2">
+                        <Globe className="w-5 h-5 text-accent-gold" />
+                        Deploy Guest Sandbox Session
+                      </h4>
+                      <p className="text-xs text-text-muted leading-relaxed">
+                        No email authentication required. You can test historical charts, run compound simulations, and formulate a mock budget plan instantly right inside your browser window. 
+                      </p>
+                      <div className="bg-bg-secondary/40 p-3 rounded-lg border border-border/40 text-[10px] text-text-muted font-mono">
+                        💡 NOTE: If you switch browser instances, devices, or purge your cookies, local milestones are deleted. You can register anytime to tether your items to permanent cloud hosting.
+                      </div>
+                      
+                      <button
+                        onClick={() => {
+                          const tempUid = "guest_" + Math.random().toString(36).substring(2, 11);
+                          const guestUser = {
+                            uid: tempUid,
+                            displayName: "Guest User",
+                            email: null,
+                            photoURL: null
+                          };
+                          setUser(guestUser);
+                          localStorage.setItem("ww_user", JSON.stringify(guestUser));
+                          localStorage.setItem("ww_sync_enabled", "false");
+                          
+                          // Check if local storage already contains profile, otherwise launch onboard modals
+                          const savedProfile = localStorage.getItem("ww_profile");
+                          if (savedProfile) {
+                            setProfile(JSON.parse(savedProfile));
+                          } else {
+                            setShowExpertOnboarding(true);
+                          }
+                        }}
+                        className="btn-primary w-full flex items-center justify-center gap-2.5 py-4 text-sm font-bold uppercase tracking-widest text-bg-void cursor-pointer mt-6"
+                      >
+                        <span>Boot Sandbox Guest Session</span>
+                        <ArrowRight className="w-4 h-4 text-bg-void" />
+                      </button>
+                    </motion.div>
+                  ) : (
+                    <motion.form
+                      key={authMode}
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0 }}
+                      onSubmit={async (e) => {
+                        e.preventDefault();
+                        if (!authEmail || !authPassword) {
+                          setAuthError("Credential inputs cannot be left blank.");
+                          return;
+                        }
+                        setAuthError(null);
+                        setIsAuthenticating(true);
+
+                        try {
+                          if (authMode === "mongodb_register") {
+                            // Register flow
+                            const tempUid = "ww_" + Math.random().toString(36).substring(2, 15);
+                            const initialProfile: UserProfile = {
+                              uid: tempUid,
+                              name: authEmail.split("@")[0],
+                              age: "28",
+                              learningGoal: "Elite Compound Simulation",
+                              currency: "USD",
+                              joinDate: new Date().toISOString(),
+                              lastVisit: new Date().toISOString(),
+                              visitDates: [new Date().toISOString().split('T')[0]],
+                              highScore: 0,
+                              netWorth: { assets: 150000, liabilities: 50000 },
+                              gitProvider: "github"
+                            };
+
+                            const initialBudget: BudgetPlan = {
+                              income: 9000,
+                              expenses: {
+                                housing: 2800,
+                                food: 850,
+                                transport: 650,
+                                health: 450,
+                                entertainment: 550,
+                                education: 1000,
+                                loans: 1200,
+                                other: 1500
+                              },
+                              timestamp: new Date().toISOString()
+                            };
+
+                            const res = await fetch("/api/auth/register", {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({
+                                email: authEmail,
+                                password: authPassword,
+                                profile: initialProfile,
+                                budget: initialBudget
+                              })
+                            });
+
+                            if (!res.ok) {
+                              const errData = await res.json();
+                              throw new Error(errData.error || "Could not register storage credentials.");
+                            }
+
+                            const data = await res.json();
+                            const newUser = data.user;
+                            
+                            setUser(newUser);
+                            setProfile(data.profile);
+                            setBudget(data.budget);
+                            
+                            localStorage.setItem("ww_user", JSON.stringify(newUser));
+                            localStorage.setItem("ww_profile", JSON.stringify(data.profile));
+                            localStorage.setItem("ww_budget", JSON.stringify(data.budget));
+                            localStorage.setItem("ww_sync_enabled", "true");
+
+                            window.dispatchEvent(new CustomEvent('ww-trigger-alert', {
+                              detail: {
+                                type: 'success',
+                                title: 'Cloud Anchor Created',
+                                message: `Session ${authEmail} securely persisted in MongoDB.`
+                              }
+                            }));
+                          } else {
+                            // Login / Switch Device Flow
+                            const res = await fetch("/api/auth/login", {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({
+                                email: authEmail,
+                                password: authPassword
+                              })
+                            });
+
+                            if (!res.ok) {
+                              const errData = await res.json();
+                              throw new Error(errData.error || "Device credential validation failed.");
+                            }
+
+                            const data = await res.json();
+                            const recoveredUser = data.user;
+
+                            setUser(recoveredUser);
+                            setProfile(data.profile);
+                            setBudget(data.budget);
+
+                            localStorage.setItem("ww_user", JSON.stringify(recoveredUser));
+                            if (data.profile) localStorage.setItem("ww_profile", JSON.stringify(data.profile));
+                            if (data.budget) localStorage.setItem("ww_budget", JSON.stringify(data.budget));
+                            localStorage.setItem("ww_sync_enabled", "true");
+
+                            window.dispatchEvent(new CustomEvent('ww-trigger-alert', {
+                              detail: {
+                                type: 'success',
+                                title: 'Device Restored Successfully',
+                                message: `All budget plans, badges, and milestones loaded from MongoDB.`
+                              }
+                            }));
+                          }
+                        } catch (err: any) {
+                          setAuthError(err.message || "An authentication exception occurred.");
+                        } finally {
+                          setIsAuthenticating(false);
+                        }
+                      }}
+                      className="space-y-4 text-left"
+                    >
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-bold uppercase tracking-widest text-text-muted flex items-center gap-1.5">
+                          <Mail className="w-3.5 h-3.5 text-accent-gold" /> Email Address
+                        </label>
+                        <input
+                          type="email"
+                          required
+                          value={authEmail}
+                          onChange={(e) => setAuthEmail(e.target.value)}
+                          placeholder="e.g. manager@firm.com"
+                          className="w-full bg-bg-secondary border border-border/80 focus:border-accent-gold/40 px-4 py-3 rounded-xl text-text-primary text-sm focus:outline-none transition-colors"
+                        />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-bold uppercase tracking-widest text-text-muted flex items-center gap-1.5">
+                          <KeyRound className="w-3.5 h-3.5 text-accent-gold" /> Security PIN / Password
+                        </label>
+                        <input
+                          type="password"
+                          required
+                          value={authPassword}
+                          onChange={(e) => setAuthPassword(e.target.value)}
+                          placeholder="••••••••"
+                          className="w-full bg-bg-secondary border border-border/80 focus:border-accent-gold/40 px-4 py-3 rounded-xl text-text-primary text-sm focus:outline-none transition-colors"
+                        />
+                      </div>
+
+                      <button
+                        type="submit"
+                        disabled={isAuthenticating}
+                        className="btn-primary w-full flex items-center justify-center gap-2.5 py-4 text-sm font-bold uppercase tracking-widest text-bg-void cursor-pointer mt-6"
+                      >
+                        {isAuthenticating ? (
+                          <RefreshCw className="w-5 h-5 animate-spin text-bg-void" />
+                        ) : (
+                          <ShieldCheck className="w-5 h-5 text-bg-void" />
+                        )}
+                        <span>
+                          {isAuthenticating ? "Verifying..." : authMode === "mongodb_register" ? "Initialize & Cloud Sync" : "Sync From Backup PIN"}
+                        </span>
+                      </button>
+                    </motion.form>
+                  )}
+                </AnimatePresence>
+              </div>
+            </div>
           </div>
         </div>
       );
@@ -484,24 +1008,127 @@ function AppContent() {
       );
     }
 
-    switch (currentHash) {
-      case "#dashboard": return <WealthDashboard user={profile} budget={budget} onUnlockAchievement={unlockAchievement} />;
-      case "#macropulse": return <div className="container mx-auto px-6 py-12"><MacroPulse /></div>;
-      case "#trendmarket": return <div className="container mx-auto px-6 py-12"><TrendMarket /></div>;
-      case "#liveorlease": return <div className="container mx-auto px-6 py-12"><LiveOrLease /></div>;
-      case "#mockyield": return <div className="container mx-auto px-6 py-12"><MockYield /></div>;
-      case "#badges": return <div className="container mx-auto px-6 py-12"><Badges unlockedAchievements={profile.achievements || []} /></div>;
-      case "#docs": return <div className="container mx-auto px-6 py-12"><CaseStudy /></div>;
-      case "#portfolio": return <PortfolioOverview user={profile} />;
-      case "#networth": return <Dashboard user={profile} budget={budget} onUpdateNetWorth={handleUpdateNetWorth} />;
-      case "#budget": return <BudgetPlanner user={profile} onSave={handleSaveBudget} initialPlan={budget} />;
-      case "#simulator": return <InvestmentSimulator user={profile} onUpdateGoals={handleUpdateGoals} />;
-      case "#quiz": return <FinancialQuiz onComplete={handleQuizComplete} bestScore={profile.highScore} />;
-      case "#scenarios": return <ScenarioSimulator user={profile} budget={budget} onComplete={() => unlockAchievement('simulation_expert')} />;
-      case "#resources": return <Resources />;
-      case "#allocation": return <AssetAllocation />;
-      default: return <LandingPage />;
-    }
+    return (
+      <Suspense fallback={<ModuleLoadingSkeleton />}>
+        {(() => {
+          switch (currentHash) {
+            case "#dashboard": 
+              return (
+                <ModuleErrorBoundary moduleName="Control Dashboard">
+                  <WealthDashboard user={profile} budget={budget} onUnlockAchievement={unlockAchievement} onUpdateGitProvider={handleUpdateGitProvider} gitProvider={gitProvider} />
+                </ModuleErrorBoundary>
+              );
+            case "#macropulse": 
+              return (
+                <ModuleErrorBoundary moduleName="MacroPulse Simulation Engine">
+                  <div className="container mx-auto px-6 py-12"><MacroPulse user={profile} /></div>
+                </ModuleErrorBoundary>
+              );
+            case "#trendmarket": 
+              return (
+                <ModuleErrorBoundary moduleName="TrendMarket Signal Engine">
+                  <div className="container mx-auto px-6 py-12"><TrendMarket /></div>
+                </ModuleErrorBoundary>
+              );
+            case "#liveorlease": 
+              return (
+                <ModuleErrorBoundary moduleName="LiveOrLease Arbitrage Simulator">
+                  <div className="container mx-auto px-6 py-12"><LiveOrLease /></div>
+                </ModuleErrorBoundary>
+              );
+            case "#mockyield": 
+              return (
+                <ModuleErrorBoundary moduleName="MockYield APY Tracker">
+                  <div className="container mx-auto px-6 py-12"><MockYield /></div>
+                </ModuleErrorBoundary>
+              );
+            case "#badges": 
+              return (
+                <ModuleErrorBoundary moduleName="Achievement Badging Service">
+                  <div className="container mx-auto px-6 py-12"><Badges unlockedAchievements={profile.achievements || []} /></div>
+                </ModuleErrorBoundary>
+              );
+            case "#docs": 
+              return (
+                <ModuleErrorBoundary moduleName="GitOps Rulebook & Case Study">
+                  <div className="container mx-auto px-6 py-12"><CaseStudy user={profile} onUpdateGitProvider={handleUpdateGitProvider} /></div>
+                </ModuleErrorBoundary>
+              );
+            case "#portfolio": 
+              return (
+                <ModuleErrorBoundary moduleName="Interactive Portfolio Balance Matrix">
+                  <PortfolioOverview user={profile} />
+                </ModuleErrorBoundary>
+              );
+            case "#networth": 
+              return (
+                <ModuleErrorBoundary moduleName="NetWorth Real-Time Tracker">
+                  <Dashboard user={profile} budget={budget} onUpdateNetWorth={handleUpdateNetWorth} />
+                </ModuleErrorBoundary>
+              );
+            case "#budget": 
+              return (
+                <ModuleErrorBoundary moduleName="Interactive Budget Planner">
+                  <BudgetPlanner user={profile} onSave={handleSaveBudget} initialPlan={budget} gitProvider={gitProvider} onUnlockAchievement={unlockAchievement} />
+                </ModuleErrorBoundary>
+              );
+            case "#simulator": 
+              return (
+                <ModuleErrorBoundary moduleName="Compound Interest & Lump-Sum Simulator">
+                  <InvestmentSimulator user={profile} onUpdateGoals={handleUpdateGoals} />
+                </ModuleErrorBoundary>
+              );
+            case "#quiz": 
+              return (
+                <ModuleErrorBoundary moduleName="Literacy Command Quiz">
+                  <FinancialQuiz onComplete={handleQuizComplete} bestScore={profile.highScore} />
+                </ModuleErrorBoundary>
+              );
+            case "#scenarios": 
+              return (
+                <ModuleErrorBoundary moduleName="Strategic Projection Engine">
+                  <ScenarioSimulator user={profile} budget={budget} onComplete={() => unlockAchievement('simulation_expert')} />
+                </ModuleErrorBoundary>
+              );
+            case "#resources": 
+              return (
+                <ModuleErrorBoundary moduleName="Literacy Guidelines & Syllabus">
+                  <Resources />
+                </ModuleErrorBoundary>
+              );
+            case "#allocation": 
+              return (
+                <ModuleErrorBoundary moduleName="Dynamic Asset Rebalancing Engine">
+                  <AssetAllocation />
+                </ModuleErrorBoundary>
+              );
+            case "#rebalancer": 
+              return (
+                <ModuleErrorBoundary moduleName="Dynamic Asset Rebalancing Engine">
+                  <AssetRebalancer user={profile} onUpdatePortfolio={handleUpdatePortfolio} onUnlockAchievement={unlockAchievement} />
+                </ModuleErrorBoundary>
+              );
+            case "#tax-estimator":
+              return (
+                <ModuleErrorBoundary moduleName="Tax Estimator Suite">
+                  <div className="container mx-auto px-6 py-12">
+                    <TaxEstimator user={profile} />
+                  </div>
+                </ModuleErrorBoundary>
+              );
+            case "#debt-payoff":
+              return (
+                <ModuleErrorBoundary moduleName="Debt Acceleration Plan">
+                  <div className="container mx-auto px-6 py-12">
+                    <DebtPayoff user={profile} />
+                  </div>
+                </ModuleErrorBoundary>
+              );
+            default: return <LandingPage />;
+          }
+        })()}
+      </Suspense>
+    );
   };
 
   return (
@@ -515,6 +1142,8 @@ function AppContent() {
         onClose={(id) => setAlerts(prev => prev.filter(a => a.id !== id))} 
         onClearAll={() => setAlerts([])}
       />
+
+      <QuickTips hash={currentHash} />
 
       {/* Splash Screen */}
       <AnimatePresence>
@@ -537,7 +1166,7 @@ function AppContent() {
                    <motion.div 
                      initial={{ width: 0 }}
                      animate={{ width: "100%" }}
-                     transition={{ duration: 2, ease: "easeInOut" }}
+                     transition={{ duration: 3.5, ease: "easeInOut" }}
                      className="h-full bg-accent-gold"
                    />
                  </div>

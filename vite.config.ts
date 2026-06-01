@@ -22,7 +22,7 @@ export default defineConfig(({mode}) => {
     base: './',
     plugins: [react(), tailwindcss()],
     define: {
-      'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),
+      // GEMINI_API_KEY is intentionally NOT exposed to the client bundle — it is only used server-side
       'process.env.FIREBASE_API_KEY': JSON.stringify(env.FIREBASE_API_KEY || (firebaseConfig as any).apiKey),
       'process.env.FIREBASE_AUTH_DOMAIN': JSON.stringify(env.FIREBASE_AUTH_DOMAIN || (firebaseConfig as any).authDomain),
       'process.env.FIREBASE_PROJECT_ID': JSON.stringify(env.FIREBASE_PROJECT_ID || (firebaseConfig as any).projectId),

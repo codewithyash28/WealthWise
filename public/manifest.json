@@ -1,0 +1,23 @@
+{
+  "short_name": "WealthWise",
+  "name": "WealthWise Elite",
+  "description": "The AI-Driven Personal Wealth Architect. Master your finances with real-time audits, scenario simulations, and global intelligence.",
+  "icons": [
+    {
+      "src": "/logo.svg",
+      "type": "image/svg+xml",
+      "sizes": "any",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/app-icon.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#020617",
+  "theme_color": "#020617",
+  "display": "standalone",
+  "orientation": "portrait"
+}

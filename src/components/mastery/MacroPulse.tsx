@@ -1,12 +1,22 @@
 import { useState, useMemo } from "react";
 import { motion } from "motion/react";
-import { TrendingUp, Activity, DollarSign, PieChart, Info, AlertTriangle } from "lucide-react";
+import { TrendingUp, Activity, DollarSign, PieChart, Info, AlertTriangle, GitBranch, Check, Terminal, RefreshCw, Send } from "lucide-react";
 import { cn } from "../../lib/utils";
+import { UserProfile } from "../../types";
 
-export function MacroPulse() {
+interface MacroPulseProps {
+  user?: UserProfile | null;
+}
+
+export function MacroPulse({ user }: MacroPulseProps) {
   const [inflation, setInflation] = useState(2.5);
   const [interestRate, setInterestRate] = useState(4.0);
   const [gdpGrowth, setGdpGrowth] = useState(2.1);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncLogs, setSyncLogs] = useState<string[]>([]);
+  const [syncStatus, setSyncStatus] = useState<"idle" | "running" | "success">("idle");
+
+  const gitProvider = user?.gitProvider || "github";
 
   const analysis = useMemo(() => {
     let status = "Stable";
@@ -108,18 +118,85 @@ export function MacroPulse() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
               <div className="p-6 bg-bg-secondary rounded-2xl space-y-2 border border-border">
-                <div className="text-[10px] text-text-muted uppercase tracking-widest font-bold">5yr Purchasing Power Loss</div>
-                <div className="text-3xl font-display font-bold text-accent-red">-{analysis.purchasingPowerLoss}%</div>
-                <p className="text-xs text-text-secondary">At {inflation}% inflation, ₹100,000 will be worth ₹{(100 - parseFloat(analysis.purchasingPowerLoss)).toFixed(1)}k in 5 years.</p>
+                <div className="text-[10px] text-text-muted uppercase tracking-widest font-bold font-mono">5yr Purchasing Power Loss</div>
+                <div className="text-3xl font-display font-bold text-accent-red font-mono">-{analysis.purchasingPowerLoss}%</div>
+                <p className="text-xs text-text-secondary">At {inflation}% inflation, simulated wealth is devaluating continuously.</p>
               </div>
 
               <div className="p-6 bg-bg-secondary rounded-2xl space-y-2 border border-border">
-                <div className="text-[10px] text-text-muted uppercase tracking-widest font-bold">Recommended Policy</div>
+                <div className="text-[10px] text-text-muted uppercase tracking-widest font-bold font-mono">Recommended Policy</div>
                 <div className="text-xl font-bold text-accent-gold">
                   {inflation > 5 ? "Aggressive Hikes" : inflation < 1 ? "Stimulus Package" : "Maintain Neutral"}
                 </div>
-                <p className="text-xs text-text-secondary">Based on current simulated parameters for optimal growth.</p>
+                <p className="text-xs text-text-secondary">Suggested macro mitigation model for active portfolios.</p>
               </div>
+            </div>
+
+            {/* GitOps Policy Serialization Accordion/Box */}
+            <div className="pt-6 border-t border-border/60 space-y-4 font-sans">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-bg-secondary/40 p-4 rounded-xl border border-border/80">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <GitBranch className="w-4 h-4 text-accent-gold animate-pulse" />
+                    <span className="text-xs font-bold uppercase tracking-wider text-text-primary font-sans">Wealth-As-Code: Macro Buffer</span>
+                  </div>
+                  <p className="text-[10px] text-text-muted leading-relaxed font-sans">
+                    Instantly compile these {inflation}% inflation levels into an automated target asset multiplier on <strong className="text-accent-gold uppercase font-mono">{gitProvider}</strong>.
+                  </p>
+                </div>
+                
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (isSyncing) return;
+                    setIsSyncing(true);
+                    setSyncStatus("running");
+                    setSyncLogs([]);
+                    
+                    const mLogs = [
+                      `Initializing gitops commit daemon...`,
+                      `Connecting user repository under active directory /wealth-policies...`,
+                      `Writing "macro-buffer.json" config with inflationLimit: ${inflation}% & targetRate: ${interestRate}%...`,
+                      `Packing payload to ${gitProvider.toUpperCase()} commit stream...`,
+                      `SUCCESS: Policy file recorded on branch main. Commit ${Math.random().toString(16).substring(2,8).toUpperCase()} finalized.`
+                    ];
+
+                    for(let i=0; i<mLogs.length; i++){
+                      await new Promise(r => setTimeout(r, i * 200 + 100));
+                      setSyncLogs(prev => [...prev, `[GitOps] ${mLogs[i]}`]);
+                    }
+                    setSyncStatus("success");
+                    setIsSyncing(false);
+                  }}
+                  disabled={isSyncing}
+                  className="btn-primary text-[10px] font-bold uppercase tracking-widest py-2 px-4 flex items-center gap-2 shrink-0 self-center cursor-pointer"
+                >
+                  {isSyncing ? (
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin text-bg-void" />
+                  ) : syncStatus === "success" ? (
+                    <Check className="w-3.5 h-3.5 text-bg-void" />
+                  ) : (
+                    <Send className="w-3.5 h-3.5 text-bg-void" />
+                  )}
+                  {isSyncing ? "Committing..." : syncStatus === "success" ? "Committed!" : `Commit to ${gitProvider}`}
+                </button>
+              </div>
+
+              {syncLogs.length > 0 && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-bg-void border border-border p-4 rounded-xl font-mono text-[9px] leading-normal space-y-1 text-text-secondary select-none"
+                >
+                  <div className="flex items-center justify-between font-bold text-accent-gold border-b border-border/40 pb-1.5 mb-1.5">
+                    <span className="flex items-center gap-1"><Terminal className="w-3 h-3 text-accent-emerald" /> CONSOLE OUTPUT</span>
+                    <span className="text-[8px] uppercase font-mono">{gitProvider} repository terminal</span>
+                  </div>
+                  {syncLogs.map((l, li) => (
+                    <div key={li} className={cn("font-mono", l.includes("SUCCESS") ? "text-accent-emerald font-bold" : "text-text-secondary")}>{l}</div>
+                  ))}
+                </motion.div>
+              )}
             </div>
           </div>
 

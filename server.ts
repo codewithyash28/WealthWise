@@ -1,396 +1,704 @@
 import express from "express";
-import mongoose from "mongoose";
-import jwt from "jsonwebtoken";
+import path from "path";
+import fs from "fs";
+import crypto from "crypto";
+import { createServer as createViteServer } from "vite";
+import { MongoClient, Db } from "mongodb";
+import { GoogleGenAI } from "@google/genai";
+import { OAuth2Client } from "google-auth-library";
+import bcrypt from "bcryptjs";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
 import dotenv from "dotenv";
-import { MongoMemoryServer } from "mongodb-memory-server";
 
 dotenv.config();
 
+const PORT = Number(process.env.PORT || 3000);
 const app = express();
-const PORT = process.env.PORT || 5001;
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || "1047114487770-testclientid.apps.googleusercontent.com";
+const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
 
-app.use(express.json());
-
-// MongoDB Connection setup
-let mongoServer: MongoMemoryServer | null = null;
-
-async function connectDB() {
-  const uri = process.env.MONGODB_URI;
-
-  if (uri && uri !== "undefined" && uri.length > 10) {
-    console.log("Connecting to production MongoDB Atlas...");
-    try {
-      await mongoose.connect(uri);
-      console.log("Connected successfully to MongoDB Atlas.");
-    } catch (err) {
-      console.error("MongoDB Atlas connection failed. Falling back to local memory server...", err);
-      await startMemoryServer();
-    }
-  } else {
-    console.log("No MONGODB_URI found. Initializing in-memory MongoDB server for testing...");
-    await startMemoryServer();
-  }
-}
-
-async function startMemoryServer() {
+const apiKey = process.env.GEMINI_API_KEY;
+let ai: GoogleGenAI | null = null;
+if (apiKey && apiKey !== "undefined" && apiKey !== "null" && apiKey.length >= 10) {
   try {
-    mongoServer = await MongoMemoryServer.create();
-    const uri = mongoServer.getUri();
-    await mongoose.connect(uri);
-    console.log("Connected successfully to self-contained In-Memory MongoDB Server.");
-    console.log("Connection URI:", uri);
+    ai = new GoogleGenAI({
+      apiKey,
+      httpOptions: {
+        headers: {
+          "User-Agent": "aistudio-build",
+        },
+      },
+    });
+    console.log("[Gemini Engine] Server-side client initialized successfully.");
   } catch (err) {
-    console.error("Failed to start in-memory MongoDB server:", err);
-    process.exit(1);
+    console.error("[Gemini Engine] Failed to initialize GoogleGenAI client:", err);
+  }
+} else {
+  console.log("[Gemini Engine] Running in offline mode (API key not set up).");
+}
+
+if (process.env.NODE_ENV === "production") {
+  app.use(helmet());
+} else {
+  app.use(helmet({ contentSecurityPolicy: false }));
+}
+
+app.use(express.json({ limit: "1mb" }));
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many requests from this IP, please try again after 15 minutes." },
+});
+app.use("/api/auth", authLimiter);
+
+const MONGODB_URI = process.env.MONGODB_URI || process.env.MONGO_URL || "mongodb://localhost:27017/wealthwise_mcp";
+const FALLBACK_DB_FILE = path.join(process.cwd(), "db_simulation.json");
+
+type CollectionName = "users" | "profiles" | "budgets" | "transactions";
+type FallbackDb = Record<CollectionName, any[]>;
+
+let mongoClient: MongoClient | null = null;
+let mongoDb: Db | null = null;
+let isRealMongoActive = false;
+
+function ensureFallbackDb() {
+  if (!fs.existsSync(FALLBACK_DB_FILE)) {
+    const emptyDb: FallbackDb = { users: [], profiles: [], budgets: [], transactions: [] };
+    fs.writeFileSync(FALLBACK_DB_FILE, JSON.stringify(emptyDb, null, 2));
+    return;
+  }
+
+  const data = readFallbackDb();
+  let changed = false;
+  for (const collection of ["users", "profiles", "budgets", "transactions"] as CollectionName[]) {
+    if (!Array.isArray(data[collection])) {
+      data[collection] = [];
+      changed = true;
+    }
+  }
+  if (changed) {
+    writeFallbackDb(data);
   }
 }
 
-// ================= SCHEMA DEFINITIONS =================
+function readFallbackDb(): FallbackDb {
+  try {
+    const parsed = JSON.parse(fs.readFileSync(FALLBACK_DB_FILE, "utf-8"));
+    return {
+      users: Array.isArray(parsed.users) ? parsed.users : [],
+      profiles: Array.isArray(parsed.profiles) ? parsed.profiles : [],
+      budgets: Array.isArray(parsed.budgets) ? parsed.budgets : [],
+      transactions: Array.isArray(parsed.transactions) ? parsed.transactions : [],
+    };
+  } catch {
+    return { users: [], profiles: [], budgets: [], transactions: [] };
+  }
+}
 
-const UserSchema = new mongoose.Schema({
-  uid: { type: String, required: true, unique: true },
-  email: { type: String, required: true },
-  name: { type: String, required: true },
-  picture: { type: String, default: "" },
-  currency: { type: String, default: "USD" },
-  age: { type: String, default: "" },
-  learningGoal: { type: String, default: "" },
-  highScore: { type: Number, default: 0 },
-  netWorth: {
-    assets: { type: Number, default: 0 },
-    liabilities: { type: Number, default: 0 }
-  },
-  achievements: [{
-    id: String,
-    title: String,
-    description: String,
-    icon: String,
-    unlockedAt: String
-  }],
-  joinDate: { type: Date, default: Date.now },
-  lastVisit: { type: Date, default: Date.now }
-});
+function writeFallbackDb(data: FallbackDb) {
+  fs.writeFileSync(FALLBACK_DB_FILE, JSON.stringify(data, null, 2));
+}
 
-const User = mongoose.model("User", UserSchema);
+function normalizeEmail(email: string) {
+  return email.toLowerCase().trim();
+}
 
-const BudgetSchema = new mongoose.Schema({
-  uid: { type: String, required: true, unique: true },
-  income: { type: Number, default: 0 },
-  savings: { type: Number, default: 0 },
-  needs: [{ category: String, amount: Number }],
-  wants: [{ category: String, amount: Number }],
-  updatedAt: { type: Date, default: Date.now }
-});
+function sanitizeUser(userDoc: any) {
+  if (!userDoc) return null;
+  return {
+    uid: userDoc.uid,
+    email: userDoc.email || null,
+    displayName: userDoc.displayName || userDoc.name || userDoc.email?.split("@")[0] || null,
+    photoURL: userDoc.photoURL || userDoc.picture || null,
+  };
+}
 
-const Budget = mongoose.model("Budget", BudgetSchema);
+function defaultProfile(uid: string, overrides: Partial<any> = {}) {
+  const now = new Date().toISOString();
+  return {
+    name: overrides.name || overrides.displayName || "Wealth Architect",
+    age: overrides.age || "",
+    learningGoal: overrides.learningGoal || "",
+    currency: overrides.currency || "USD",
+    joinDate: overrides.joinDate || now,
+    lastVisit: now,
+    visitDates: Array.isArray(overrides.visitDates) ? overrides.visitDates : [now.split("T")[0]],
+    highScore: Number(overrides.highScore || 0),
+    netWorth: overrides.netWorth || { assets: 0, liabilities: 0 },
+    achievements: Array.isArray(overrides.achievements) ? overrides.achievements : [],
+    goals: Array.isArray(overrides.goals) ? overrides.goals : [],
+    portfolio: overrides.portfolio,
+    gitProvider: overrides.gitProvider || "github",
+    ...overrides,
+    uid,
+  };
+}
 
-const TransactionSchema = new mongoose.Schema({
-  uid: { type: String, required: true },
-  type: { type: String, enum: ["income", "expense", "asset", "liability"], required: true },
-  category: { type: String, required: true },
-  amount: { type: Number, required: true },
-  description: { type: String, default: "" },
-  date: { type: Date, default: Date.now }
-});
+async function connectToDatabase() {
+  ensureFallbackDb();
+  try {
+    console.log("[MongoDB Engine] Connecting to database...");
+    mongoClient = new MongoClient(MONGODB_URI, {
+      connectTimeoutMS: 5000,
+      serverSelectionTimeoutMS: 5000,
+    });
+    await mongoClient.connect();
+    mongoDb = mongoClient.db();
+    isRealMongoActive = true;
+    console.log("[MongoDB Engine] Connection established successfully.");
 
-const Transaction = mongoose.model("Transaction", TransactionSchema);
+    try {
+      await mongoDb.collection("users").createIndex({ email: 1 }, { unique: true, sparse: true });
+      await mongoDb.collection("users").createIndex({ googleId: 1 }, { unique: true, sparse: true });
+      await mongoDb.collection("users").createIndex({ uid: 1 }, { unique: true });
+      await mongoDb.collection("profiles").createIndex({ uid: 1 }, { unique: true });
+      await mongoDb.collection("budgets").createIndex({ uid: 1 }, { unique: true });
+      await mongoDb.collection("transactions").createIndex({ uid: 1, date: -1 });
+    } catch (indexErr) {
+      console.warn("[MongoDB Engine] Non-fatal indexes setup warning:", indexErr);
+    }
+  } catch (err) {
+    console.error("[MongoDB Engine] Real MongoDB inactive. Switching to local file persistence.");
+    isRealMongoActive = false;
+  }
+}
 
-// ================= API ENDPOINTS =================
-
-// Google Sign-In verification & Upsert
-app.post("/api/auth/google", async (req, res) => {
-  const { credential } = req.body;
-
-  if (!credential) {
-    return res.status(400).json({ error: "Missing credential token" });
+async function findOne(collection: CollectionName, predicate: Record<string, any>) {
+  if (isRealMongoActive && mongoDb) {
+    return await mongoDb.collection(collection).findOne(predicate);
   }
 
+  const data = readFallbackDb();
+  return data[collection].find((item) =>
+    Object.entries(predicate).every(([key, value]) => item[key] === value)
+  ) || null;
+}
+
+async function insertOne(collection: CollectionName, doc: any) {
+  if (isRealMongoActive && mongoDb) {
+    await mongoDb.collection(collection).insertOne(doc);
+    return;
+  }
+
+  const data = readFallbackDb();
+  data[collection].push(doc);
+  writeFallbackDb(data);
+}
+
+async function upsertByUid(collection: "profiles" | "budgets", uid: string, doc: any) {
+  const cleanDoc = { ...doc, uid };
+  if (isRealMongoActive && mongoDb) {
+    await mongoDb.collection(collection).updateOne({ uid }, { $set: cleanDoc }, { upsert: true });
+    return;
+  }
+
+  const data = readFallbackDb();
+  const idx = data[collection].findIndex((item) => item.uid === uid);
+  if (idx >= 0) {
+    data[collection][idx] = { ...data[collection][idx], ...cleanDoc };
+  } else {
+    data[collection].push(cleanDoc);
+  }
+  writeFallbackDb(data);
+}
+
+async function updateUserByUid(uid: string, update: any) {
+  if (isRealMongoActive && mongoDb) {
+    await mongoDb.collection("users").updateOne({ uid }, { $set: update }, { upsert: true });
+    return;
+  }
+
+  const data = readFallbackDb();
+  const idx = data.users.findIndex((item) => item.uid === uid);
+  if (idx >= 0) {
+    data.users[idx] = { ...data.users[idx], ...update, uid };
+  } else {
+    data.users.push({ ...update, uid });
+  }
+  writeFallbackDb(data);
+}
+
+async function getTransactionsByUid(uid: string, limit = 0) {
+  if (isRealMongoActive && mongoDb) {
+    const cursor = mongoDb.collection("transactions").find({ uid }).sort({ date: -1 });
+    return limit > 0 ? await cursor.limit(limit).toArray() : await cursor.toArray();
+  }
+
+  const data = readFallbackDb();
+  const records = data.transactions
+    .filter((item) => item.uid === uid)
+    .sort((a, b) => String(b.date).localeCompare(String(a.date)));
+  return limit > 0 ? records.slice(0, limit) : records;
+}
+
+async function recordTransaction(uid: string, payload: any) {
+  const amount = Number(payload.amount);
+  if (!Number.isFinite(amount) || amount <= 0) {
+    throw new Error("Transaction amount must be a positive number.");
+  }
+
+  const type = payload.type;
+  if (!["income", "expense", "asset", "liability"].includes(type)) {
+    throw new Error("Transaction type must be income, expense, asset, or liability.");
+  }
+
+  const tx = {
+    id: crypto.randomUUID(),
+    uid,
+    type,
+    category: String(payload.category || "Uncategorized"),
+    amount,
+    description: String(payload.description || ""),
+    date: new Date().toISOString(),
+  };
+
+  await insertOne("transactions", tx);
+
+  const profile = await findOne("profiles", { uid });
+  if (profile && (type === "asset" || type === "liability")) {
+    const netWorth = {
+      assets: Number(profile.netWorth?.assets || 0),
+      liabilities: Number(profile.netWorth?.liabilities || 0),
+    };
+    if (type === "asset") netWorth.assets += amount;
+    if (type === "liability") netWorth.liabilities += amount;
+    await upsertByUid("profiles", uid, { ...profile, netWorth, lastVisit: new Date().toISOString() });
+  }
+
+  return tx;
+}
+
+async function getFinancialState(uid: string) {
+  const profile = await findOne("profiles", { uid });
+  const budget = await findOne("budgets", { uid });
+  const transactions = await getTransactionsByUid(uid, 10);
+  return { profile, budget, recentTransactions: transactions };
+}
+
+app.get("/api/db-health", (req, res) => {
+  res.json({
+    status: "ok",
+    database: isRealMongoActive ? "MongoDB Server (Live MCP Active)" : "Local Persistent File Emulator",
+    connectionString: isRealMongoActive ? "Connected securely" : "Sandbox Backup engaged",
+  });
+});
+
+app.post("/api/auth/register", async (req, res) => {
   try {
-    // Standard decoding of ID Token (JWT) from Google Identity Services
-    const decoded = jwt.decode(credential) as any;
+    const { email, password, profile, budget } = req.body;
 
-    if (!decoded || !decoded.email) {
-      return res.status(400).json({ error: "Invalid Google credential token" });
+    if (!email || !password) {
+      return res.status(400).json({ error: "Email and Security PIN/password are required." });
     }
 
-    const { sub: googleId, email, name, picture } = decoded;
-    
-    // We map googleId as our UID
-    let user = await User.findOne({ uid: googleId });
-    let isNewUser = false;
+    const normalizedEmail = normalizeEmail(email);
+    const existingUser = await findOne("users", { email: normalizedEmail });
+    if (existingUser) {
+      return res.status(409).json({ error: "An account with this email is already synchronized." });
+    }
 
-    if (!user) {
-      isNewUser = true;
-      user = new User({
-        uid: googleId,
-        email,
-        name,
-        picture,
-        joinDate: new Date()
+    const uid = "ww_" + crypto.randomUUID().replace(/-/g, "").substring(0, 13);
+    const hashedPassword = await bcrypt.hash(password, 12);
+    const userDoc = {
+      uid,
+      email: normalizedEmail,
+      password: hashedPassword,
+      displayName: profile?.name || normalizedEmail.split("@")[0],
+      photoURL: null,
+      provider: "password",
+      createdAt: new Date().toISOString(),
+      lastVisit: new Date().toISOString(),
+    };
+
+    await insertOne("users", userDoc);
+    await upsertByUid("profiles", uid, profile ? defaultProfile(uid, profile) : defaultProfile(uid, { name: userDoc.displayName }));
+    if (budget) {
+      await upsertByUid("budgets", uid, { ...budget, updatedAt: new Date().toISOString() });
+    }
+
+    res.status(201).json({
+      success: true,
+      user: sanitizeUser(userDoc),
+      profile: await findOne("profiles", { uid }),
+      budget: await findOne("budgets", { uid }),
+    });
+  } catch (error) {
+    console.error("Register Error:", error);
+    res.status(500).json({ error: "Internal registration error." });
+  }
+});
+
+app.post("/api/auth/login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ error: "Email and PIN/password are required." });
+    }
+
+    const userDoc = await findOne("users", { email: normalizeEmail(email) });
+    if (!userDoc || !userDoc.password) {
+      return res.status(401).json({ error: "Invalid credentials. Double check your email and security PIN." });
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, userDoc.password);
+    if (!isPasswordValid) {
+      return res.status(401).json({ error: "Invalid credentials. Double check your email and security PIN." });
+    }
+
+    await updateUserByUid(userDoc.uid, { lastVisit: new Date().toISOString() });
+
+    res.json({
+      success: true,
+      user: sanitizeUser(userDoc),
+      profile: await findOne("profiles", { uid: userDoc.uid }),
+      budget: await findOne("budgets", { uid: userDoc.uid }),
+    });
+  } catch (error) {
+    console.error("Login Error:", error);
+    res.status(500).json({ error: "Internal server error." });
+  }
+});
+
+app.post("/api/auth/google", async (req, res) => {
+  try {
+    const { credential } = req.body;
+    if (!credential) {
+      return res.status(400).json({ error: "Missing Google credential token." });
+    }
+
+    const ticket = await googleClient.verifyIdToken({
+      idToken: credential,
+      audience: GOOGLE_CLIENT_ID,
+    });
+    const payload = ticket.getPayload();
+    if (!payload?.sub || !payload.email) {
+      return res.status(400).json({ error: "Invalid Google credential payload." });
+    }
+
+    const email = normalizeEmail(payload.email);
+    const existingByGoogle = await findOne("users", { googleId: payload.sub });
+    const existingByEmail = await findOne("users", { email });
+    const existingUser = existingByGoogle || existingByEmail;
+    const uid = existingUser?.uid || `google_${payload.sub}`;
+    const now = new Date().toISOString();
+
+    const userDoc = {
+      ...(existingUser || {}),
+      uid,
+      googleId: payload.sub,
+      email,
+      displayName: payload.name || existingUser?.displayName || email.split("@")[0],
+      photoURL: payload.picture || existingUser?.photoURL || null,
+      provider: existingUser?.provider === "password" ? "password+google" : "google",
+      createdAt: existingUser?.createdAt || now,
+      lastVisit: now,
+    };
+
+    await updateUserByUid(uid, userDoc);
+
+    let profile = await findOne("profiles", { uid });
+    const isNewUser = !profile;
+    if (!profile) {
+      profile = defaultProfile(uid, {
+        name: userDoc.displayName,
+        currency: "USD",
+        achievements: [],
+        goals: [],
       });
-      await user.save();
-      console.log(`Created new user in MongoDB: ${name} (${email})`);
+      await upsertByUid("profiles", uid, profile);
     } else {
-      user.lastVisit = new Date();
-      if (picture && user.picture !== picture) user.picture = picture;
-      await user.save();
-      console.log(`Logged in existing user from MongoDB: ${name} (${email})`);
+      await upsertByUid("profiles", uid, { ...profile, lastVisit: now });
+      profile = await findOne("profiles", { uid });
     }
-
-    // Load budget
-    const budget = await Budget.findOne({ uid: googleId });
 
     res.json({
       success: true,
       isNewUser,
-      user: {
-        uid: user.uid,
-        displayName: user.name,
-        email: user.email,
-        photoURL: user.picture
-      },
-      profile: user,
-      budget: budget || null
+      user: sanitizeUser(userDoc),
+      profile,
+      budget: await findOne("budgets", { uid }),
     });
   } catch (error) {
-    console.error("Google Auth error:", error);
-    res.status(500).json({ error: "Authentication failed" });
+    console.error("Google Auth Error:", error);
+    res.status(401).json({ error: "Google authentication failed. Verify GOOGLE_CLIENT_ID and try again." });
   }
 });
 
-// Get User Profile
+app.post("/api/auth/sync", async (req, res) => {
+  try {
+    const { uid, email, profile, budget } = req.body;
+    if (!uid) {
+      return res.status(400).json({ error: "Missing uid for sync." });
+    }
+
+    const userDoc = await findOne("users", { uid });
+    if (!userDoc) {
+      return res.status(401).json({ error: "Unauthorized sync attempt." });
+    }
+    if (email && userDoc.email && normalizeEmail(email) !== userDoc.email) {
+      return res.status(401).json({ error: "Unauthorized sync email mismatch." });
+    }
+
+    if (profile) {
+      await upsertByUid("profiles", uid, { ...profile, uid, lastVisit: new Date().toISOString() });
+    }
+    if (budget) {
+      await upsertByUid("budgets", uid, { ...budget, uid, updatedAt: new Date().toISOString() });
+    }
+
+    res.json({ success: true, syncedAt: new Date().toISOString() });
+  } catch (error) {
+    console.error("Sync Error:", error);
+    res.status(500).json({ error: "Synchronization failure." });
+  }
+});
+
 app.get("/api/profile/:uid", async (req, res) => {
   try {
-    const user = await User.findOne({ uid: req.params.uid });
-    if (!user) return res.status(404).json({ error: "User not found" });
-
-    const budget = await Budget.findOne({ uid: req.params.uid });
-    res.json({ profile: user, budget });
+    const profile = await findOne("profiles", { uid: req.params.uid });
+    if (!profile) return res.status(404).json({ error: "User profile not found." });
+    res.json({ profile, budget: await findOne("budgets", { uid: req.params.uid }) });
   } catch (error) {
-    res.status(500).json({ error: "Failed to fetch profile" });
+    res.status(500).json({ error: "Failed to fetch profile." });
   }
 });
 
-// Sync / Update User Profile
 app.put("/api/profile/:uid", async (req, res) => {
   try {
-    const { name, age, learningGoal, currency, highScore, netWorth, achievements } = req.body;
-    
-    const user = await User.findOne({ uid: req.params.uid });
-    if (!user) return res.status(404).json({ error: "User not found" });
+    const existingProfile = await findOne("profiles", { uid: req.params.uid });
+    if (!existingProfile) return res.status(404).json({ error: "User profile not found." });
 
-    if (name !== undefined) user.name = name;
-    if (age !== undefined) user.age = age;
-    if (learningGoal !== undefined) user.learningGoal = learningGoal;
-    if (currency !== undefined) user.currency = currency;
-    if (highScore !== undefined) user.highScore = highScore;
-    if (netWorth !== undefined) user.netWorth = netWorth;
-    if (achievements !== undefined) user.achievements = achievements;
-
-    user.lastVisit = new Date();
-    await user.save();
-    
-    res.json({ success: true, profile: user });
+    const updatedProfile = { ...existingProfile, ...req.body, uid: req.params.uid, lastVisit: new Date().toISOString() };
+    await upsertByUid("profiles", req.params.uid, updatedProfile);
+    res.json({ success: true, profile: await findOne("profiles", { uid: req.params.uid }) });
   } catch (error) {
-    res.status(500).json({ error: "Failed to update profile" });
+    res.status(500).json({ error: "Failed to update profile." });
   }
 });
 
-// Get Budget
 app.get("/api/budget/:uid", async (req, res) => {
   try {
-    const budget = await Budget.findOne({ uid: req.params.uid });
-    res.json(budget || null);
+    res.json(await findOne("budgets", { uid: req.params.uid }) || null);
   } catch (error) {
-    res.status(500).json({ error: "Failed to fetch budget" });
+    res.status(500).json({ error: "Failed to fetch budget." });
   }
 });
 
-// Save Budget
 app.post("/api/budget/:uid", async (req, res) => {
   try {
-    const { income, savings, needs, wants } = req.body;
-    let budget = await Budget.findOne({ uid: req.params.uid });
-
-    if (!budget) {
-      budget = new Budget({ uid: req.params.uid });
-    }
-
-    budget.income = income ?? 0;
-    budget.savings = savings ?? 0;
-    budget.needs = needs ?? [];
-    budget.wants = wants ?? [];
-    budget.updatedAt = new Date();
-
-    await budget.save();
-    res.json(budget);
+    const budget = { ...req.body, uid: req.params.uid, updatedAt: new Date().toISOString() };
+    await upsertByUid("budgets", req.params.uid, budget);
+    res.json(await findOne("budgets", { uid: req.params.uid }));
   } catch (error) {
-    res.status(500).json({ error: "Failed to save budget" });
+    res.status(500).json({ error: "Failed to save budget." });
   }
 });
 
-// Get Transactions
 app.get("/api/transactions/:uid", async (req, res) => {
   try {
-    const transactions = await Transaction.find({ uid: req.params.uid }).sort({ date: -1 });
-    res.json(transactions);
+    res.json(await getTransactionsByUid(req.params.uid));
   } catch (error) {
-    res.status(500).json({ error: "Failed to fetch transactions" });
+    res.status(500).json({ error: "Failed to fetch transactions." });
   }
 });
 
-// Create Transaction & Adjust Net Worth
 app.post("/api/transactions/:uid", async (req, res) => {
   try {
-    const { type, category, amount, description } = req.body;
-    
-    const user = await User.findOne({ uid: req.params.uid });
-    if (!user) return res.status(404).json({ error: "User not found" });
-
-    const tx = new Transaction({
-      uid: req.params.uid,
-      type,
-      category,
-      amount,
-      description,
-      date: new Date()
-    });
-    await tx.save();
-
-    // Dynamically adjust user's assets or liabilities in MongoDB based on transaction type!
-    if (type === "asset") {
-      user.netWorth.assets += Number(amount);
-    } else if (type === "liability") {
-      user.netWorth.liabilities += Number(amount);
-    }
-    
-    await user.save();
-
-    res.json({ success: true, transaction: tx, netWorth: user.netWorth });
-  } catch (error) {
-    res.status(500).json({ error: "Failed to record transaction" });
+    const transaction = await recordTransaction(req.params.uid, req.body);
+    const profile = await findOne("profiles", { uid: req.params.uid });
+    res.json({ success: true, transaction, netWorth: profile?.netWorth });
+  } catch (error: any) {
+    res.status(400).json({ error: error.message || "Failed to record transaction." });
   }
 });
 
-// ================= AI AGENT (GEMINI TOOL CALLING) BACKEND API =================
-// This enables the front-end Gemini library to delegate real database interactions to MongoDB.
 app.post("/api/ai/tool-call", async (req, res) => {
-  const { uid, toolName, arguments: args } = req.body;
-
+  const { uid, toolName, arguments: args = {} } = req.body;
   if (!uid) {
-    return res.status(400).json({ error: "User UID is required for financial operations" });
+    return res.status(400).json({ error: "User UID is required for financial operations." });
   }
 
   try {
-    console.log(`Executing AI agent tool call [${toolName}] for user ${uid}`);
-    
     if (toolName === "getUserFinancialState") {
-      const user = await User.findOne({ uid });
-      const budget = await Budget.findOne({ uid });
-      const transactions = await Transaction.find({ uid }).sort({ date: -1 }).limit(10);
-
-      if (!user) {
-        return res.json({ error: "User profile not found in MongoDB." });
-      }
-
-      return res.json({
-        profile: {
-          name: user.name,
-          age: user.age,
-          learningGoal: user.learningGoal,
-          currency: user.currency,
-          highScore: user.highScore,
-          netWorth: user.netWorth,
-          achievements: user.achievements
-        },
-        budget: budget || null,
-        recentTransactions: transactions
-      });
+      return res.json(await getFinancialState(uid));
     }
 
     if (toolName === "recordTransaction") {
-      const user = await User.findOne({ uid });
-      if (!user) return res.status(404).json({ error: "User profile not found" });
-
-      const { type, category, amount, description } = args;
-      const tx = new Transaction({
-        uid,
-        type,
-        category,
-        amount: Number(amount),
-        description: description || "",
-        date: new Date()
-      });
-      await tx.save();
-
-      // Recalculate net worth based on assets/liabilities
-      if (type === "asset") {
-        user.netWorth.assets += Number(amount);
-      } else if (type === "liability") {
-        user.netWorth.liabilities += Number(amount);
-      }
-      await user.save();
-
+      const transaction = await recordTransaction(uid, args);
       return res.json({
         success: true,
-        message: `Successfully logged ${type} of ${user.currency} ${amount} under '${category}' category in MongoDB.`,
-        netWorth: user.netWorth,
-        newTransaction: tx
+        message: `Logged ${transaction.type} transaction for ${transaction.amount}.`,
+        transaction,
+        state: await getFinancialState(uid),
       });
     }
 
     if (toolName === "updateBudget") {
-      const { income, savings, needs, wants } = args;
-      let budget = await Budget.findOne({ uid });
-
-      if (!budget) {
-        budget = new Budget({ uid });
-      }
-
-      if (income !== undefined) budget.income = Number(income);
-      if (savings !== undefined) budget.savings = Number(savings);
-      if (needs !== undefined) budget.needs = needs;
-      if (wants !== undefined) budget.wants = wants;
-      budget.updatedAt = new Date();
-
-      await budget.save();
-      return res.json({
-        success: true,
-        message: "Successfully updated your budget plan in MongoDB.",
-        budget
-      });
+      const budget = { ...args, uid, updatedAt: new Date().toISOString() };
+      await upsertByUid("budgets", uid, budget);
+      return res.json({ success: true, message: "Budget updated in MongoDB.", budget: await findOne("budgets", { uid }) });
     }
 
     if (toolName === "updateFinancialGoals") {
-      const user = await User.findOne({ uid });
-      if (!user) return res.status(404).json({ error: "User not found" });
-
-      const { learningGoal } = args;
-      if (learningGoal !== undefined) {
-        user.learningGoal = learningGoal;
-        await user.save();
-      }
-
-      return res.json({
-        success: true,
-        message: "Successfully updated financial learning goals in MongoDB.",
-        learningGoal: user.learningGoal
-      });
+      const profile = await findOne("profiles", { uid });
+      if (!profile) return res.status(404).json({ error: "User profile not found." });
+      const updates: any = { ...profile };
+      if (args.learningGoal !== undefined) updates.learningGoal = String(args.learningGoal);
+      if (Array.isArray(args.goals)) updates.goals = args.goals;
+      await upsertByUid("profiles", uid, updates);
+      return res.json({ success: true, message: "Financial goals updated.", profile: await findOne("profiles", { uid }) });
     }
 
     res.status(400).json({ error: `Unknown tool name: ${toolName}` });
   } catch (error: any) {
     console.error("AI Tool-call execution error:", error);
-    res.status(500).json({ error: error.message || "Failed to execute AI tool call" });
+    res.status(500).json({ error: error.message || "Failed to execute AI tool call." });
   }
 });
 
-// Start Server and connect to DB
-connectDB().then(() => {
-  app.listen(PORT, () => {
-    console.log(`=================================================`);
-    console.log(`🚀 WealthWise Elite Server is running on port ${PORT}`);
-    console.log(`📊 API Proxy target: http://localhost:${PORT}`);
-    console.log(`=================================================`);
-  });
+app.post("/api/gemini/insight", async (req, res) => {
+  try {
+    const { prompt, history = [], uid } = req.body;
+    if (!prompt) {
+      return res.status(400).json({ error: "Prompt is required." });
+    }
+
+    if (!ai) {
+      return res.json({
+        text: "I'm currently in offline mode because the Gemini API key isn't set up. You can still use the local simulations and MongoDB-backed storage.",
+      });
+    }
+
+    const state = uid ? await getFinancialState(uid) : null;
+    const stateContext = state ? `\n\nCurrent MongoDB-backed user state:\n${JSON.stringify(state).slice(0, 8000)}` : "";
+    const contents = [
+      ...history,
+      { role: "user", parts: [{ text: `${prompt}${stateContext}` }] },
+    ];
+
+    const result = await ai.models.generateContent({
+      model: "gemini-1.5-flash",
+      contents,
+      config: {
+        systemInstruction: "You are the WealthWise AI Advisor, a world-class personal finance expert. Use the provided MongoDB-backed state when available. Provide clear, actionable, encouraging advice. Always include a short educational disclaimer that this is not professional financial advice.",
+      },
+    });
+
+    res.json({ text: result.text || "" });
+  } catch (error) {
+    console.error("[Gemini Insight Endpoint Error]:", error);
+    res.status(500).json({ error: "An error occurred generating insights." });
+  }
 });
+
+app.post("/api/gemini/audit", async (req, res) => {
+  try {
+    const { user, budget, uid } = req.body;
+    if (!user) {
+      return res.status(400).json({ error: "User profile details are required." });
+    }
+
+    if (!ai) {
+      return res.json({
+        text: "AI Wealth Audit is currently offline. Please configure GEMINI_API_KEY to proceed securely.",
+      });
+    }
+
+    const state = uid ? await getFinancialState(uid) : { profile: user, budget, recentTransactions: [] };
+    const prompt = `
+      As a World-Class Personal Wealth Architect, perform a "One-Click AI Audit" for this MongoDB-backed user state:
+      ${JSON.stringify(state).slice(0, 8000)}
+
+      Provide a concise, high-impact financial roadmap in 3 sections:
+      1. **Wealth Health Check**: A fair assessment of their current position.
+      2. **The Golden Path**: 3 specific, actionable steps to increase net worth over the next 12 months.
+      3. **Risk Mitigation**: One major blind spot based on profile, budget, portfolio, goals, and recent transactions.
+
+      Keep the tone professional, elite, and encouraging. Use Markdown formatting. Max 300 words.
+    `;
+
+    const result = await ai.models.generateContent({
+      model: "gemini-1.5-flash",
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      config: {
+        temperature: 0.7,
+        topP: 0.95,
+        topK: 40,
+      },
+    });
+
+    res.json({ text: result.text || "Unable to generate audit at this time." });
+  } catch (error) {
+    console.error("[Gemini Audit Endpoint Error]:", error);
+    res.status(500).json({ error: "An error occurred generating wealth audit." });
+  }
+});
+
+app.post("/api/gemini/image-analysis", async (req, res) => {
+  try {
+    const { base64Image, prompt } = req.body;
+    if (!base64Image || !prompt) {
+      return res.status(400).json({ error: "Image data and prompt are required." });
+    }
+    if (!ai) {
+      return res.json({ text: "AI image analysis is currently unavailable. Please check your API configuration." });
+    }
+    const result = await ai.models.generateContent({
+      model: "gemini-1.5-flash",
+      contents: {
+        parts: [
+          { inlineData: { mimeType: "image/jpeg", data: base64Image } },
+          { text: prompt },
+        ],
+      },
+    });
+    res.json({ text: result.text || "" });
+  } catch (error) {
+    console.error("[Gemini Image Endpoint Error]:", error);
+    res.status(500).json({ error: "An error occurred analyzing the image." });
+  }
+});
+
+app.post("/api/gemini/fast", async (req, res) => {
+  try {
+    const { prompt } = req.body;
+    if (!prompt) return res.status(400).json({ error: "Prompt is required." });
+    if (!ai) return res.json({ text: "Fast AI response is currently unavailable." });
+    const result = await ai.models.generateContent({
+      model: "gemini-1.5-flash",
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+    });
+    res.json({ text: result.text || "" });
+  } catch (error) {
+    console.error("[Gemini Fast Endpoint Error]:", error);
+    res.status(500).json({ error: "An error occurred generating a fast response." });
+  }
+});
+
+async function startServer() {
+  await connectToDatabase();
+
+  if (process.env.NODE_ENV !== "production") {
+    const vite = await createViteServer({
+      server: { middlewareMode: true },
+      appType: "spa",
+    });
+    app.use(vite.middlewares);
+  } else {
+    const distPath = path.join(process.cwd(), "dist");
+    app.use(express.static(distPath));
+    app.get("*", (req, res) => {
+      res.sendFile(path.join(distPath, "index.html"));
+    });
+  }
+
+  app.listen(PORT, "0.0.0.0", () => {
+    console.log(`[WealthWise Backend] Online and serving on http://0.0.0.0:${PORT}`);
+  });
+}
+
+startServer();

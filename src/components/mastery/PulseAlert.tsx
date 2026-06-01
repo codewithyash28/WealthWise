@@ -134,64 +134,62 @@ export function PulseAlert({ alerts, onClose, onClearAll }: PulseAlertProps) {
 
       {/* Floating Toasts */}
       {!isMuted && (
-        <div className="fixed top-24 right-6 z-50 w-full max-w-sm pointer-events-none">
-          <div className="flex flex-col gap-4">
-            <AnimatePresence mode="popLayout">
-              {alerts.slice(0, 3).map((alert) => (
-                <motion.div
-                  key={alert.id}
-                  layout
-                  initial={{ opacity: 0, x: 50, scale: 0.9 }}
-                  animate={{ opacity: 1, x: 0, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.8, transition: { duration: 0.2 } }}
-                  className="pointer-events-auto"
-                >
-                  <div className={cn(
-                    "card p-5 shadow-2xl backdrop-blur-xl border border-border/60 relative overflow-hidden group",
-                    alert.type === "risk" ? "border-accent-red/40 bg-accent-red/5" :
-                    alert.type === "market" ? "border-accent-blue/40 bg-accent-blue/5" :
-                    alert.type === "achievement" ? "border-accent-gold/40 bg-accent-gold/5" : "bg-bg-secondary/90"
-                  )}>
-                    <button 
-                      onClick={() => onClose(alert.id)}
-                      className="absolute top-4 right-4 p-1 text-text-muted hover:text-text-primary transition-colors"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
+        <div className="fixed bottom-28 right-6 z-50 w-full max-w-sm pointer-events-none flex flex-col-reverse gap-4">
+          <AnimatePresence mode="popLayout">
+            {alerts.slice(0, 2).map((alert) => (
+              <motion.div
+                key={alert.id}
+                layout
+                initial={{ opacity: 0, y: 50, scale: 0.9 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8, transition: { duration: 0.2 } }}
+                className="pointer-events-auto"
+              >
+                <div className={cn(
+                  "card p-5 shadow-2xl backdrop-blur-xl border border-border/60 relative overflow-hidden group",
+                  alert.type === "risk" ? "border-accent-red/40 bg-accent-red/5" :
+                  alert.type === "market" ? "border-accent-blue/40 bg-accent-blue/5" :
+                  alert.type === "achievement" ? "border-accent-gold/40 bg-accent-gold/5" : "bg-bg-secondary/90"
+                )}>
+                  <button 
+                    onClick={() => onClose(alert.id)}
+                    className="absolute top-4 right-4 p-1 text-text-muted hover:text-text-primary transition-colors cursor-pointer"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
 
-                    <div className="flex gap-4">
-                      <div className={cn(
-                        "w-10 h-10 rounded-xl flex items-center justify-center shrink-0",
-                        alert.type === "risk" ? "bg-accent-red/20 text-accent-red" :
-                        alert.type === "market" ? "bg-accent-blue/20 text-accent-blue" :
-                        alert.type === "achievement" ? "bg-accent-gold/20 text-accent-gold" : "bg-accent-purple/20 text-accent-purple"
-                      )}>
-                        {alert.type === "risk" ? <AlertTriangle className="w-5 h-5" /> :
-                         alert.type === "market" ? <TrendingUp className="w-5 h-5" /> :
-                         alert.type === "achievement" ? <Sparkles className="w-5 h-5" /> : <Info className="w-5 h-5" />}
-                      </div>
+                  <div className="flex gap-4">
+                    <div className={cn(
+                      "w-10 h-10 rounded-xl flex items-center justify-center shrink-0",
+                      alert.type === "risk" ? "bg-accent-red/20 text-accent-red" :
+                      alert.type === "market" ? "bg-accent-blue/20 text-accent-blue" :
+                      alert.type === "achievement" ? "bg-accent-gold/20 text-accent-gold" : "bg-accent-purple/20 text-accent-purple"
+                    )}>
+                      {alert.type === "risk" ? <AlertTriangle className="w-5 h-5" /> :
+                       alert.type === "market" ? <TrendingUp className="w-5 h-5" /> :
+                       alert.type === "achievement" ? <Sparkles className="w-5 h-5" /> : <Info className="w-5 h-5" />}
+                    </div>
 
-                      <div className="space-y-1 pr-6">
-                        <div className="flex items-center gap-2">
-                           <span className={cn(
-                             "text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded",
-                             alert.type === "risk" ? "bg-accent-red/10 text-accent-red" :
-                             alert.type === "market" ? "bg-accent-blue/10 text-accent-blue" :
-                             alert.type === "achievement" ? "bg-accent-gold/10 text-accent-gold" : "bg-accent-purple/10 text-accent-purple"
-                           )}>
-                             {alert.type}
-                           </span>
-                           <span className="text-[10px] text-text-muted font-mono">{alert.timestamp}</span>
-                        </div>
-                        <div className="font-bold text-sm leading-tight">{alert.title}</div>
-                        <div className="text-xs text-text-secondary leading-relaxed">{alert.message}</div>
+                    <div className="space-y-1 pr-6">
+                      <div className="flex items-center gap-2">
+                         <span className={cn(
+                           "text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded",
+                           alert.type === "risk" ? "bg-accent-red/10 text-accent-red" :
+                           alert.type === "market" ? "bg-accent-blue/10 text-accent-blue" :
+                           alert.type === "achievement" ? "bg-accent-gold/10 text-accent-gold" : "bg-accent-purple/10 text-accent-purple"
+                         )}>
+                           {alert.type}
+                         </span>
+                         <span className="text-[10px] text-text-muted font-mono">{alert.timestamp}</span>
                       </div>
+                      <div className="font-bold text-sm leading-tight">{alert.title}</div>
+                      <div className="text-xs text-text-secondary leading-relaxed">{alert.message}</div>
                     </div>
                   </div>
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          </div>
+                </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
         </div>
       )}
     </>

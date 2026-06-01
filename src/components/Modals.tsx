@@ -67,55 +67,63 @@ export function CurrencySelector({ isOpen, onSelect, currentCurrency }: Currency
 
 interface NameInputProps {
   isOpen: boolean;
-  onComplete: (name: string, age: string, learningGoal: string) => void;
+  onComplete: (name: string, age: string, learningGoal: string, gitProvider: "gitlab" | "github" | "bitbucket") => void;
 }
 
 export function NameInput({ isOpen, onComplete }: NameInputProps) {
   const [name, setName] = useState("");
   const [age, setAge] = useState("");
   const [learningGoal, setLearningGoal] = useState("");
+  const [gitProvider, setGitProvider] = useState<"gitlab" | "github" | "bitbucket">("github");
 
   if (!isOpen) return null;
 
   const ageOptions = ["11-14", "15-17", "18-21", "22-25", "25+"];
+
+  const gitProviders = [
+    { id: "github" as const, name: "GitHub", subtitle: "Public Cloud Repos", desc: "Fast imports & open-source sync.", color: "text-white border-white/20 select-none bg-zinc-900/40" },
+    { id: "gitlab" as const, name: "GitLab", subtitle: "DevOps & MCP Pipelines", desc: "Strict policy compliance audits.", color: "text-accent-gold border-accent-gold/20 bg-amber-500/5" },
+    { id: "bitbucket" as const, name: "Bitbucket", subtitle: "Atlassian Workspace", desc: "Corporate-grade policy tracking.", color: "text-blue-400 border-blue-400/20 bg-blue-500/5" }
+  ];
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-bg-void/90 backdrop-blur-md">
       <motion.div
         initial={{ opacity: 0, scale: 0.96, y: 15 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        className="card max-w-md w-full p-8 space-y-6 text-left"
+        className="card max-w-md w-full p-8 space-y-6"
       >
-        <div className="text-center space-y-2">
-          <div className="w-11 h-11 bg-white/[0.02] border border-white/[0.06] rounded-full flex items-center justify-center mx-auto mb-2 text-accent-gold shadow-sm">
-            <User className="w-4 h-4" />
+        <div className="text-center space-y-1">
+          <div className="w-12 h-12 bg-accent-gold/10 rounded-full flex items-center justify-center mx-auto mb-2">
+            <User className="w-6 h-6 text-accent-gold" />
           </div>
-          <h2 className="text-2xl font-display font-medium text-text-primary">Personalize Your Experience</h2>
-          <p className="text-text-secondary text-xs font-light">We'll tailor your financial insights based on your learning goals.</p>
+          <h2 className="text-2xl font-display font-bold">Personalize Your Experience</h2>
+          <p className="text-text-secondary text-xs">We&apos;ll tailor your financial insights based on your profile</p>
         </div>
 
-        <div className="space-y-5">
-          <div className="space-y-2">
-            <label className="text-[9px] font-bold uppercase tracking-[0.2em] text-text-secondary ml-1">Full Name</label>
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-bold uppercase tracking-widest text-text-muted ml-0.5">Full Name</label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. John Doe"
-              className="input-field w-full text-sm font-medium"
+              className="input-field w-full text-sm py-2 px-3"
               autoFocus
             />
           </div>
 
-          <div className="space-y-2">
-            <label className="text-[9px] font-bold uppercase tracking-[0.2em] text-text-secondary ml-1">Age Range</label>
-            <div className="grid grid-cols-5 gap-2">
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-bold uppercase tracking-widest text-text-muted ml-0.5">Age Range</label>
+            <div className="grid grid-cols-5 gap-1.5">
               {ageOptions.map(option => (
                 <button
                   key={option}
                   onClick={() => setAge(option)}
+                  type="button"
                   className={cn(
-                    "py-2.5 rounded-xl border text-[10px] font-bold uppercase tracking-wider transition-all duration-300",
+                    "py-1.5 rounded-lg border text-xs font-bold transition-all",
                     age === option 
                       ? "bg-[#C5A880]/15 border-accent-gold/40 text-accent-gold shadow-sm" 
                       : "bg-white/[0.01] border-white/[0.04] hover:border-accent-gold/25 text-text-secondary hover:text-text-primary hover:bg-[#C5A880]/5"
@@ -127,23 +135,59 @@ export function NameInput({ isOpen, onComplete }: NameInputProps) {
             </div>
           </div>
 
-          <div className="space-y-2">
-            <label className="text-[9px] font-bold uppercase tracking-[0.2em] text-text-secondary ml-1">Primary Financial Goal</label>
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-bold uppercase tracking-widest text-text-muted ml-0.5">Primary Financial Goal</label>
             <input
               type="text"
               value={learningGoal}
               onChange={(e) => setLearningGoal(e.target.value)}
-              placeholder="e.g. Wealth Building, Investment Basics, Inflation Hedge"
-              className="input-field w-full text-sm font-medium"
+              placeholder="e.g. Retirement, Investing, Debt Management"
+              className="input-field w-full text-xs py-2 px-3"
             />
           </div>
 
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-bold uppercase tracking-widest text-text-muted ml-0.5">Preferred Git Provider (GitOps Manager)</label>
+            <div className="grid grid-cols-1 gap-2">
+              {gitProviders.map(provider => {
+                const isSelected = gitProvider === provider.id;
+                return (
+                  <button
+                    key={provider.id}
+                    onClick={() => setGitProvider(provider.id)}
+                    type="button"
+                    className={cn(
+                      "p-2.5 rounded-xl border text-left flex items-center justify-between transition-all relative cursor-pointer",
+                      isSelected 
+                        ? `${provider.color} border border-border-active shadow-[0_0_15px_rgba(255,255,255,0.05)]`
+                        : "bg-bg-secondary border-border/40 hover:bg-bg-secondary/80 text-text-secondary"
+                    )}
+                  >
+                    <div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs font-bold">{provider.name}</span>
+                        <span className="text-[8px] font-mono uppercase tracking-wider text-text-muted">({provider.subtitle})</span>
+                      </div>
+                      <p className="text-[10px] text-text-muted leading-relaxed mt-0.5">{provider.desc}</p>
+                    </div>
+                    {isSelected && (
+                      <div className="w-5 h-5 rounded-full bg-accent-gold/20 flex items-center justify-center border border-accent-gold/40">
+                        <Check className="w-3 h-3 text-accent-gold" />
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           <button
-            onClick={() => name.trim() && age && learningGoal.trim() && onComplete(name.trim(), age, learningGoal.trim())}
+            onClick={() => name.trim() && age && learningGoal.trim() && onComplete(name.trim(), age, learningGoal.trim(), gitProvider)}
             disabled={!name.trim() || !age || !learningGoal.trim()}
-            className="btn-primary w-full flex items-center justify-center gap-1.5 py-3.5 text-xs font-bold uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed"
+            type="button"
+            className="btn-primary w-full py-2.5 flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Create Architecture <ChevronRight className="w-4 h-4" />
+            Welcome to WealthWise Elite <ChevronRight className="w-4 h-4" />
           </button>
         </div>
       </motion.div>

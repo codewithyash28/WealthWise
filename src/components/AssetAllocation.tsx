@@ -159,10 +159,16 @@ export function AssetAllocation() {
             </div>
           </div>
 
-          <div className="p-6 rounded-2xl bg-accent-gold/5 border border-accent-gold/20 text-center">
-            <p className="text-accent-gold font-medium italic">
+          <div className="p-6 rounded-2xl bg-accent-gold/5 border border-accent-gold/20 text-center space-y-4">
+            <p className="text-accent-gold font-medium italic text-xs">
               "Rebalance your portfolio at least once a year to maintain your target allocation!"
             </p>
+            <a 
+              href="#rebalancer" 
+              className="inline-flex w-full py-2.5 bg-accent-gold text-bg-primary text-[10px] font-black uppercase tracking-widest rounded-xl hover:opacity-90 justify-center items-center font-mono transition-all"
+            >
+              Launch Rebalance Calculator
+            </a>
           </div>
         </div>
       </div>

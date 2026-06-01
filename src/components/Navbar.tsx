@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Menu, X, Globe, ChevronRight, Sun, Moon, Flame, Sparkles } from "lucide-react";
+import { Menu, X, Globe, ChevronRight, Sun, Moon, Flame, Sparkles, Cloud } from "lucide-react";
 import { Logo } from "./Logo";
 import { CURRENCIES } from "../constants";
 
@@ -10,7 +10,7 @@ interface NavbarProps {
   onCurrencyClick: () => void;
   theme: "light" | "dark";
   onToggleTheme: () => void;
-  user?: { displayName: string | null; photoURL: string | null } | null;
+  user?: { displayName: string | null; photoURL: string | null; email?: string | null } | null;
   onSignOut?: () => void;
 }
 
@@ -26,13 +26,13 @@ export function Navbar({ currentHash, currency, onCurrencyClick, theme, onToggle
 
   const navLinks = [
     { name: "Dashboard", hash: "#dashboard" },
+    { name: "Portfolio", hash: "#portfolio" },
+    { name: "Rebalancer", hash: "#rebalancer" },
+    { name: "Debt Payoff", hash: "#debt-payoff" },
+    { name: "Tax Estimator", hash: "#tax-estimator" },
     { name: "MacroPulse", hash: "#macropulse" },
-    { name: "TrendMarket", hash: "#trendmarket" },
-    { name: "LiveOrLease", hash: "#liveorlease" },
-    { name: "MockYield", hash: "#mockyield" },
+    { name: "Quiz", hash: "#quiz" },
     { name: "Badges", hash: "#badges" },
-    { name: "Docs", hash: "#docs" },
-    { name: "Wealth Quiz", hash: "#quiz" },
   ];
 
   return (
@@ -62,10 +62,17 @@ export function Navbar({ currentHash, currency, onCurrencyClick, theme, onToggle
           ))}
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 bg-accent-gold/5 border border-accent-gold/15 rounded-full text-accent-gold mr-1 shadow-[0_0_15px_rgba(197,168,128,0.03)]">
-            <Flame className="w-3.5 h-3.5 fill-accent-gold animate-pulse" />
-            <span className="text-[9px] font-black tracking-widest uppercase">7 DAY STREAK</span>
+        <div className="flex items-center gap-4">
+          {user && (
+            <div className={`hidden md:flex items-center gap-1.5 px-3 py-1.5 border rounded-full text-[10px] font-black tracking-wider uppercase font-mono ${user.email ? "bg-accent-emerald/10 border-accent-emerald/30 text-accent-emerald" : "bg-accent-gold/10 border-accent-gold/20 text-accent-gold"}`}>
+              <Cloud className="w-3.5 h-3.5 text-current" />
+              <span>{user.email ? "MongoDB Synced" : "Local Sandbox"}</span>
+            </div>
+          )}
+
+          <div className="hidden lg:flex items-center gap-1 px-2.5 py-1.5 bg-accent-gold/10 border border-accent-gold/20 rounded-full text-accent-gold mr-2 animate-pulse">
+            <Flame className="w-4 h-4 fill-accent-gold" />
+            <span className="text-[10px] font-black tracking-tighter">7 DAY STREAK</span>
           </div>
 
           <button

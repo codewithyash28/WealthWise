@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { DeleteConfirmationDialog } from "./DeleteConfirmationDialog";
 import { motion } from "motion/react";
 import { TrendingUp, DollarSign, Calendar, Target, Info, ArrowRight, ChevronRight, Calculator, PieChart, Plus, Trash2 } from "lucide-react";
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler } from 'chart.js';
@@ -18,20 +19,82 @@ export function InvestmentSimulator({ user, onUpdateGoals }: InvestmentSimulator
   const [activeTab, setActiveTab] = useState<"SIP" | "LUMP" | "GOAL">("SIP");
   const currency = CURRENCIES[user.currency] || CURRENCIES.USD;
 
+  // Deletion logic states
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [goalToDelete, setGoalToDelete] = useState<{ id: string; title: string } | null>(null);
+
   // SIP State
-  const [sipMonthly, setSipMonthly] = useState(currency.sipExample);
-  const [sipReturn, setSipReturn] = useState(10);
-  const [sipPeriod, setSipPeriod] = useState(15);
+  const [sipMonthly, setSipMonthly] = useState(() => {
+    const saved = localStorage.getItem("ww_sim_sip_monthly");
+    return saved ? Math.max(0, Number(JSON.parse(saved))) : currency.sipExample;
+  });
+  const [sipReturn, setSipReturn] = useState(() => {
+    const saved = localStorage.getItem("ww_sim_sip_return");
+    return saved ? Math.max(0, Number(JSON.parse(saved))) : 10;
+  });
+  const [sipPeriod, setSipPeriod] = useState(() => {
+    const saved = localStorage.getItem("ww_sim_sip_period");
+    return saved ? Math.max(1, Number(JSON.parse(saved))) : 15;
+  });
 
   // Lump Sum State
-  const [lumpAmount, setLumpAmount] = useState(currency.avgSalary * 2);
-  const [lumpReturn, setLumpReturn] = useState(10);
-  const [lumpPeriod, setLumpPeriod] = useState(15);
+  const [lumpAmount, setLumpAmount] = useState(() => {
+    const saved = localStorage.getItem("ww_sim_lump_amount");
+    return saved ? Math.max(0, Number(JSON.parse(saved))) : currency.avgSalary * 2;
+  });
+  const [lumpReturn, setLumpReturn] = useState(() => {
+    const saved = localStorage.getItem("ww_sim_lump_return");
+    return saved ? Math.max(0, Number(JSON.parse(saved))) : 10;
+  });
+  const [lumpPeriod, setLumpPeriod] = useState(() => {
+    const saved = localStorage.getItem("ww_sim_lump_period");
+    return saved ? Math.max(1, Number(JSON.parse(saved))) : 15;
+  });
 
   // Goal State
-  const [goalAmount, setGoalAmount] = useState(currency.emergencyTarget);
-  const [goalPeriod, setGoalPeriod] = useState(5);
-  const [goalReturn, setGoalReturn] = useState(10);
+  const [goalAmount, setGoalAmount] = useState(() => {
+    const saved = localStorage.getItem("ww_sim_goal_amount");
+    return saved ? Math.max(0, Number(JSON.parse(saved))) : currency.emergencyTarget;
+  });
+  const [goalPeriod, setGoalPeriod] = useState(() => {
+    const saved = localStorage.getItem("ww_sim_goal_period");
+    return saved ? Math.max(1, Number(JSON.parse(saved))) : 5;
+  });
+  const [goalReturn, setGoalReturn] = useState(() => {
+    const saved = localStorage.getItem("ww_sim_goal_return");
+    return saved ? Math.max(0, Number(JSON.parse(saved))) : 10;
+  });
+
+  // Persists states automatically
+  useEffect(() => {
+    localStorage.setItem("ww_sim_sip_monthly", JSON.stringify(sipMonthly));
+  }, [sipMonthly]);
+  useEffect(() => {
+    localStorage.setItem("ww_sim_sip_return", JSON.stringify(sipReturn));
+  }, [sipReturn]);
+  useEffect(() => {
+    localStorage.setItem("ww_sim_sip_period", JSON.stringify(sipPeriod));
+  }, [sipPeriod]);
+
+  useEffect(() => {
+    localStorage.setItem("ww_sim_lump_amount", JSON.stringify(lumpAmount));
+  }, [lumpAmount]);
+  useEffect(() => {
+    localStorage.setItem("ww_sim_lump_return", JSON.stringify(lumpReturn));
+  }, [lumpReturn]);
+  useEffect(() => {
+    localStorage.setItem("ww_sim_lump_period", JSON.stringify(lumpPeriod));
+  }, [lumpPeriod]);
+
+  useEffect(() => {
+    localStorage.setItem("ww_sim_goal_amount", JSON.stringify(goalAmount));
+  }, [goalAmount]);
+  useEffect(() => {
+    localStorage.setItem("ww_sim_goal_period", JSON.stringify(goalPeriod));
+  }, [goalPeriod]);
+  useEffect(() => {
+    localStorage.setItem("ww_sim_goal_return", JSON.stringify(goalReturn));
+  }, [goalReturn]);
 
   const calculateSIP = () => {
     const r = sipReturn / 12 / 100;
@@ -63,6 +126,13 @@ export function InvestmentSimulator({ user, onUpdateGoals }: InvestmentSimulator
   const goalResults = calculateGoal();
 
   const [savedGoals, setSavedGoals] = useState<FinancialGoal[]>(user.goals || []);
+  const [goalTitle, setGoalTitle] = useState("");
+  const [goalCategory, setGoalCategory] = useState<"RETIREMENT" | "HOUSE" | "CAR" | "EDUCATION" | "OTHER">("OTHER");
+  const [customDeadline, setCustomDeadline] = useState(() => {
+    const d = new Date();
+    d.setFullYear(d.getFullYear() + goalPeriod);
+    return d.toISOString().split('T')[0];
+  });
 
   // Sync state with user profile if it changes externally
   useEffect(() => {
@@ -71,27 +141,56 @@ export function InvestmentSimulator({ user, onUpdateGoals }: InvestmentSimulator
     }
   }, [user.goals]);
 
+  // Synchronise deadline with period slider adjustments
+  const handlePeriodChange = (years: number) => {
+    setGoalPeriod(years);
+    const d = new Date();
+    d.setFullYear(d.getFullYear() + years);
+    setCustomDeadline(d.toISOString().split('T')[0]);
+  };
+
+  // Synchronise period slider when custom calendar date changes
+  useEffect(() => {
+    const today = new Date();
+    const deadlineDate = new Date(customDeadline);
+    const diffTime = Math.max(0, deadlineDate.getTime() - today.getTime());
+    const diffYears = Math.max(1, Math.round(diffTime / (1000 * 60 * 60 * 24 * 365.25)));
+    if (diffYears !== goalPeriod && diffYears >= 1 && diffYears <= 40) {
+      setGoalPeriod(diffYears);
+    }
+  }, [customDeadline]);
+
   const handleSaveGoal = () => {
     if (activeTab === "GOAL") {
+      const finalTitle = goalTitle.trim() || `Goal for ${formatCurrency(goalAmount, user.currency, currency.locale)}`;
       const newGoal: FinancialGoal = {
         id: Math.random().toString(36).substr(2, 9),
-        title: `Goal for ${formatCurrency(goalAmount, user.currency, currency.locale)}`,
+        title: finalTitle,
         targetAmount: goalAmount,
         currentAmount: 0,
-        deadline: new Date(new Date().setFullYear(new Date().getFullYear() + goalPeriod)).toISOString().split('T')[0],
-        category: "OTHER"
+        deadline: customDeadline,
+        category: goalCategory
       };
       const updated = [...savedGoals, newGoal];
       setSavedGoals(updated);
       onUpdateGoals?.(updated);
-      // Removed alert for iframe compatibility
+      setGoalTitle("");
     }
   };
 
   const handleDeleteGoal = (id: string) => {
-    const updated = savedGoals.filter(g => g.id !== id);
+    const goal = savedGoals.find(g => g.id === id);
+    if (!goal) return;
+    setGoalToDelete({ id, title: goal.title });
+    setDeleteConfirmOpen(true);
+  };
+
+  const executeDeleteGoal = () => {
+    if (!goalToDelete) return;
+    const updated = savedGoals.filter(g => g.id !== goalToDelete.id);
     setSavedGoals(updated);
     onUpdateGoals?.(updated);
+    setGoalToDelete(null);
   };
 
   // Automatically check for completed goals
@@ -332,29 +431,118 @@ export function InvestmentSimulator({ user, onUpdateGoals }: InvestmentSimulator
           )}
 
           {activeTab === "GOAL" && (
-            <div className="card p-8 space-y-8">
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <label className="text-sm font-medium">Target Amount</label>
-                  <span className="text-xl font-mono font-bold text-accent-gold">{formatCurrency(goalAmount, user.currency, currency.locale)}</span>
-                </div>
-                <input type="range" min={currency.emergencyTarget / 2} max={currency.emergencyTarget * 50} step={currency.emergencyTarget / 2} value={goalAmount} onChange={(e) => setGoalAmount(Number(e.target.value))} className="w-full accent-accent-gold" />
+            <div className="card p-8 space-y-6 text-left">
+              {/* Custom Goal Label Input */}
+              <div className="space-y-2">
+                <label className="text-xs font-bold uppercase tracking-wider text-text-muted">Goal Title / Target Label</label>
+                <input
+                  type="text"
+                  value={goalTitle}
+                  onChange={(e) => setGoalTitle(e.target.value)}
+                  placeholder="e.g. Dream House Downpayment, Retirement Vault"
+                  className="w-full bg-bg-secondary text-text-primary border border-border/80 focus:border-accent-gold rounded-xl px-4 py-3 text-sm placeholder-text-muted outline-none transition-colors"
+                />
               </div>
 
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <label className="text-sm font-medium">Years to Goal</label>
-                  <span className="text-xl font-mono font-bold text-accent-blue">{goalPeriod} Years</span>
+              {/* Goal Category Grid */}
+              <div className="space-y-2">
+                <label className="text-xs font-bold uppercase tracking-wider text-text-muted">Goal Category</label>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {[
+                    { id: "RETIREMENT" as const, label: "Retirement" },
+                    { id: "HOUSE" as const, label: "House / Land" },
+                    { id: "CAR" as const, label: "Vehicle" },
+                    { id: "EDUCATION" as const, label: "Education" },
+                    { id: "OTHER" as const, label: "Other / General" },
+                  ].map((cat) => {
+                    const isSelected = goalCategory === cat.id;
+                    return (
+                      <button
+                        key={cat.id}
+                        type="button"
+                        onClick={() => setGoalCategory(cat.id)}
+                        className={cn(
+                          "py-2 px-3 rounded-lg border text-xs font-bold transition-all text-center cursor-pointer",
+                          isSelected
+                            ? "bg-accent-gold/10 border-accent-gold text-accent-gold"
+                            : "bg-bg-secondary border-border/40 hover:bg-bg-secondary/80 text-text-muted hover:text-text-secondary"
+                        )}
+                      >
+                        {cat.label}
+                      </button>
+                    );
+                  })}
                 </div>
-                <input type="range" min="1" max="40" step="1" value={goalPeriod} onChange={(e) => setGoalPeriod(Number(e.target.value))} className="w-full accent-accent-blue" />
               </div>
 
-              <div className="space-y-4">
+              {/* Synchronized Goal Target Amount Selection */}
+              <div className="space-y-4 pt-2">
                 <div className="flex justify-between items-center">
-                  <label className="text-sm font-medium">Expected Return (%)</label>
-                  <span className="text-xl font-mono font-bold text-accent-emerald">{goalReturn}%</span>
+                  <label className="text-xs font-bold uppercase tracking-wider text-text-muted">Target Amount</label>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-mono text-text-muted font-bold">{currency.symbol}</span>
+                    <input
+                      type="number"
+                      value={goalAmount}
+                      onChange={(e) => setGoalAmount(Math.max(0, Number(e.target.value)))}
+                      className="bg-bg-secondary border border-border rounded-lg px-2.5 py-1 text-sm font-mono font-bold w-32 text-right focus:border-accent-gold outline-none"
+                    />
+                  </div>
                 </div>
-                <input type="range" min="1" max="30" step="0.5" value={goalReturn} onChange={(e) => setGoalReturn(Number(e.target.value))} className="w-full accent-accent-emerald" />
+                <input
+                  type="range"
+                  min={currency.emergencyTarget / 2}
+                  max={currency.emergencyTarget * 50}
+                  step={currency.emergencyTarget / 2}
+                  value={goalAmount}
+                  onChange={(e) => setGoalAmount(Number(e.target.value))}
+                  className="w-full accent-accent-gold"
+                />
+              </div>
+
+              {/* Synchronized Deadline Control */}
+              <div className="space-y-4 pt-2">
+                <div className="flex justify-between items-center">
+                  <label className="text-xs font-bold uppercase tracking-wider text-text-muted">Target Date</label>
+                  <input
+                    type="date"
+                    value={customDeadline}
+                    onChange={(e) => {
+                      if (e.target.value) setCustomDeadline(e.target.value);
+                    }}
+                    className="bg-bg-secondary border border-border rounded-lg px-2.5 py-1 text-xs text-text-primary focus:border-accent-blue outline-none"
+                  />
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-xs text-text-secondary">Or adjust slider to modify terms:</span>
+                  <span className="text-sm font-mono font-bold text-accent-blue">{goalPeriod} Years</span>
+                </div>
+                <input
+                  type="range"
+                  min="1"
+                  max="40"
+                  step="1"
+                  value={goalPeriod}
+                  onChange={(e) => handlePeriodChange(Number(e.target.value))}
+                  className="w-full accent-accent-blue"
+                />
+              </div>
+
+              {/* Compound Interest Performance Assumptions */}
+              <div className="space-y-4 pt-2 border-t border-border/40">
+                <div className="flex justify-between items-center">
+                  <label className="text-xs font-bold uppercase tracking-wider text-text-muted">Assumed Compound Return</label>
+                  <span className="text-sm font-mono font-bold text-accent-emerald">{goalReturn}%</span>
+                </div>
+                <input
+                  type="range"
+                  min="1"
+                  max="30"
+                  step="0.5"
+                  value={goalReturn}
+                  onChange={(e) => setGoalReturn(Number(e.target.value))}
+                  className="w-full accent-accent-emerald"
+                />
               </div>
             </div>
           )}
@@ -432,6 +620,14 @@ export function InvestmentSimulator({ user, onUpdateGoals }: InvestmentSimulator
           )}
         </div>
       </div>
+
+      <DeleteConfirmationDialog 
+        isOpen={deleteConfirmOpen}
+        onClose={() => setDeleteConfirmOpen(false)}
+        onConfirm={executeDeleteGoal}
+        itemName={goalToDelete?.title || ""}
+        itemType="financial goal"
+      />
     </div>
   );
 }
