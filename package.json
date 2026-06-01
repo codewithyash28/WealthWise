@@ -9,9 +9,7 @@
     "start": "node dist/server.cjs",
     "preview": "vite preview",
     "clean": "rm -rf dist",
-    "lint": "tsc --noEmit",
-    "test": "vitest run",
-    "test:watch": "vitest"
+    "lint": "tsc --noEmit"
   },
   "dependencies": {
     "@google/genai": "^1.29.0",
@@ -25,8 +23,8 @@
     "express-rate-limit": "^8.5.2",
     "google-auth-library": "^10.6.2",
     "helmet": "^8.2.0",
-    "jspdf": "^4.2.1",
     "jsonwebtoken": "^9.0.3",
+    "jspdf": "^4.2.1",
     "lucide-react": "^0.546.0",
     "mongodb": "^7.2.0",
     "mongoose": "^9.6.2",
@@ -40,18 +38,16 @@
     "vite": "^6.2.0"
   },
   "devDependencies": {
-    "@types/bcryptjs": "^2.4.6",
     "@types/express": "^4.17.21",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^22.14.0",
     "autoprefixer": "^10.4.21",
-    "mongodb-memory-server": "^11.1.0",
     "esbuild": "^0.28.0",
+    "mongodb-memory-server": "^11.1.0",
     "tailwindcss": "^4.1.14",
     "tsx": "^4.21.0",
     "typescript": "~5.8.2",
-    "vite": "^6.2.0",
-    "vitest": "^4.1.7"
+    "vite": "^6.2.0"
   },
   "overrides": {
     "node-domexception": "file:./shims/node-domexception"

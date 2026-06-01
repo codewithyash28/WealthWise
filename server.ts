@@ -328,7 +328,7 @@ app.post("/api/auth/register", async (req, res) => {
     });
   } catch (error) {
     console.error("Register Error:", error);
-    res.status(500).json({ error: "Internal registration error." });
+    res.status(500).json({ error: error.message || "Internal registration error." });
   }
 });
 
@@ -359,7 +359,7 @@ app.post("/api/auth/login", async (req, res) => {
     });
   } catch (error) {
     console.error("Login Error:", error);
-    res.status(500).json({ error: "Internal server error." });
+    res.status(500).json({ error: error.message || "Internal server error." });
   }
 });
 
@@ -453,7 +453,7 @@ app.post("/api/auth/sync", async (req, res) => {
     res.json({ success: true, syncedAt: new Date().toISOString() });
   } catch (error) {
     console.error("Sync Error:", error);
-    res.status(500).json({ error: "Synchronization failure." });
+    res.status(500).json({ error: error.message || "Synchronization failure." });
   }
 });
 
@@ -591,7 +591,7 @@ app.post("/api/gemini/insight", async (req, res) => {
     res.json({ text: result.text || "" });
   } catch (error) {
     console.error("[Gemini Insight Endpoint Error]:", error);
-    res.status(500).json({ error: "An error occurred generating insights." });
+    res.status(500).json({ error: error.message || "An error occurred generating insights." });
   }
 });
 
@@ -634,7 +634,7 @@ app.post("/api/gemini/audit", async (req, res) => {
     res.json({ text: result.text || "Unable to generate audit at this time." });
   } catch (error) {
     console.error("[Gemini Audit Endpoint Error]:", error);
-    res.status(500).json({ error: "An error occurred generating wealth audit." });
+    res.status(500).json({ error: error.message || "An error occurred generating wealth audit." });
   }
 });
 
