@@ -47,6 +47,19 @@ window.addEventListener('unhandledrejection', (event) => {
   console.error('Unhandled promise rejection:', reason);
 });
 
+// Register Service Worker for Offline Resilience
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then(registration => {
+        console.log('[SW] ServiceWorker registered with scope: ', registration.scope);
+      })
+      .catch(error => {
+        console.error('[SW] ServiceWorker registration failed: ', error);
+      });
+  });
+}
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <App />

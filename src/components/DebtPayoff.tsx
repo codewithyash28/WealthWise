@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Plus, Trash2, ArrowRight, ShieldAlert, Sparkles, TrendingUp, DollarSign, Wallet, Scale, Info, CheckCircle2 } from "lucide-react";
 import { formatCurrency, cn } from "../lib/utils";
@@ -20,8 +20,10 @@ interface DebtPayoffProps {
 export function DebtPayoff({ user }: DebtPayoffProps) {
   const currency = CURRENCIES[user.currency] || CURRENCIES.USD;
 
-  // Preloaded sample debts for premium UX
+  // Preloaded sample debts for premium UX with localStorage persistence
   const [loans, setLoans] = useState<Loan[]>(() => {
+    const saved = localStorage.getItem("ww_debt_loans");
+    if (saved) return JSON.parse(saved);
     return [
       { id: "1", name: "Premium Visa Credit Card", balance: 4500, rate: 19.9, minPayment: 150 },
       { id: "2", name: "Apex Federal Student Loan", balance: 18000, rate: 5.5, minPayment: 250 },
@@ -35,10 +37,28 @@ export function DebtPayoff({ user }: DebtPayoffProps) {
   const [newLoanRate, setNewLoanRate] = useState("");
   const [newLoanMin, setNewLoanMin] = useState("");
 
-  const [payoffMethod, setPayoffMethod] = useState<"AVALANCHE" | "SNOWBALL">("AVALANCHE");
+  const [payoffMethod, setPayoffMethod] = useState<"AVALANCHE" | "SNOWBALL">(() => {
+    const saved = localStorage.getItem("ww_debt_method");
+    return (saved as "AVALANCHE" | "SNOWBALL") || "AVALANCHE";
+  });
   const [extraPayment, setExtraPayment] = useState(() => {
+    const saved = localStorage.getItem("ww_debt_extra");
+    if (saved) return Number(saved);
     return currency.avgSalary > 5000 ? 500 : 200;
   });
+
+  // Persistence effects
+  useEffect(() => {
+    localStorage.setItem("ww_debt_loans", JSON.stringify(loans));
+  }, [loans]);
+
+  useEffect(() => {
+    localStorage.setItem("ww_debt_method", payoffMethod);
+  }, [payoffMethod]);
+
+  useEffect(() => {
+    localStorage.setItem("ww_debt_extra", extraPayment.toString());
+  }, [extraPayment]);
 
   const handleAddLoan = (e: React.FormEvent) => {
     e.preventDefault();
