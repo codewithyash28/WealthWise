@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion } from "motion/react";
 import { Calculator, Percent, DollarSign, Wallet, HelpCircle, FileText, CheckCircle2 } from "lucide-react";
 import { formatCurrency, cn } from "../lib/utils";
@@ -13,9 +13,29 @@ export function TaxEstimator({ user }: TaxEstimatorProps) {
   const currency = CURRENCIES[user.currency] || CURRENCIES.USD;
   const initialSalary = currency.avgSalary * 1.5;
 
-  const [grossIncome, setGrossIncome] = useState(initialSalary);
-  const [preTaxDeduction, setPreTaxDeduction] = useState(Math.round(initialSalary * 0.08));
-  const [otherDeductions, setOtherDeductions] = useState(0);
+  const [grossIncome, setGrossIncome] = useState(() => {
+    const saved = localStorage.getItem("ww_tax_gross");
+    return saved ? Number(saved) : initialSalary;
+  });
+  const [preTaxDeduction, setPreTaxDeduction] = useState(() => {
+    const saved = localStorage.getItem("ww_tax_pretax");
+    return saved ? Number(saved) : Math.round(initialSalary * 0.08);
+  });
+  const [otherDeductions, setOtherDeductions] = useState(() => {
+    const saved = localStorage.getItem("ww_tax_other");
+    return saved ? Number(saved) : 0;
+  });
+
+  // Persist tax parameters for computation caching
+  useEffect(() => {
+    localStorage.setItem("ww_tax_gross", grossIncome.toString());
+  }, [grossIncome]);
+  useEffect(() => {
+    localStorage.setItem("ww_tax_pretax", preTaxDeduction.toString());
+  }, [preTaxDeduction]);
+  useEffect(() => {
+    localStorage.setItem("ww_tax_other", otherDeductions.toString());
+  }, [otherDeductions]);
 
   // Advanced calculation based on progressive tax brackets depending on selected currency
   const taxResults = useMemo(() => {

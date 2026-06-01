@@ -4,6 +4,7 @@ import { motion } from "motion/react";
 import { TrendingUp, DollarSign, Calendar, Target, Info, ArrowRight, ChevronRight, Calculator, PieChart, Plus, Trash2 } from "lucide-react";
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler } from 'chart.js';
 import { Line } from 'react-chartjs-2';
+import { ResponsiveChartContainer } from "./ui/ResponsiveChartContainer";
 import { formatCurrency, cn } from "../lib/utils";
 import { CURRENCIES } from "../constants";
 import { UserProfile, FinancialGoal } from "../types";
@@ -589,7 +590,9 @@ export function InvestmentSimulator({ user, onUpdateGoals }: InvestmentSimulator
         <div className="space-y-8">
           {activeTab !== "GOAL" && (
             <div className="card p-8 h-[400px]">
-              <Line data={chartData} options={chartOptions} />
+              <ResponsiveChartContainer>
+                {() => <Line data={chartData} options={chartOptions} />}
+              </ResponsiveChartContainer>
             </div>
           )}
 

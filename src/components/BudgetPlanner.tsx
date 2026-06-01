@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { PieChart, Home, Utensils, Car, HeartPulse, Gamepad2, GraduationCap, CreditCard, Package, Save, RotateCcw, Copy, ChevronRight, AlertTriangle, CheckCircle2, TrendingUp, Download, Target, BarChart3, LineChart, Trash2, ShieldAlert, Terminal, FileCode, Check, ExternalLink, Activity, Sparkles } from "lucide-react";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title } from 'chart.js';
 import { Doughnut, Bar, Line } from 'react-chartjs-2';
+import { ResponsiveChartContainer } from "./ui/ResponsiveChartContainer";
 import { formatCurrency, cn } from "../lib/utils";
 import { CURRENCIES } from "../constants";
 import { UserProfile, BudgetPlan } from "../types";
@@ -917,7 +918,9 @@ export function BudgetPlanner({ user, onSave, initialPlan, gitProvider = "gitlab
           <div className="card p-8 flex flex-col items-center justify-center space-y-8">
             <h3 className="text-xl font-bold w-full text-left">Expenditure Distribution</h3>
             <div className="relative w-full h-[300px]">
-              <Doughnut data={chartData} options={chartOptions} />
+              <ResponsiveChartContainer>
+                {() => <Doughnut data={chartData} options={chartOptions} />}
+              </ResponsiveChartContainer>
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                 <div className="text-text-muted text-xs uppercase tracking-widest">Total Expenses</div>
                 <div className="text-2xl font-mono font-bold">{formatCurrency(totalExpenses, user.currency, currency.locale)}</div>
@@ -999,6 +1002,8 @@ export function BudgetPlanner({ user, onSave, initialPlan, gitProvider = "gitlab
               <BarChart3 className="w-5 h-5 text-accent-gold" /> Spending Comparison
             </h3>
             <div className="h-[300px]">
+              <ResponsiveChartContainer>
+                {() => (
               <Bar 
                 data={{
                   labels: Object.keys(expenses).map(k => k.charAt(0).toUpperCase() + k.slice(1)),
@@ -1031,6 +1036,8 @@ export function BudgetPlanner({ user, onSave, initialPlan, gitProvider = "gitlab
                   }
                 }}
               />
+                )}
+              </ResponsiveChartContainer>
             </div>
           </div>
 
@@ -1040,6 +1047,8 @@ export function BudgetPlanner({ user, onSave, initialPlan, gitProvider = "gitlab
               <LineChart className="w-5 h-5 text-accent-gold" /> Monthly Expense Trends
             </h3>
             <div className="h-[300px]">
+              <ResponsiveChartContainer>
+                {() => (
               <Line 
                 data={{
                   labels: history.map(h => h.month),
@@ -1065,6 +1074,8 @@ export function BudgetPlanner({ user, onSave, initialPlan, gitProvider = "gitlab
                   }
                 }}
               />
+                )}
+              </ResponsiveChartContainer>
             </div>
           </div>
         </div>

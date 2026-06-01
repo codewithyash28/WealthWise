@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { Line } from "react-chartjs-2";
+import { ResponsiveChartContainer } from "./ui/ResponsiveChartContainer";
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler } from 'chart.js';
 import { UserProfile, BudgetPlan } from "../types";
 import { CURRENCIES } from "../constants";
@@ -304,9 +305,13 @@ export function WealthPathChart({ user, budget }: WealthPathChartProps) {
         </motion.div>
       )}
 
-      {/* Main Chart Rendering Container */}
+      {/* Main Chart Rendering Container with Bulletproof Responsive Scaling */}
       <div className="h-[310px] w-full bg-bg-secondary/10 p-4 rounded-2xl border border-border/20">
-        <Line data={chartData} options={options} />
+        <ResponsiveChartContainer>
+          {() => (
+            <Line data={chartData} options={options} />
+          )}
+        </ResponsiveChartContainer>
       </div>
 
       {/* Actionable Scenario Comparison Insights Footer */}
