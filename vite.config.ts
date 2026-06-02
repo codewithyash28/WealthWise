@@ -30,6 +30,7 @@ export default defineConfig(({mode}) => {
       'process.env.FIREBASE_MESSAGING_SENDER_ID': JSON.stringify(env.FIREBASE_MESSAGING_SENDER_ID || (firebaseConfig as any).messagingSenderId),
       'process.env.FIREBASE_APP_ID': JSON.stringify(env.FIREBASE_APP_ID || (firebaseConfig as any).appId),
       'process.env.FIREBASE_FIRESTORE_DATABASE_ID': JSON.stringify(env.FIREBASE_FIRESTORE_DATABASE_ID || (firebaseConfig as any).firestoreDatabaseId),
+      'process.env.GOOGLE_CLIENT_ID': JSON.stringify(env.GOOGLE_CLIENT_ID || '1047114487770-testclientid.apps.googleusercontent.com'),
     },
     resolve: {
       alias: {
@@ -37,8 +38,15 @@ export default defineConfig(({mode}) => {
       },
     },
     server: {
+      proxy: {
+        '/api': {
+          target: 'http://localhost:5001',
+          changeOrigin: true,
+          secure: false,
+        }
+      },
       // HMR is disabled in AI Studio via DISABLE_HMR env var.
-      // Do not modifyâfile watching is disabled to prevent flickering during agent edits.
+      // Do not modify—file watching is disabled to prevent flickering during agent edits.
       hmr: process.env.DISABLE_HMR !== 'true',
     },
   };

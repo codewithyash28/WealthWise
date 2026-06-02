@@ -233,16 +233,16 @@ export function InvestmentSimulator({ user, onUpdateGoals }: InvestmentSimulator
         {
           label: 'Total Value',
           data: returnsData,
-          borderColor: '#F0B429',
-          backgroundColor: 'rgba(240, 180, 41, 0.1)',
+          borderColor: '#C5A880',
+          backgroundColor: 'rgba(197, 168, 128, 0.08)',
           fill: true,
           tension: 0.4,
         },
         {
           label: 'Amount Invested',
           data: investedData,
-          borderColor: '#3B82F6',
-          backgroundColor: 'rgba(59, 130, 246, 0.2)',
+          borderColor: '#4A89FF',
+          backgroundColor: 'rgba(74, 137, 255, 0.1)',
           fill: true,
           tension: 0.4,
         }
@@ -256,10 +256,10 @@ export function InvestmentSimulator({ user, onUpdateGoals }: InvestmentSimulator
     plugins: {
       legend: { display: false },
       tooltip: {
-        backgroundColor: '#111827',
-        titleFont: { family: 'Syne', size: 14 },
+        backgroundColor: '#1a1a1e',
+        titleFont: { family: 'Outfit', size: 14 },
         bodyFont: { family: 'Outfit', size: 12 },
-        borderColor: 'rgba(240,180,41,0.2)',
+        borderColor: 'rgba(197,168,128,0.2)',
         borderWidth: 1,
         padding: 12,
         callbacks: {

@@ -171,7 +171,7 @@ export function CaseStudy({ user, onUpdateGitProvider }: CaseStudyProps) {
                  </div>
                  <div className="relative border-l-2 border-dashed border-accent-gold/30 ml-6 h-8" />
                  <div className="flex gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-accent-gold/20 border border-accent-gold flex items-center justify-center shrink-0 shadow-[0_0_20px_rgba(240,180,41,0.3)]">
+                    <div className="w-12 h-12 rounded-xl bg-accent-gold/20 border border-accent-gold flex items-center justify-center shrink-0 shadow-[0_0_20px_rgba(197,168,128,0.15)]">
                        <span className="font-black text-xs uppercase tracking-tighter text-accent-gold">WW Elite</span>
                     </div>
                     <div>

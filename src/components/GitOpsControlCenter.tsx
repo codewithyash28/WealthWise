@@ -6,7 +6,6 @@ import {
 } from "lucide-react";
 import { UserProfile, BudgetPlan } from "../types";
 import { cn } from "../lib/utils";
-import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
 
 interface GitOpsControlCenterProps {
   user: UserProfile;
@@ -272,7 +271,7 @@ jobs:
     downloadAnchor.remove();
   };
 
-  // Recharts success rate calculation
+  // Repository diagnostics data for the lightweight CSS chart.
   const chartData = useMemo(() => {
     const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
     
@@ -306,6 +305,8 @@ jobs:
       failed: baseStats[day].failed
     }));
   }, [history]);
+
+  const maxChartOps = Math.max(...chartData.map(item => item.successful + item.failed), 1);
 
   return (
     <div id="gitops-center" className="space-y-6">
@@ -516,7 +517,7 @@ jobs:
             </div>
           </div>
 
-          {/* Recharts Simple Progress Chart */}
+          {/* Lightweight diagnostics chart */}
           <div className="card p-5 bg-bg-secondary/20 border-border/40 space-y-4">
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
@@ -528,22 +529,34 @@ jobs:
               </span>
             </div>
 
-            <div className="h-40 w-full select-none text-[10px] font-mono pt-1">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData} margin={{ top: 5, right: 5, left: -25, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.05)" />
-                  <XAxis dataKey="day" stroke="var(--color-text-muted, #71717a)" fontSize={9} tickLine={false} />
-                  <YAxis stroke="var(--color-text-muted, #71717a)" fontSize={9} tickLine={false} />
-                  <Tooltip 
-                    contentStyle={{ backgroundColor: "#09090b", borderColor: "rgba(255, 255, 255, 0.1)" }}
-                    labelStyle={{ color: "#fafafa", fontSize: 10, fontWeight: "bold" }}
-                    itemStyle={{ fontSize: 10 }}
-                  />
-                  <Legend verticalAlign="top" height={24} iconSize={8} wrapperStyle={{ fontSize: 9 }} />
-                  <Bar dataKey="successful" name="Successful" fill="#10B981" radius={[2, 2, 0, 0]} />
-                  <Bar dataKey="failed" name="Failed" fill="#EF4444" radius={[2, 2, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+            <div className="h-40 w-full min-w-0 select-none text-[10px] font-mono pt-1">
+              <div className="flex items-end justify-between gap-2 h-28 border-b border-border/50 px-1">
+                {chartData.map(item => {
+                  const successHeight = `${Math.max(8, (item.successful / maxChartOps) * 100)}%`;
+                  const failedHeight = `${Math.max(4, (item.failed / maxChartOps) * 100)}%`;
+                  return (
+                    <div key={item.day} className="flex-1 min-w-0 h-full flex items-end justify-center gap-1">
+                      <div
+                        className="w-3 rounded-t bg-accent-emerald/80 border border-accent-emerald/30"
+                        style={{ height: successHeight }}
+                        title={`${item.day}: ${item.successful} successful operations`}
+                      />
+                      <div
+                        className="w-3 rounded-t bg-accent-red/80 border border-accent-red/30"
+                        style={{ height: failedHeight }}
+                        title={`${item.day}: ${item.failed} failed operations`}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="grid grid-cols-7 gap-2 mt-2 px-1 text-center text-[9px] text-text-muted">
+                {chartData.map(item => <span key={item.day}>{item.day}</span>)}
+              </div>
+              <div className="flex items-center justify-center gap-4 mt-2 text-[9px] uppercase tracking-wider text-text-muted">
+                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-accent-emerald" /> Successful</span>
+                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-accent-red" /> Failed</span>
+              </div>
             </div>
           </div>
 

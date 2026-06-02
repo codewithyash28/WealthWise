@@ -324,4 +324,3 @@ export function WealthPathChart({ user, budget }: WealthPathChartProps) {
     </motion.div>
   );
 }
-
