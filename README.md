@@ -103,8 +103,13 @@ Engineered for the elite, the UI utilizes a custom-crafted theme:
 
 ---
 
-## 🎀 Credits & Disclaimer
+## 🎀 Contributors
 
-Designed and developed with extreme precision by **[Code with Yash](https://yash-choubey-student-developer-port.vercel.app/)**.
+Designed and developed with extreme precision by an incredible team of developers:
+
+* **[Code with Yash](https://github.com/codewithyash28)** — Core Architecture, Multi-Agent AI Loops & Design System
+* **[tamimi36](https://github.com/tamimi36)** — Simulation Engines (MacroPulse & TrendMarket Analytics)
+* **[Kaushal Kalas](https://github.com/kaushalkalas-awesome)** — Frontend Architecture, UI Components & Micro-interactions
+* **[Anand s](https://github.com/sajithanand)** — Full-Stack Integration, Express Backend & MongoDB MCP Bindings
 
 <sub>**Disclaimer:** WealthWise Elite is an interactive educational sandbox. Calculations are pedagogical model exercises and do not constitute actual professional financial advice.</sub>
