@@ -1,5 +1,5 @@
 import { motion } from "motion/react";
-import { ChevronRight, Play, CheckCircle2, TrendingUp, PieChart, Sparkles, BrainCircuit, ShieldCheck } from "lucide-react";
+import { ChevronRight, Play, CheckCircle2, TrendingUp, PieChart, Sparkles, BrainCircuit, ShieldCheck, UserCheck } from "lucide-react";
 import { cn } from "../lib/utils";
 import { Logo } from "./Logo";
 
@@ -18,6 +18,68 @@ export function LandingPage() {
     { icon: <Sparkles className="w-6 h-6 text-accent-gold-bright" />, title: "MockYield DeFi", desc: "Safely learn decentralized finance, liquidity provision, and yield farming mechanics." },
     { icon: <CheckCircle2 className="w-6 h-6 text-accent-emerald" />, title: "Mastery Alerts", desc: "Receive automated alerts detailing risk management opportunities as you learn." }
   ];
+
+  const loadDemoProfile = () => {
+    const demoUid = "demo_" + Math.random().toString(36).substring(2, 11);
+    const demoUser = {
+      uid: demoUid,
+      displayName: "Elite Demo User",
+      email: null,
+      photoURL: null
+    };
+
+    const demoProfile = {
+      uid: demoUid,
+      name: "Elite Demo User",
+      age: "32",
+      learningGoal: "Strategic Wealth Preservation",
+      currency: "USD",
+      joinDate: new Date().toISOString(),
+      lastVisit: new Date().toISOString(),
+      visitDates: [new Date().toISOString().split('T')[0]],
+      highScore: 1250,
+      netWorth: { assets: 450000, liabilities: 120000 },
+      gitProvider: "github",
+      portfolio: {
+        stocks: 250000,
+        bonds: 100000,
+        crypto: 50000,
+        cash: 50000
+      },
+      achievements: [
+        { id: "first_budget", title: "Budget Architect", icon: "📝", unlockedAt: new Date().toISOString() },
+        { id: "quiz_master", title: "Financial Sage", icon: "🧠", unlockedAt: new Date().toISOString() }
+      ],
+      goals: [
+        { id: "1", title: "Early Retirement", target: 2000000, current: 450000, deadline: "2040-01-01" },
+        { id: "2", title: "Real Estate Acquisition", target: 500000, current: 150000, deadline: "2028-06-01" }
+      ]
+    };
+
+    const demoBudget = {
+      income: 12500,
+      expenses: {
+        housing: 3500,
+        food: 1200,
+        transport: 800,
+        health: 600,
+        entertainment: 1000,
+        education: 500,
+        loans: 2000,
+        other: 1000
+      },
+      timestamp: new Date().toISOString()
+    };
+
+    localStorage.setItem("ww_user", JSON.stringify(demoUser));
+    localStorage.setItem("ww_profile", JSON.stringify(demoProfile));
+    localStorage.setItem("ww_budget", JSON.stringify(demoBudget));
+    localStorage.setItem("ww_uid", demoUid);
+    localStorage.setItem("ww_sync_enabled", "false");
+
+    window.location.hash = "#dashboard";
+    window.location.reload();
+  };
 
   return (
     <div className="space-y-24 md:space-y-36 pb-32">
@@ -96,6 +158,17 @@ export function LandingPage() {
               Start Learning <ChevronRight className="w-4 h-4" />
             </a>
             <span className="text-[8px] font-bold text-text-muted uppercase tracking-[0.2em] pointer-events-none">Full Dashboard Access</span>
+          </div>
+
+          <div className="flex flex-col items-center gap-1.5">
+            <button
+              onClick={loadDemoProfile}
+              className="px-8 py-3.5 bg-accent-blue/10 border border-accent-blue/30 text-accent-blue text-xs font-bold uppercase tracking-wider rounded-xl hover:bg-accent-blue/20 transition-all flex items-center justify-center gap-2 w-full sm:w-auto"
+              aria-label="Load a sample profile with high-complexity data"
+            >
+              <UserCheck className="w-4 h-4" /> Load Elite Sample
+            </button>
+            <span className="text-[8px] font-bold text-text-muted uppercase tracking-[0.2em] pointer-events-none">Instant Demo Mode</span>
           </div>
           
           <div className="flex flex-col items-center gap-1.5">
