@@ -27,6 +27,17 @@ export interface UserProfile {
   portfolio?: Portfolio;
   goals?: FinancialGoal[];
   gitProvider?: "gitlab" | "github" | "bitbucket";
+  xp?: number;
+  coins?: number;
+  completedQuests?: string[];
+  purchasedItems?: string[];
+  activeAura?: string;
+  activityLogs?: string[];
+  dailyIntent?: {
+    text: string;
+    completed: boolean;
+    date: string;
+  };
 }
 
 export interface Achievement {

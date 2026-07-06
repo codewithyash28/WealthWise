@@ -134,7 +134,7 @@ export function PulseAlert({ alerts, onClose, onClearAll }: PulseAlertProps) {
 
       {/* Floating Toasts */}
       {!isMuted && (
-        <div className="fixed bottom-28 right-6 z-50 w-full max-w-sm pointer-events-none flex flex-col-reverse gap-4">
+        <div className="fixed bottom-24 right-6 z-[200] w-[calc(100vw-3rem)] sm:w-[350px] pointer-events-none flex flex-col-reverse gap-3 items-end">
           <AnimatePresence mode="popLayout">
             {alerts.slice(0, 2).map((alert) => (
               <motion.div

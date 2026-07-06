@@ -125,6 +125,18 @@ export function FinancialQuiz({ onComplete, bestScore }: FinancialQuizProps) {
           <div className="text-text-muted">Grade: {grade.badge}</div>
         </motion.div>
 
+        <div className="bg-bg-secondary border border-border/80 p-6 rounded-2xl flex justify-center items-center gap-12 text-center max-w-md mx-auto w-full shadow-inner">
+          <div>
+            <div className="text-[10px] text-text-muted uppercase tracking-widest font-bold">XP Earned</div>
+            <div className="text-3xl font-mono font-black text-accent-gold mt-1">+{Math.floor(score * 0.5)} XP</div>
+          </div>
+          <div className="w-px h-10 bg-border/80" />
+          <div>
+            <div className="text-[10px] text-text-muted uppercase tracking-widest font-bold">Coins Awarded</div>
+            <div className="text-3xl font-mono font-black text-accent-emerald mt-1">+{Math.floor(score * 0.3)} 🪙</div>
+          </div>
+        </div>
+
         <div className="flex gap-8 text-xl font-mono">
           <div className="flex items-center gap-2 text-accent-emerald">
             <CheckCircle2 className="w-6 h-6" /> {answers.filter(a => a.isCorrect).length} Correct

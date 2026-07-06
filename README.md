@@ -1,115 +1,111 @@
-# <img src="public/logo.svg" width="40" height="40" align="center" /> WealthWise Elite 2.0
+#   __      __              _ _   _      __   _              _      _ _ _ 
+#   \ \    / /___ __ _ _  _| | |_| |_   / /  (_)___ ___    | |  _ _(_) |_ ___
+#    \ \/\/ / -_) _` | ' \| |  _| ' \  / /   | (_-</ -_)   | | | '_| |  _/ -_)
+#     \_/\_/\___\__,_|_||_|_|\__|_||_|/_/    |_/__/\___|   |_| |_| |_|\__\___|
+#               E L I T E   2.0   --   F I N A N C I A L   M A T R I X
 
-### *The Next-Gen Multi-Agent Personal Wealth Architect & Simulation Suite*
-
-[![Status](https://img.shields.io/badge/Status-Live%20Production-f0b429?style=for-the-badge&logo=shield)](https://wealth-wise-elite.vercel.app/#home)
-[![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react)](https://react.dev/)
-[![Tailwind](https://img.shields.io/badge/Tailwind-v4-38B2AC?style=for-the-badge&logo=tailwind-css)](https://tailwindcss.com/)
-[![Gemini](https://img.shields.io/badge/Gemini-1.5%20Pro-4285F4?style=for-the-badge&logo=google-gemini)](https://deepmind.google/technologies/gemini/)
-
-> **"Don't just save wealth—simulate its velocity. WealthWise Elite 2.0 turns the complexity of global macroeconomics into your personal competitive advantage."**
-
-WealthWise Elite 2.0 is a premium financial literacy platform engineered with high-fidelity simulation engines, autonomous AI agents, and a sophisticated "Obsidian & Gold" design system. It empowers users to master their financial destiny through real-time audits, strategic projections, and macroeconomic stress-testing.
+> **"Traditional personal finance platforms are dead-end, static 2D spreadsheets. WealthWise Elite 2.0 redefines financial literacy by turning abstract economic calculations into fully interactive, spatial 3D WebGL physics simulations."**
 
 ---
 
-## 💎 The 7 Pillars of Financial Mastery
+## 🌌 The Vision: Redefining Financial Literacy
 
-| Engine Suite | Purpose | Key Metric |
-| :--- | :--- | :--- |
-| **🌍 MacroPulse** | 10-year simulation of GDP, CPI, and interest rate impacts. | Inflation Erosion Curves |
-| **💹 TrendMarket** | Gamified trading hub for stock cycles and market sentiment. | Real-time Bull/Bear Signals |
-| **🏠 LiveOrLease** | Deep-dive real estate arbitrage (Buy vs. Rent) decisioning. | 20-Year Net-Value Delta |
-| **📈 Tax Estimator** | Progressive tax schedule modeling (US, India, UK, EU). | Take-Home Pay Gauges |
-| **⚖️ Debt Payoff** | Mathematical Avalanche vs. Psychological Snowball simulations. | Debt Freedom Velocity |
-| **💎 MockYield** | Secure sandbox for DeFi staking and compounding APY. | Interactive Staking Sliders |
-| **📊 Asset Rebalancer**| Dynamic realignment of portfolio weights across asset classes. | Slippage & Delta Tracking |
+**WealthWise Elite 2.0** is an immersive, high-fidelity personal finance simulator, sandbox playground, and gamified education hub. Designed for modern developers, builders, and sophisticated financial practitioners, the platform moves past traditional text-based interfaces. It establishes a sleek, modern visual environment featuring responsive deep space-blue backgrounds, faint architectural structural grids, and glowing cyber-neon accents balanced by elegant, sparse metallic gold rewards.
+
+By leveraging the modern **@google/genai SDK** (Gemini Pro), the platform bridges the gap between deep AI-native reasoning and spatial physical visualizations. Users can physically watch their purchasing power erode under high inflation, observe real-time compound interest accumulate via stacked gold WebGL columns, and test behavioral trading biases in volatile mock markets.
 
 ---
 
-## 🤖 Multi-Step Agentic Intelligence
+## 💎 Elite Core Features
 
-Beyond standard chatbots, WealthWise Elite 2.0 utilizes an **autonomous reasoning loop** powered by Gemini 1.5.
+### 🌐 1. Spatial 3D Projection Viewport
+Driven by a highly optimized **ThreeJS / WebGL canvas** powered by `@react-three/fiber` and `@react-three/drei` in `Simulation3DScene.tsx` and `InvestmentSimulator.tsx`:
+*   **Wealth Growth Modeler**: Staggered, glowing exponential gold columns representing monthly SIP contributions compounding over 30-year scales.
+*   **Inflation Power Decay**: Visualizes the erosion of liquid capital. Uninvested cash is shown side-by-side with compound columns as sloped, decaying burnt-orange bars.
+*   **Startup Runway Planner**: Connects levitating, glowing milestone nodes representing cash-burn vs. financing events with volumetric, physical cylinder conduits.
+*   **Loan Amortization Schedule**: Renders principal-to-interest shifts using dual-segmented geometric cylinders that morph dynamically based on interest rates.
+*   **Studio-Grade Refinement**: Features orbit-damped camera positioning, soft point-lights, high-intensity spot-lights, glowing emissive glass materials, and real-time reflections on a glossy, dark-mirrored reflector floor.
 
-- **Strategic Planning**: Deconstructs complex goals (e.g., "Rebalance for a recession") into technical tool calls.
-- **GitOps Integration**: Tracks wealth policies and configurations via a Model Context Protocol (MCP) pipeline.
-- **Real-time Auditing**: One-click AI audits analyze your MongoDB-backed state to provide high-impact roadmaps.
-- **Logic Logging**: Transparent chain-of-thought streaming directly to the developer console.
+### 🤖 2. Generative Dashboard & Socratic AI Advisor
+*   **One-Click Comprehensive Audit**: Runs a deep financial analysis evaluating savings rates, progressive tax brackets, and portfolio asset drift, displaying a real-time NetWorth Health Score (0-100).
+*   **Socratic Financial Advisor**: A high-agency chatbot answering complex theoretical questions regarding asset allocations, central bank strategies, and rebalancing principles. In compliance with strict fintech guidelines, it focuses on financial literacy and economic reasoning without promoting speculative individual assets.
+*   **Autonomous Operational Logs**: Features an interactive GitOps-style reasoning stream widget powered by the `GitOpsControlCenter` illustrating the AI's step-by-step thinking chronologically.
 
----
+### ⚙️ 3. Node-Based Strategy Builder (GitOps-As-Code)
+*   **Asset Policy Syncing**: Integrates mock GitLab/GitHub Model Context Protocol (MCP) servers. Modifying asset profiles or risk ratios creates an autonomous multi-step code transaction (e.g. committing raw policy configurations into `/wealth-policies/user-profile.json`).
+*   **Defensive Guardrails**: Auto-calibrates spending constraints under negative simulation outcomes, deploying up to 70% automatic variable expense contractions.
 
-## 🎨 Luxe-Modern Design System
+### 📊 4. Progressive Tax & Debt Acceleration Engines
+*   **Progressive Tax Estimator**: Features deep tax schedules supporting progressive tax brackets for **India (New vs. Old Regimes)**, **United States**, **United Kingdom**, and **Germany**, calculating detailed deductions, exemptions, and producing clean take-home annual distribution gauges.
+*   **Debt Payoff Simulator**: Runs mathematical head-to-head simulations pitting the **Debt Avalanche** (high-interest rate focus) against the **Debt Snowball** (lowest balance focus) methodologies, graphing absolute payoff dates and total interest saved.
 
-Engineered for the elite, the UI utilizes a custom-crafted theme:
-- **Palette**: Obsidian charcoal backgrounds with premium Metallic Gold accents.
-- **Motion**: Fluid viewport entrances and micro-interactions powered by `motion/react`.
-- **Charts**: Responsive, D3-infused SVG renderers for high-density data visualization.
-- **UX**: Duolingo-inspired streaks and NFT-style achievement badges for high engagement.
+### 🎮 5. Gamified Rewards Loop & Achievement Case
+*   **FinIQ Quiz Hub**: Features 15 academic-tier economic levels. Completing quiz sets unlocks a **+50% XP boost** and **+30% Gold Coins multiplier** added to your persistent global profile.
+*   **Consistency Heatmap & Streaks**: Built with interactive activity calendars tracking visits, high scores, and logs over time, driving behavioral consistency.
+*   **Interactive Achievement Badges**: Unlocks beautifully styled, inspectable digital medallions. Hovering over a badge reveals a smooth CSS drawer detailing lock descriptions or unlock dates and timestamps.
 
----
-
-## 🛠️ Technical Specifications
-
-- **Core**: React 19 (Vite) + TypeScript (Strict Mode)
-- **Styling**: Tailwind CSS v4 + Lucide Icons
-- **AI**: Gemini 1.5 Pro / Flash via `@google/genai` SDK
-- **Backend**: Express (Node.js) + MongoDB / Local Persistence Emulator
-- **Persistence**: Hybrid Auth (Google OAuth + Custom Security PINs)
-- **Validation**: Strict Type Safety & Module-level Error Boundaries
-
----
-
-## 🚀 Quick Start for Developers
-
-### Prerequisites
-- Node.js 18+
-- MongoDB (Optional, falls back to local JSON persistence)
-- Gemini API Key
-
-### Installation
-
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/your-repo/wealth-wise-elite.git
-   cd wealth-wise-elite
-   ```
-
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
-
-3. **Configure Environment**
-   Create a `.env` file in the root:
-   ```env
-   GEMINI_API_KEY=your_key_here
-   GOOGLE_CLIENT_ID=your_client_id_here
-   MONGODB_URI=your_mongodb_uri_here
-   ```
-
-4. **Run Development Server**
-   ```bash
-   npm run dev
-   ```
+### 🚨 6. Universal Warning Gate Dialog
+*   **ConfirmationDialog**: Enforces frosted glassmorphism background blurring (`backdrop-blur-md`) and responsive, spring-damped physics animations (`stiffness: 300, damping: 25`) before executing high-impact actions like clearing custom simulation goals or resetting active budget matrices.
 
 ---
 
-## 📂 Project Structure
+## 🛠️ Unified Tech Stack
 
-- `src/components/mastery/`: Core simulation engines (MacroPulse, TrendMarket, etc.)
-- `src/lib/gemini.ts`: Resilient AI initialization and tool configuration.
-- `server.ts`: Express backend with MongoDB MCP bindings and Gemini endpoints.
-- `public/`: Brand assets including SVG and PNG logos.
+*   **Runtime Environment**: React 18, Vite, TypeScript (Strict, compiler-guaranteed type safety)
+*   **Graphics & Shading**: Three.js, `@react-three/fiber`, `@react-three/drei` (WebGL Canvas)
+*   **Transitions & Physics**: `motion/react` (Spring-based damping animations and stagger triggers)
+*   **Data Visualizations**: Recharts, D3-inspired SVG components
+*   **Core AI Integration**: `@google/genai` TypeScript SDK (Server-side Gemini Pro model calls)
+*   **Styling Theme**: Luxe-Modern "Elite Space" Theme (Tailwind CSS, Deep Obsidian Space-Blue `#020408` with sharp Neon Cyan `#0EA5E9` and Teal `#14B8A6` accents)
 
 ---
 
-## 🎀 Contributors
+## 📂 Project Directory Structure
 
-Designed and developed with extreme precision by an incredible team of developers:
+```bash
+src/
+├── components/
+│   ├── mastery/         # Core Simulation Modules (MacroPulse, TrendMarket, LiveOrLease, MockYield, PulseAlert)
+│   ├── ui/              # Global UI Components (Slider, Input, Select, Tabs, Progress)
+│   ├── TaxEstimator.tsx # 📈 Multi-jurisdiction Progressive Tax Slabs & Deductions Gauge
+│   ├── DebtPayoff.tsx   # ⚖️ Avalanche vs. Snowball compounding projection slopes
+│   ├── Simulation3DScene.tsx # 🌐 ThreeJS WebGL Render Engine, Shading, and Reflective Gloss Ground
+│   ├── InvestmentSimulator.tsx # ⚙️ Multi-projection variables control, goal creator & WebGL nodes
+│   ├── ConfirmationDialog.tsx # 🚨 Glassmorphic, spring-damped universal modal gate
+│   ├── FinancialQuiz.tsx # 🎯 15-Level Economic Quiz, Multipliers, XP and Coin dispensers
+│   ├── Dashboard.tsx    # 📊 Unified metrics hub, D3 charts, AI Auditor, and GitOps terminal logs
+│   ├── Badges.tsx       # 🏆 Staggered metallic achievement grid with expansion reveal details
+│   └── CaseStudy.tsx    # 📖 High-level system architecture, metrics analysis, and MCP control panel
+```
 
-* **[Code with Yash](https://github.com/codewithyash28)** — Core Architecture, Multi-Agent AI Loops & Design System
-* **[tamimi36](https://github.com/tamimi36)** — Simulation Engines (MacroPulse & TrendMarket Analytics)
-* **[Kaushal Kalas](https://github.com/kaushalkalas-awesome)** — Frontend Architecture, UI Components & Micro-interactions
-* **[Anand s](https://github.com/sajithanand)** — Full-Stack Integration, Express Backend & MongoDB MCP Bindings
+---
 
-<sub>**Disclaimer:** WealthWise Elite is an interactive educational sandbox. Calculations are pedagogical model exercises and do not constitute actual professional financial advice.</sub>
+## 🗺️ Product Roadmap: The Path to "Infinite/100"
+
+To maintain absolute startup-quality excellence and prepare for a seamless 90-day product review window, the platform follows this structural roadmap:
+
+### 🎨 Phase 1: Visual Hierarchy & Design Precision
+*   [x] **Geometric Sans-Serif Typography**: Replaced traditional serif lettering in hero titles with geometric, high-impact sans-serif pairings to project a futuristic AI tech feel.
+*   [x] **Sleek Viewport Whitespace**: Scaled down main banner graphics and hero texts, introducing wider negative margins to draw focusing attention immediately to the interactive 3D WebGL modules.
+*   [x] **Conserved Accent Contrast**: Shifted secondary highlights, lines, and borders to sharp Neon Cyan and Deep Teal accents, restricting metallic gold solely for high-status rewards, unlocked badges, and active notifications.
+*   [x] **Radial Background Deepening**: Layered a faint, deep radial gradient mixing space-black with dark midnight-blue behind the viewport canvas to eliminate flat backdrops.
+
+### ⚡ Phase 2: Asynchronous & Kinetic Performance
+*   [x] **Preempt Double-Renders**: Resolved overlapping alert/toast glitches in the background tick interval by introducing rigorous title-hash checking before pushing news items.
+*   [x] **Fixed Toast Stacking bounds**: Replaced expansive toast-width margins with explicit, viewport-relative bounds (`w-[calc(100vw-3rem)] max-w-[380px]`) to anchor the alerts safely in the bottom-right corner without blocking central hero features.
+*   [ ] **Lazy Loading `<Canvas>`**: Implement lazy-loaded code splits for the Three.js viewport so the initial bundle size stays lightweight and loads in under 1 second.
+*   [ ] **Baked Lighting Maps**: Replace real-time shadow computation loops with baked light maps to support 60 FPS performance on lower-tier mobile GPU hardware.
+
+### 🚀 Phase 3: Operational AI-Native Features & Monetization
+*   [ ] **Dynamic WebGL Node Instantiation**: Give Gemini the agency to programmatically inject physical meshes, custom coordinates, and material properties into the 3D viewport on-the-fly based on direct user input.
+*   [ ] **B2C Premium Tier Gates**: Establish a high-tier checkout modal locking advanced 30-year macroeconomic simulations and real-time API integrations under a $5/month "Elite Plus" subscription.
+*   [ ] **B2B Affiliate Integrations**: Connect simulated results inside the `LiveOrLease` property analyzer directly with live, geographic high-yield savings products or competitive mortgage providers.
+
+---
+
+## 🎀 Credits
+
+Designed, engineered, and fine-tuned with extreme pride and structural precision by **[Code with Yash](https://yash-choubey-student-developer-port.vercel.app/)** inside the Google AI Studio sandbox environment.
+
+---
+<sub>**Compliance Disclaimer:** WealthWise Elite is an interactive educational sandbox and modeling playground. Calculations, estimations, and projections calculated here are intended for financial literacy purposes and do not represent formal tax, investment, or personal legal advice.</sub>

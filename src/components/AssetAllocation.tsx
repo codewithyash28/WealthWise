@@ -18,24 +18,24 @@ interface Allocation {
 
 const ALLOCATIONS: Record<RiskLevel, Allocation[]> = {
   CONSERVATIVE: [
-    { label: "Bonds", value: 60, color: "#4A89FF", desc: "Stable income, low risk" },
-    { label: "Cash/FD", value: 20, color: "#8E919A", desc: "Maximum liquidity" },
-    { label: "Stocks", value: 20, color: "#C5A880", desc: "Modest growth potential" },
+    { label: "Bonds", value: 60, color: "#3B82F6", desc: "Stable income, low risk" },
+    { label: "Cash/FD", value: 20, color: "#94A3B8", desc: "Maximum liquidity" },
+    { label: "Stocks", value: 20, color: "#F0B429", desc: "Modest growth potential" },
   ],
   MODERATE: [
-    { label: "Stocks", value: 50, color: "#C5A880", desc: "Balanced growth" },
-    { label: "Bonds", value: 40, color: "#4A89FF", desc: "Risk mitigation" },
+    { label: "Stocks", value: 50, color: "#F0B429", desc: "Balanced growth" },
+    { label: "Bonds", value: 40, color: "#3B82F6", desc: "Risk mitigation" },
     { label: "Gold/Other", value: 10, color: "#10D9A0", desc: "Diversification" },
   ],
   AGGRESSIVE: [
-    { label: "Stocks", value: 80, color: "#C5A880", desc: "High growth focus" },
-    { label: "Bonds", value: 15, color: "#4A89FF", desc: "Small safety net" },
-    { label: "Crypto/Speculative", value: 5, color: "#8B7BBF", desc: "High risk, high reward" },
+    { label: "Stocks", value: 80, color: "#F0B429", desc: "High growth focus" },
+    { label: "Bonds", value: 15, color: "#3B82F6", desc: "Small safety net" },
+    { label: "Crypto/Speculative", value: 5, color: "#7C3AED", desc: "High risk, high reward" },
   ],
   VERY_AGGRESSIVE: [
-    { label: "Stocks (Large Cap)", value: 50, color: "#C5A880", desc: "Core growth" },
-    { label: "Stocks (Mid/Small)", value: 40, color: "#D4A050", desc: "Aggressive growth" },
-    { label: "Crypto/Speculative", value: 10, color: "#8B7BBF", desc: "Maximum risk" },
+    { label: "Stocks (Large Cap)", value: 50, color: "#F0B429", desc: "Core growth" },
+    { label: "Stocks (Mid/Small)", value: 40, color: "#F97316", desc: "Aggressive growth" },
+    { label: "Crypto/Speculative", value: 10, color: "#7C3AED", desc: "Maximum risk" },
   ],
 };
 
@@ -60,10 +60,10 @@ export function AssetAllocation() {
     plugins: {
       legend: { display: false },
       tooltip: {
-        backgroundColor: '#1a1a1e',
-        titleFont: { family: 'Outfit', size: 14 },
+        backgroundColor: '#111827',
+        titleFont: { family: 'Syne', size: 14 },
         bodyFont: { family: 'Outfit', size: 12 },
-        borderColor: 'rgba(197,168,128,0.2)',
+        borderColor: 'rgba(240,180,41,0.2)',
         borderWidth: 1,
         padding: 12,
         callbacks: {

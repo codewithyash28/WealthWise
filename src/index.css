@@ -1,62 +1,58 @@
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Syne:wght@600;700;800&family=Outfit:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap');
 @import "tailwindcss";
 
 :root {
   --font-sans: "Outfit", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Cormorant Garamond", serif;
+  --font-display: "Syne", sans-serif;
+  --font-serif: "Cormorant Garamond", serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
 
-  /* Dark Theme (Default) - Refined for Luxury Fintech */
-  --bg-void: #060608;
-  --bg-primary: #0A0A0C;
-  --bg-secondary: #111115;
-  --bg-card: rgba(18, 18, 22, 0.55);
-  --bg-card-hover: rgba(24, 24, 30, 0.7);
-  --accent-gold: #C5A880; /* Elegant champagne gold */
-  --accent-gold-bright: #E2C9A1;
-  --accent-gold-dark: #9F8259;
+  /* Dark Theme (Default) - Refined for Luxury */
+  --bg-void: #020408;
+  --bg-primary: #050812;
+  --bg-secondary: #0A0F1E;
+  --bg-card: rgba(13, 18, 34, 0.7);
+  --bg-card-hover: rgba(18, 25, 48, 0.8);
+  --accent-gold: #D4AF37; /* More metallic gold */
+  --accent-gold-bright: #F0B429;
   --accent-emerald: #10D9A0;
-  --accent-blue: #4A89FF;
-  --accent-red: #E85D5D;
-  --accent-orange: #D4A050;
-  --accent-purple: #8B7BBF;
-  --accent-rose: #E85D7A;
-  --text-primary: #F3F3F5;
-  --text-secondary: #8E919A;
-  --text-muted: #51545E;
-  --border: rgba(255, 255, 255, 0.04);
-  --border-active: rgba(197, 168, 128, 0.25);
-  --aurora-opacity: 0.03;
-  --grid-opacity: 0.12;
+  --accent-blue: #3B82F6;
+  --accent-cyan: #0EA5E9;
+  --accent-teal: #14B8A6;
+  --text-primary: #F8FAFC;
+  --text-secondary: #94A3B8;
+  --text-muted: #475569;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-active: rgba(14, 165, 233, 0.4);
+  --aurora-opacity: 0.08;
+  --grid-opacity: 0.03;
 }
 
 :root.light {
-  --bg-void: #F6F6F9;
-  --bg-primary: #FCFCFD;
-  --bg-secondary: #F0F0F3;
-  --bg-card: rgba(255, 255, 255, 0.75);
-  --bg-card-hover: rgba(255, 255, 255, 0.95);
-  --accent-gold: #9E8259;
-  --accent-gold-bright: #B59A72;
-  --accent-gold-dark: #7A5F3A;
-  --accent-emerald: #0D9488;
+  --bg-void: #F8FAFC;
+  --bg-primary: #F1F5F9;
+  --bg-secondary: #E2E8F0;
+  --bg-card: rgba(255, 255, 255, 0.8);
+  --bg-card-hover: rgba(248, 250, 252, 0.9);
+  --accent-gold: #B48A04;
+  --accent-gold-bright: #D97706;
+  --accent-emerald: #059669;
   --accent-blue: #2563EB;
-  --accent-red: #DC2626;
-  --accent-orange: #D97706;
-  --accent-purple: #7C3AED;
-  --accent-rose: #E11D48;
-  --text-primary: #1C1C1E;
-  --text-secondary: #6B7280;
-  --text-muted: #9CA3AF;
-  --border: rgba(0, 0, 0, 0.05);
-  --border-active: rgba(158, 130, 89, 0.3);
-  --aurora-opacity: 0.02;
+  --accent-cyan: #0284C7;
+  --accent-teal: #0D9488;
+  --text-primary: #0F172A;
+  --text-secondary: #475569;
+  --text-muted: #94A3B8;
+  --border: rgba(0, 0, 0, 0.08);
+  --border-active: rgba(2, 132, 199, 0.4);
+  --aurora-opacity: 0.03;
   --grid-opacity: 0.06;
 }
 
 @theme {
   --font-sans: var(--font-sans);
   --font-display: var(--font-display);
+  --font-serif: var(--font-serif);
   --font-mono: var(--font-mono);
 
   --color-bg-void: var(--bg-void);
@@ -67,10 +63,8 @@
   --color-accent-gold: var(--accent-gold);
   --color-accent-emerald: var(--accent-emerald);
   --color-accent-blue: var(--accent-blue);
-  --color-accent-red: var(--accent-red);
-  --color-accent-orange: var(--accent-orange);
-  --color-accent-purple: var(--accent-purple);
-  --color-accent-rose: var(--accent-rose);
+  --color-accent-cyan: var(--accent-cyan);
+  --color-accent-teal: var(--accent-teal);
   --color-text-primary: var(--text-primary);
   --color-text-secondary: var(--text-secondary);
   --color-text-muted: var(--text-muted);
@@ -84,11 +78,15 @@
 @layer base {
   body {
     @apply bg-bg-void text-text-primary font-sans antialiased overflow-x-hidden;
-    background: radial-gradient(circle at 50% 0%, var(--bg-primary) 0%, var(--bg-void) 100%);
+    background: radial-gradient(circle at 50% 20%, #030a16 0%, #020408 100%);
   }
 
   h1, h2, h3, h4, h5, h6 {
-    @apply font-display tracking-tight font-medium;
+    @apply font-display;
+  }
+
+  .font-serif {
+    @apply font-serif;
   }
 
   .font-mono {
@@ -98,62 +96,59 @@
 
 @layer components {
   .glass {
-    @apply bg-bg-secondary/70 backdrop-blur-xl border border-white/[0.03];
+    @apply bg-bg-secondary/80 backdrop-blur-xl border border-border;
   }
 
   .card {
-    @apply bg-bg-card border border-white/[0.04] rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.5)] transition-all duration-300 backdrop-blur-md;
+    @apply bg-bg-card border border-border rounded-[20px] shadow-2xl transition-all duration-300;
   }
 
   .card-hover {
-    @apply hover:bg-bg-card-hover hover:border-border-active hover:-translate-y-1 hover:shadow-[0_20px_50px_rgba(197,168,128,0.04)];
+    @apply hover:bg-bg-card-hover hover:border-border-active hover:-translate-y-1 hover:shadow-[0_0_30px_rgba(240,180,41,0.2)];
   }
 
   .btn-primary {
-    @apply bg-gradient-to-br from-[#E2C9A1] via-[#C5A880] to-[#9F8259] text-bg-void font-semibold tracking-wide px-6 py-3 rounded-xl transition-all duration-300 hover:brightness-110 hover:-translate-y-0.5 hover:shadow-[0_4px_24px_rgba(197,168,128,0.25)] active:scale-98 cursor-pointer select-none;
+    @apply bg-linear-to-br from-[#0EA5E9] to-[#2563EB] text-white font-semibold px-6 py-3 rounded-[10px] transition-all duration-200 hover:brightness-110 hover:-translate-y-0.5 hover:shadow-[0_0_20px_rgba(14,165,233,0.4)] active:scale-95;
   }
 
   .btn-secondary {
-    @apply bg-white/[0.02] border border-white/[0.08] text-text-primary font-semibold px-6 py-3 rounded-xl transition-all duration-300 hover:bg-white/[0.06] hover:border-accent-gold/40 hover:-translate-y-0.5 active:scale-98 cursor-pointer select-none;
+    @apply border border-accent-gold/40 text-accent-gold font-semibold px-6 py-3 rounded-[10px] transition-all duration-200 hover:bg-accent-gold/10 active:scale-95;
   }
 
   .input-field {
-    @apply bg-bg-secondary/80 border border-white/[0.06] rounded-xl px-4 py-3 text-text-primary placeholder:text-text-muted focus:border-accent-gold/40 focus:ring-1 focus:ring-accent-gold/20 outline-none transition-all duration-300;
+    @apply bg-bg-secondary border border-border rounded-[12px] px-4 py-3 text-text-primary placeholder:text-text-muted focus:border-border-active focus:ring-1 focus:ring-accent-gold/40 outline-none transition-all duration-200;
   }
 }
 
 @keyframes float1 {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  33% { transform: translate(40px, -60px) scale(1.05); }
-  66% { transform: translate(-30px, 40px) scale(0.95); }
+  0%, 100% { transform: translate(0, 0); }
+  33% { transform: translate(60px, -80px); }
+  66% { transform: translate(-40px, 60px); }
 }
 
 @keyframes float2 {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  33% { transform: translate(-40px, 60px) scale(0.95); }
-  66% { transform: translate(30px, -40px) scale(1.05); }
+  0%, 100% { transform: translate(0, 0); }
+  33% { transform: translate(-60px, 80px); }
+  66% { transform: translate(40px, -60px); }
 }
 
 .aurora-1 {
-  @apply fixed w-[500px] h-[500px] blur-[150px] rounded-full pointer-events-none;
+  @apply fixed w-[600px] h-[600px] blur-[120px] rounded-full pointer-events-none;
   background-color: var(--accent-gold);
   opacity: var(--aurora-opacity);
-  animation: float1 25s infinite ease-in-out;
+  animation: float1 20s infinite;
 }
 
 .aurora-2 {
-  @apply fixed w-[400px] h-[400px] blur-[130px] rounded-full pointer-events-none;
-  background-color: var(--accent-blue);
+  @apply fixed w-[500px] h-[500px] blur-[100px] rounded-full pointer-events-none;
+  background-color: var(--accent-emerald);
   opacity: var(--aurora-opacity);
-  animation: float2 30s infinite ease-in-out;
+  animation: float2 25s infinite;
 }
 
 .grid-overlay {
   @apply fixed inset-0 pointer-events-none;
   opacity: var(--grid-opacity);
-  background-image: radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.08) 1.5px, transparent 0);
-  background-size: 40px 40px;
-  mask-image: radial-gradient(circle at 50% 30%, black, transparent 80%);
-  -webkit-mask-image: radial-gradient(circle at 50% 30%, black, transparent 80%);
+  background-image: repeating-linear-gradient(0deg, transparent, transparent 49px, var(--text-primary) 50px),
+                    repeating-linear-gradient(90deg, transparent, transparent 49px, var(--text-primary) 50px);
 }
-

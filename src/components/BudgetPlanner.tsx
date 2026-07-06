@@ -6,6 +6,7 @@ import { Doughnut, Bar, Line } from 'react-chartjs-2';
 import { formatCurrency, cn } from "../lib/utils";
 import { CURRENCIES } from "../constants";
 import { UserProfile, BudgetPlan } from "../types";
+import { ConfirmationDialog } from "./ConfirmationDialog";
 
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title);
 
@@ -18,6 +19,7 @@ interface BudgetPlannerProps {
 }
 
 export function BudgetPlanner({ user, onSave, initialPlan, gitProvider = "gitlab", onUnlockAchievement }: BudgetPlannerProps) {
+  const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false);
   // Support state for backing up original un-crunch planning configuration
   const [originalIncome, setOriginalIncome] = useState(initialPlan?.income || 6500);
   const [originalExpenses, setOriginalExpenses] = useState(initialPlan?.expenses || {
@@ -89,7 +91,7 @@ export function BudgetPlanner({ user, onSave, initialPlan, gitProvider = "gitlab
     datasets: [{
       data: Object.values(expenses),
       backgroundColor: [
-        '#C5A880', '#10D9A0', '#4A89FF', '#E85D5D', '#8B7BBF', '#D4A050', '#51545E', '#8E919A'
+        '#F0B429', '#10D9A0', '#3B82F6', '#EF4444', '#7C3AED', '#F97316', '#475569', '#94A3B8'
       ],
       borderWidth: 0,
       hoverOffset: 10,
@@ -102,10 +104,10 @@ export function BudgetPlanner({ user, onSave, initialPlan, gitProvider = "gitlab
     plugins: {
       legend: { display: false },
       tooltip: {
-        backgroundColor: '#1a1a1e',
-        titleFont: { family: 'Outfit', size: 14 },
+        backgroundColor: '#111827',
+        titleFont: { family: 'Syne', size: 14 },
         bodyFont: { family: 'Outfit', size: 12 },
-        borderColor: 'rgba(197,168,128,0.2)',
+        borderColor: 'rgba(240,180,41,0.2)',
         borderWidth: 1,
         padding: 12,
         callbacks: {
@@ -818,7 +820,7 @@ export function BudgetPlanner({ user, onSave, initialPlan, gitProvider = "gitlab
               <button onClick={exportToCSV} className="btn-secondary flex-1 flex items-center justify-center gap-2">
                 <Download className="w-4 h-4" /> Export CSV
               </button>
-              <button onClick={() => { setIncome(0); setExpenses({ housing: 0, food: 0, transport: 0, health: 0, entertainment: 0, education: 0, loans: 0, other: 0 }); setGoals({ housing: 0, food: 0, transport: 0, health: 0, entertainment: 0, education: 0, loans: 0, other: 0 }); }} className="btn-secondary px-4">
+              <button onClick={() => setIsResetConfirmOpen(true)} className="btn-secondary px-4" title="Reset Budget">
                 <RotateCcw className="w-4 h-4" />
               </button>
             </div>
@@ -1006,16 +1008,16 @@ export function BudgetPlanner({ user, onSave, initialPlan, gitProvider = "gitlab
                     {
                       label: 'Your Spending',
                       data: Object.values(expenses),
-                      backgroundColor: '#C5A880',
+                      backgroundColor: '#F0B429',
                     },
                     {
                       label: 'Local Average',
                       data: Object.keys(expenses).map(k => {
                         if (k === 'housing') return currency.avgRent;
                         if (k === 'food') return currency.avgFood;
-                        return currency.avgSalary * 0.05;
+                        return currency.avgSalary * 0.05; // Dummy average for others
                       }),
-                      backgroundColor: '#51545E',
+                      backgroundColor: '#94A3B8',
                     }
                   ]
                 }}
@@ -1047,11 +1049,10 @@ export function BudgetPlanner({ user, onSave, initialPlan, gitProvider = "gitlab
                     label: 'Monthly Expenses',
                     data: history.map(h => h.total),
                     borderColor: '#10D9A0',
-                    backgroundColor: 'rgba(16, 217, 160, 0.08)',
+                    backgroundColor: 'rgba(16, 217, 160, 0.1)',
                     fill: true,
                     tension: 0.4,
                     pointBackgroundColor: '#10D9A0',
-                    pointBorderColor: '#10D9A0',
                   }]
                 }}
                 options={{
@@ -1070,6 +1071,20 @@ export function BudgetPlanner({ user, onSave, initialPlan, gitProvider = "gitlab
           </div>
         </div>
       </div>
+
+      <ConfirmationDialog
+        isOpen={isResetConfirmOpen}
+        onClose={() => setIsResetConfirmOpen(false)}
+        onConfirm={() => {
+          setIncome(0);
+          setExpenses({ housing: 0, food: 0, transport: 0, health: 0, entertainment: 0, education: 0, loans: 0, other: 0 });
+          setGoals({ housing: 0, food: 0, transport: 0, health: 0, entertainment: 0, education: 0, loans: 0, other: 0 });
+        }}
+        title="Confirm Budget Reset"
+        message="Are you sure you want to completely reset your budget? This will zero out your income, monthly expenses, and financial goals targets in your current planner session."
+        confirmText="Reset Budget"
+        type="danger"
+      />
     </div>
   );
 }

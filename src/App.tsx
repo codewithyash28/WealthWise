@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef, Component, ErrorInfo, ReactNode, lazy, Suspense } from "react";
+import { useState, useEffect, useCallback, Component, ErrorInfo, ReactNode, lazy, Suspense } from "react";
 
 class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean, error: Error | null }> {
   constructor(props: { children: ReactNode }) {
@@ -110,6 +110,7 @@ const AssetAllocation = lazy(() => import("./components/AssetAllocation").then(m
 const AssetRebalancer = lazy(() => import("./components/AssetRebalancer").then(m => ({ default: m.AssetRebalancer })));
 const Badges = lazy(() => import("./components/Badges").then(m => ({ default: m.Badges })));
 const CaseStudy = lazy(() => import("./components/CaseStudy").then(m => ({ default: m.CaseStudy })));
+const QuestsHub = lazy(() => import("./components/QuestsHub").then(m => ({ default: m.QuestsHub })));
 const MacroPulse = lazy(() => import("./components/mastery/MacroPulse").then(m => ({ default: m.MacroPulse })));
 const TrendMarket = lazy(() => import("./components/mastery/TrendMarket").then(m => ({ default: m.TrendMarket })));
 const LiveOrLease = lazy(() => import("./components/mastery/LiveOrLease").then(m => ({ default: m.LiveOrLease })));
@@ -163,13 +164,21 @@ function AppContent() {
   const [isLoading, setIsLoading] = useState(false);
   const [unlockedAchievement, setUnlockedAchievement] = useState<Achievement | null>(null);
   const [gitProvider, setGitProvider] = useState<"gitlab" | "github" | "bitbucket">("github");
-  const googleInitializedRef = useRef(false);
-  const googleButtonRenderedRef = useRef(false);
   const [alerts, setAlerts] = useState<any[]>([
     { id: 'welcome', type: 'market', title: 'WealthWise Mastery Active', message: 'Inflation trends are shifting. Check the MacroPulse engine.', timestamp: 'Just now' }
   ]);
 
   useEffect(() => {
+    // Fetch real-time, search-grounded global news alerts on mount
+    fetch("/api/gemini/autonomous-alerts")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && data.alerts && data.alerts.length > 0) {
+          setAlerts(data.alerts);
+        }
+      })
+      .catch((err) => console.error("Error loading live economic grounding:", err));
+
     const nudges = [
       { type: 'info', title: 'Macro Tip', message: 'Did you know? High inflation erodes purchasing power. Use the MacroPulse to see how.' },
       { type: 'achievement', title: 'Step Closer', message: 'You are on your way to Diamond Tier! Complete more modules to rise.' },
@@ -179,10 +188,14 @@ function AppContent() {
 
     const interval = setInterval(() => {
       const nudge = nudges[Math.floor(Math.random() * nudges.length)];
-      setAlerts(prev => [
-        { id: Math.random().toString(), ...nudge, timestamp: 'Now' },
-        ...prev.slice(0, 2)
-      ]);
+      setAlerts(prev => {
+        const exists = prev.some(a => a.title === nudge.title);
+        if (exists) return prev;
+        return [
+          { id: Math.random().toString(), ...nudge, timestamp: 'Now' },
+          ...prev.slice(0, 2)
+        ];
+      });
     }, 45000); // Every 45 seconds a new nudge
 
     return () => clearInterval(interval);
@@ -349,112 +362,36 @@ function AppContent() {
     setShowNameInput(true);
   };
 
-  const handleGoogleCredentialResponse = async (response: any) => {
-    setAuthError(null);
-    setIsLoading(true);
-    try {
-      const res = await fetch("/api/auth/google", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ credential: response.credential }),
-      });
-      
-      const data = await res.json();
-      if (data.success) {
-        setUser(data.user);
-        setProfile(data.profile);
-        setBudget(data.budget);
-        if (data.profile?.gitProvider) {
-          setGitProvider(data.profile.gitProvider);
-        }
-        
-        localStorage.setItem("ww_user", JSON.stringify(data.user));
-        localStorage.setItem("ww_profile", JSON.stringify(data.profile));
-        localStorage.setItem("ww_uid", data.user.uid);
-        localStorage.setItem("ww_sync_enabled", "true");
-        if (data.budget) {
-          localStorage.setItem("ww_budget", JSON.stringify(data.budget));
-        } else {
-          localStorage.removeItem("ww_budget");
-        }
-        
-        if (data.isNewUser || !data.profile.learningGoal) {
-          setShowExpertOnboarding(true);
-        } else {
-          window.location.hash = "#dashboard";
-        }
-      } else {
-        setAuthError(data.error || "Google sign-in verification failed.");
-      }
-    } catch (err) {
-      console.error("Failed to sign in with Google:", err);
-      setAuthError("Google sign-in could not complete. Check the OAuth client ID and server connection.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (typeof window !== "undefined" && !user) {
-      const initGoogle = () => {
-        const google = (window as any).google;
-        if (google && google.accounts && google.accounts.id) {
-          if (!googleInitializedRef.current) {
-            google.accounts.id.initialize({
-              client_id: (process.env as any).GOOGLE_CLIENT_ID || "1047114487770-testclientid.apps.googleusercontent.com",
-              callback: handleGoogleCredentialResponse,
-            });
-            googleInitializedRef.current = true;
-          }
-          
-          const btn = document.getElementById("google-signin-btn");
-          if (btn && !googleButtonRenderedRef.current) {
-            google.accounts.id.renderButton(btn, {
-              theme: "filled_blue",
-              size: "large",
-              shape: "pill",
-            });
-            googleButtonRenderedRef.current = true;
-          }
-        } else {
-          setTimeout(initGoogle, 500);
-        }
-      };
-      initGoogle();
-    }
-  }, [user]);
-
   const handleOnboardingComplete = (name: string, age: string, learningGoal: string, onboardingGitProvider: "gitlab" | "github" | "bitbucket" = "github") => {
-    const activeUid = user?.uid || Math.random().toString(36).substring(2, 15);
-    const updatedUser: LocalUser = {
-      uid: activeUid,
-      displayName: name || user?.displayName || "Wealth Architect",
+    const uid = user?.uid || Math.random().toString(36).substring(2, 15);
+    const newUser: LocalUser = {
+      uid,
+      displayName: name,
       email: user?.email || null,
-      photoURL: user?.photoURL || null
+      photoURL: null
     };
-    
-    const updatedProfile: UserProfile = {
-      uid: activeUid,
-      name: name || user?.displayName || "Wealth Architect",
+
+    const newProfile: UserProfile = {
+      uid,
+      name,
       age,
       learningGoal,
-      currency: tempCurrency || profile?.currency || "USD",
-      joinDate: profile?.joinDate || new Date().toISOString(),
+      currency: tempCurrency || "USD",
+      joinDate: new Date().toISOString(),
       lastVisit: new Date().toISOString(),
-      visitDates: profile?.visitDates ? [...profile.visitDates, new Date().toISOString().split('T')[0]] : [new Date().toISOString().split('T')[0]],
+      visitDates: [new Date().toISOString().split('T')[0]],
       highScore: profile?.highScore || 0,
-      netWorth: profile?.netWorth || { assets: user?.email ? 0 : 125000, liabilities: user?.email ? 0 : 45000 },
+      netWorth: profile?.netWorth || { assets: 125000, liabilities: 45000 },
       gitProvider: onboardingGitProvider,
       achievements: profile?.achievements || [],
       goals: profile?.goals || []
     };
 
-    setUser(updatedUser);
-    setProfile(updatedProfile);
+    setUser(newUser);
+    setProfile(newProfile);
     setGitProvider(onboardingGitProvider);
-    localStorage.setItem("ww_user", JSON.stringify(updatedUser));
-    localStorage.setItem("ww_profile", JSON.stringify(updatedProfile));
-    localStorage.setItem("ww_uid", activeUid);
+    localStorage.setItem("ww_user", JSON.stringify(newUser));
+    localStorage.setItem("ww_profile", JSON.stringify(newProfile));
     
     setShowNameInput(false);
     setShowTutorial(true);
@@ -470,7 +407,7 @@ function AppContent() {
     }
   };
 
-  const unlockAchievement = useCallback(async (id: string) => {
+  const unlockAchievement = useCallback((id: string) => {
     if (!profile) return;
     const existingAchievements = profile.achievements || [];
     if (existingAchievements.find(a => a.id === id)) return;
@@ -492,40 +429,17 @@ function AppContent() {
     localStorage.setItem("ww_profile", JSON.stringify(updatedProfile));
     setUnlockedAchievement(newAchievement);
     
+    // Auto-hide achievement notification
     setTimeout(() => setUnlockedAchievement(null), 5000);
+  }, [profile]);
 
-    if (user?.uid) {
-      try {
-        await fetch(`/api/profile/${user.uid}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ achievements: [...existingAchievements, newAchievement] })
-        });
-      } catch (err) {
-        console.error("Failed to sync achievement to server:", err);
-      }
-    }
-  }, [profile, user]);
-
-  const handleSaveBudget = async (plan: BudgetPlan) => {
+  const handleSaveBudget = (plan: BudgetPlan) => {
     setBudget(plan);
     localStorage.setItem("ww_budget", JSON.stringify(plan));
     unlockAchievement('first_budget');
-
-    if (user?.uid) {
-      try {
-        await fetch(`/api/budget/${user.uid}`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(plan)
-        });
-      } catch (err) {
-        console.error("Failed to sync budget to server:", err);
-      }
-    }
   };
 
-  const handleUpdateNetWorth = async (assets: number, liabilities: number) => {
+  const handleUpdateNetWorth = (assets: number, liabilities: number) => {
     if (!profile) return;
     const updatedProfile = {
       ...profile,
@@ -534,18 +448,6 @@ function AppContent() {
     setProfile(updatedProfile);
     localStorage.setItem("ww_profile", JSON.stringify(updatedProfile));
     if (assets > liabilities) unlockAchievement('networth_positive');
-
-    if (user?.uid) {
-      try {
-        await fetch(`/api/profile/${user.uid}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ netWorth: { assets, liabilities } })
-        });
-      } catch (err) {
-        console.error("Failed to sync net worth to server:", err);
-      }
-    }
   };
 
   const handleUpdatePortfolio = (portfolio: Portfolio) => {
@@ -558,28 +460,19 @@ function AppContent() {
     localStorage.setItem("ww_profile", JSON.stringify(updatedProfile));
   };
 
-  const handleQuizComplete = async (score: number) => {
+  const handleQuizComplete = (score: number) => {
     if (!profile) return;
-    let newHighScore = profile.highScore;
-    if (score > profile.highScore) {
-      newHighScore = score;
-      const updatedProfile = { ...profile, highScore: score };
-      setProfile(updatedProfile);
-      localStorage.setItem("ww_profile", JSON.stringify(updatedProfile));
-    }
+    const earnedXp = Math.floor(score * 0.5);
+    const earnedCoins = Math.floor(score * 0.3);
+    const updatedProfile = {
+      ...profile,
+      highScore: Math.max(profile.highScore || 0, score),
+      xp: (profile.xp || 0) + earnedXp,
+      coins: (profile.coins || 0) + earnedCoins,
+    };
+    setProfile(updatedProfile);
+    localStorage.setItem("ww_profile", JSON.stringify(updatedProfile));
     if (score > 100) unlockAchievement('quiz_master');
-
-    if (user?.uid) {
-      try {
-        await fetch(`/api/profile/${user.uid}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ highScore: newHighScore })
-        });
-      } catch (err) {
-        console.error("Failed to sync quiz score to server:", err);
-      }
-    }
   };
 
   const handleSignIn = () => {
@@ -589,6 +482,7 @@ function AppContent() {
   const handleStartFullOnboarding = (targetHash: string) => {
     setShowExpertOnboarding(false);
     setShowCurrencySelector(true);
+    // After currency and name input, it will auto-route to the dashboard or target
   };
 
   const handleSignOut = () => {
@@ -598,30 +492,16 @@ function AppContent() {
     localStorage.removeItem("ww_user");
     localStorage.removeItem("ww_profile");
     localStorage.removeItem("ww_budget");
-    localStorage.removeItem("ww_uid");
     localStorage.removeItem("ww_sync_enabled");
-    googleButtonRenderedRef.current = false;
     window.location.hash = "#home";
   };
 
-  const handleUpdateGoals = async (goals: FinancialGoal[]) => {
+  const handleUpdateGoals = (goals: FinancialGoal[]) => {
     if (!profile) return;
     const updatedProfile = { ...profile, goals };
     setProfile(updatedProfile);
     localStorage.setItem("ww_profile", JSON.stringify(updatedProfile));
     if (goals.length > 0) unlockAchievement('goal_setter');
-
-    if (user?.uid) {
-      try {
-        await fetch(`/api/profile/${user.uid}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ goals })
-        });
-      } catch (err) {
-        console.error("Failed to sync goals to server:", err);
-      }
-    }
   };
 
   const getWelcomeMessage = () => {
@@ -734,15 +614,6 @@ function AppContent() {
                   >
                     Offline Guest
                   </button>
-                </div>
-
-                <div className="space-y-3">
-                  <div id="google-signin-btn" className="min-h-[44px] flex items-center justify-center"></div>
-                  <div className="flex items-center gap-3">
-                    <div className="h-px flex-1 bg-border/60" />
-                    <span className="text-[9px] text-text-muted uppercase tracking-widest font-bold">or use email backup</span>
-                    <div className="h-px flex-1 bg-border/60" />
-                  </div>
                 </div>
 
                 {authError && (
@@ -1014,7 +885,17 @@ function AppContent() {
             case "#dashboard": 
               return (
                 <ModuleErrorBoundary moduleName="Control Dashboard">
-                  <WealthDashboard user={profile} budget={budget} onUnlockAchievement={unlockAchievement} onUpdateGitProvider={handleUpdateGitProvider} gitProvider={gitProvider} />
+                  <WealthDashboard 
+                    user={profile} 
+                    budget={budget} 
+                    onUnlockAchievement={unlockAchievement} 
+                    onUpdateGitProvider={handleUpdateGitProvider} 
+                    gitProvider={gitProvider} 
+                    onUpdateProfile={(updated) => {
+                      setProfile(updated);
+                      localStorage.setItem("ww_profile", JSON.stringify(updated));
+                    }}
+                  />
                 </ModuleErrorBoundary>
               );
             case "#macropulse": 
@@ -1044,7 +925,7 @@ function AppContent() {
             case "#badges": 
               return (
                 <ModuleErrorBoundary moduleName="Achievement Badging Service">
-                  <div className="container mx-auto px-6 py-12"><Badges unlockedAchievements={profile.achievements || []} /></div>
+                  <div className="container mx-auto px-6 py-12"><Badges user={profile} unlockedAchievements={profile.achievements || []} /></div>
                 </ModuleErrorBoundary>
               );
             case "#docs": 
@@ -1081,6 +962,21 @@ function AppContent() {
               return (
                 <ModuleErrorBoundary moduleName="Literacy Command Quiz">
                   <FinancialQuiz onComplete={handleQuizComplete} bestScore={profile.highScore} />
+                </ModuleErrorBoundary>
+              );
+            case "#quests": 
+              return (
+                <ModuleErrorBoundary moduleName="Financial Quests & Shop">
+                  <div className="container mx-auto px-6 py-12">
+                    <QuestsHub 
+                      userProfile={profile} 
+                      onUpdateProfile={(updated) => {
+                        setProfile(updated);
+                        localStorage.setItem("ww_profile", JSON.stringify(updated));
+                      }} 
+                      onUnlockAchievement={unlockAchievement} 
+                    />
+                  </div>
                 </ModuleErrorBoundary>
               );
             case "#scenarios": 
@@ -1185,7 +1081,7 @@ function AppContent() {
             exit={{ opacity: 0, y: 50, x: "-50%" }}
             className="fixed bottom-8 left-1/2 z-[200] max-w-sm w-full"
           >
-            <div className="card p-4 border-accent-gold bg-bg-void/90 backdrop-blur-md shadow-[0_0_30px_rgba(197,168,128,0.15)] flex items-center gap-4">
+            <div className="card p-4 border-accent-gold bg-bg-void/90 backdrop-blur-md shadow-[0_0_30px_rgba(240,180,41,0.3)] flex items-center gap-4">
               <div className="text-3xl">{unlockedAchievement.icon}</div>
               <div>
                 <div className="text-[10px] text-accent-gold font-bold uppercase tracking-widest">Achievement Unlocked!</div>

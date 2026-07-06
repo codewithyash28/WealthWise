@@ -124,8 +124,8 @@ export function ScenarioSimulator({ user, budget, onComplete }: ScenarioSimulato
         {
           label: 'Scenario Projection',
           data: scenario,
-          borderColor: '#C5A880',
-          backgroundColor: 'rgba(197, 168, 128, 0.1)',
+          borderColor: '#D4AF37',
+          backgroundColor: 'rgba(212, 175, 55, 0.1)',
           fill: true,
           tension: 0.4,
         }
@@ -139,10 +139,10 @@ export function ScenarioSimulator({ user, budget, onComplete }: ScenarioSimulato
     plugins: {
       legend: { position: 'top' as const, labels: { color: '#94A3B8', font: { family: 'Outfit' } } },
       tooltip: {
-        backgroundColor: '#0A0A0C',
-        titleFont: { family: 'Outfit', size: 14 },
+        backgroundColor: '#050812',
+        titleFont: { family: 'Syne', size: 14 },
         bodyFont: { family: 'Outfit', size: 12 },
-        borderColor: 'rgba(197, 168, 128, 0.2)',
+        borderColor: 'rgba(212, 175, 55, 0.2)',
         borderWidth: 1,
         padding: 12,
         callbacks: {
@@ -153,8 +153,8 @@ export function ScenarioSimulator({ user, budget, onComplete }: ScenarioSimulato
       }
     },
     scales: {
-      x: { grid: { display: false }, ticks: { color: '#51545E' } },
-      y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#51545E', callback: (value: any) => formatCurrency(value, user.currency, currency.locale).split('.')[0] } }
+      x: { grid: { display: false }, ticks: { color: '#475569' } },
+      y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#475569', callback: (value: any) => formatCurrency(value, user.currency, currency.locale).split('.')[0] } }
     }
   };
 

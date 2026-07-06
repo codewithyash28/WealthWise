@@ -1,10 +1,9 @@
 export async function getAIResponse(prompt: string, history: any = []) {
   try {
-    const uid = localStorage.getItem("ww_uid");
     const res = await fetch("/api/gemini/insight", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt, history, uid })
+      body: JSON.stringify({ prompt, history })
     });
     if (!res.ok) {
       throw new Error(`HTTP error ${res.status}`);
@@ -13,17 +12,16 @@ export async function getAIResponse(prompt: string, history: any = []) {
     return data.text || "";
   } catch (error) {
     console.error("Gemini Insight Proxy Error:", error);
-    return "System under heavy load: Simulating MacroPulse stability locally. I'm currently in high-fidelity sandbox mode while the server-side engine recalibrates. Projections remain 100% functional.";
+    return "I'm sorry, I encountered an error retrieving insights. Standard offline simulations are still fully active.";
   }
 }
 
 export async function generateWealthAudit(user: any, budget: any) {
   try {
-    const uid = localStorage.getItem("ww_uid");
     const res = await fetch("/api/gemini/audit", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ user, budget, uid })
+      body: JSON.stringify({ user, budget })
     });
     if (!res.ok) {
       throw new Error(`HTTP error ${res.status}`);
@@ -32,42 +30,15 @@ export async function generateWealthAudit(user: any, budget: any) {
     return data.text || "Unable to generate audit at this time.";
   } catch (error) {
     console.error("Gemini Audit Proxy Error:", error);
-    return "AI Engine Connection Latency: Generating Local Structural Audit instead. Based on your current obsidian-tier portfolio, you have strong capital velocity but should monitor inflation erosion in the MacroPulse module.";
+    return "The Wealth Architect is currently over capacity. Offline analytical projections remain functional.";
   }
 }
 
+// Retain signatures to ensure absolute type safety & no broken imports
 export async function analyzeFinancialImage(base64Image: string, prompt: string) {
-  try {
-    const res = await fetch("/api/gemini/image-analysis", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ base64Image, prompt })
-    });
-    if (!res.ok) {
-      throw new Error(`HTTP error ${res.status}`);
-    }
-    const data = await res.json();
-    return data.text || "Unable to analyze image at this time.";
-  } catch (error) {
-    console.error("Gemini Image Analysis Proxy Error:", error);
-    return "Visual Processing Engine Offline: Please verify your document structure manually. Standard OCR and analysis services are temporarily transitioning to local backup buffers.";
-  }
+  return "AI Image Analysis is currently disabled on client. Execute through backend server pipeline assets.";
 }
 
 export async function getFastAIResponse(prompt: string) {
-  try {
-    const res = await fetch("/api/gemini/fast", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt })
-    });
-    if (!res.ok) {
-      throw new Error(`HTTP error ${res.status}`);
-    }
-    const data = await res.json();
-    return data.text || "";
-  } catch (error) {
-    console.error("Gemini Fast Proxy Error:", error);
-    return "Fast Logic Core Recalibrating: Defaulting to local structural rules. Macro simulations are unaffected by this service interruption.";
-  }
+  return "AI response services are offline. Check server key registration.";
 }

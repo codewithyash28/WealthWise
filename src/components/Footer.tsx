@@ -2,20 +2,20 @@ import { Logo } from "./Logo";
 
 export function Footer() {
   return (
-    <footer className="bg-bg-primary/40 border-t border-white/[0.04] pt-20 pb-10 text-left">
-      <div className="container mx-auto px-6 max-w-5xl">
+    <footer className="bg-bg-primary border-t border-border pt-20 pb-10">
+      <div className="container mx-auto px-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-16">
           <div className="space-y-6">
             <Logo size="sm" />
-            <p className="text-text-secondary text-xs leading-relaxed max-w-xs font-light">
-              Empowering global financial literacy, one decision at a time. Your journey to structured wealth management begins here.
+            <p className="text-text-secondary leading-relaxed max-width-xs">
+              Empowering global financial literacy, one decision at a time. Your journey to financial freedom starts here.
             </p>
-            <div className="flex">
+            <div className="flex gap-4">
               <a 
                 href="https://yash-choubey-student-developer-port.vercel.app/" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="px-3.5 py-1.5 rounded-full bg-white/[0.02] text-accent-gold text-[9px] font-bold uppercase tracking-widest border border-white/[0.08] hover:border-accent-gold/30 hover:bg-white/[0.04] transition-all duration-300"
+                className="px-3 py-1 rounded-full bg-accent-gold/10 text-accent-gold text-xs font-semibold border border-accent-gold/20 hover:bg-accent-gold/20 transition-all"
               >
                 made by Code with yash 🚀
               </a>
@@ -23,26 +23,26 @@ export function Footer() {
           </div>
 
           <div>
-            <h4 className="font-display font-medium text-sm uppercase tracking-[0.2em] text-text-primary mb-6">Quick Navigation</h4>
-            <ul className="space-y-3.5">
-              <li><a href="#home" className="text-text-secondary hover:text-accent-gold text-[10px] font-bold uppercase tracking-widest transition-colors duration-200">Home</a></li>
-              <li><a href="#dashboard" className="text-text-secondary hover:text-accent-gold text-[10px] font-bold uppercase tracking-widest transition-colors duration-200">Dashboard</a></li>
-              <li><a href="#budget" className="text-text-secondary hover:text-accent-gold text-[10px] font-bold uppercase tracking-widest transition-colors duration-200">Budget Architect</a></li>
-              <li><a href="#simulator" className="text-text-secondary hover:text-accent-gold text-[10px] font-bold uppercase tracking-widest transition-colors duration-200">Investment Simulator</a></li>
-              <li><a href="#quiz" className="text-text-secondary hover:text-accent-gold text-[10px] font-bold uppercase tracking-widest transition-colors duration-200">Wealth Quiz</a></li>
+            <h4 className="font-display font-bold text-lg mb-6">Quick Links</h4>
+            <ul className="space-y-4">
+              <li><a href="#home" className="text-text-secondary hover:text-accent-gold transition-colors">Home</a></li>
+              <li><a href="#dashboard" className="text-text-secondary hover:text-accent-gold transition-colors">Dashboard</a></li>
+              <li><a href="#budget" className="text-text-secondary hover:text-accent-gold transition-colors">Budget Architect</a></li>
+              <li><a href="#simulator" className="text-text-secondary hover:text-accent-gold transition-colors">Investment Simulator</a></li>
+              <li><a href="#quiz" className="text-text-secondary hover:text-accent-gold transition-colors">Wealth Quiz</a></li>
             </ul>
           </div>
 
-          <div className="space-y-6">
-            <h4 className="font-display font-medium text-sm uppercase tracking-[0.2em] text-text-primary">Global Impact</h4>
-            <p className="text-text-secondary text-xs leading-relaxed max-w-xs font-light">
-              Join thousands of learners worldwide mastering personal finance and economic simulation parameters within WealthWise Elite.
+          <div>
+            <h4 className="font-display font-bold text-lg mb-6">Global Impact</h4>
+            <p className="text-text-secondary mb-6">
+              Join learners worldwide mastering their personal finances with WealthWise Elite.
             </p>
-            <div className="flex items-center gap-3 text-text-muted text-[10px] uppercase tracking-wider font-bold">
-              <div className="flex -space-x-1.5">
-                {['W', 'W', 'E', 'L'].map((char, i) => (
-                  <div key={i} className="w-7 h-7 rounded-full border border-bg-primary bg-bg-secondary flex items-center justify-center text-[9px] font-black text-accent-gold shadow-sm">
-                    {char}
+            <div className="flex items-center gap-2 text-text-muted text-sm">
+              <div className="flex -space-x-2">
+                {[1, 2, 3, 4].map(i => (
+                  <div key={i} className="w-8 h-8 rounded-full border-2 border-bg-primary bg-bg-card flex items-center justify-center text-[10px] font-bold">
+                    {String.fromCharCode(64 + i)}
                   </div>
                 ))}
               </div>
@@ -51,20 +51,20 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="pt-10 border-t border-white/[0.04] flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
-          <div className="text-text-muted text-[10px] uppercase tracking-wider font-medium">
-            © WealthWise Elite · Educational simulator only · Device-local workspace
+        <div className="pt-10 border-t border-border flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
+          <div className="text-text-muted text-sm">
+            © WealthWise Elite · Educational content only · Not financial advice
           </div>
-          <div className="flex flex-wrap items-center justify-center gap-4 text-text-muted text-[9px] font-bold uppercase tracking-widest">
+          <div className="flex items-center gap-4 text-text-muted text-xs">
             <span>HTML5</span>
             <span>CSS3</span>
-            <span>TypeScript</span>
+            <span>JavaScript</span>
             <span>Chart.js</span>
             <span>React</span>
           </div>
         </div>
-        <div className="mt-6 text-center text-[8px] text-text-muted uppercase tracking-[0.25em] font-medium leading-relaxed max-w-3xl mx-auto opacity-60">
-          Information is for educational parameters only. Always consult a qualified professional financial advisor prior to making real-world investment decisions.
+        <div className="mt-6 text-center text-[10px] text-text-muted uppercase tracking-widest">
+          Information is for learning purposes. Always consult a qualified financial advisor for personal investment decisions.
         </div>
       </div>
     </footer>

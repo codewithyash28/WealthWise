@@ -2,7 +2,6 @@ node_modules/
 build/
 dist/
 coverage/
-db_simulation.json
 .DS_Store
 *.log
 .env*

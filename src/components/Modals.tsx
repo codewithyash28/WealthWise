@@ -1,6 +1,6 @@
-import { useState } from "react";
-import { motion } from "motion/react";
-import { Check, ChevronRight, User } from "lucide-react";
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "motion/react";
+import { Check, ChevronRight, Globe, User } from "lucide-react";
 import { CURRENCIES } from "../constants";
 import { cn } from "../lib/utils";
 
@@ -16,33 +16,31 @@ export function CurrencySelector({ isOpen, onSelect, currentCurrency }: Currency
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-bg-void/90 backdrop-blur-md">
       <motion.div
-        initial={{ opacity: 0, scale: 0.96, y: 15 }}
+        initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        className="card max-w-lg w-full p-8 space-y-6 text-left"
+        className="card max-w-lg w-full p-8 space-y-8"
       >
         <div className="text-center space-y-2">
-          <h2 className="text-3xl font-display font-medium text-text-primary">
-            Welcome to <span className="text-accent-gold italic font-semibold">WealthWise Elite</span>
-          </h2>
-          <p className="text-text-secondary text-sm font-light">Select your currency to personalize all global simulations.</p>
+          <h2 className="text-3xl font-display font-bold text-accent-gold">🌍 Welcome to WealthWise Elite</h2>
+          <p className="text-text-secondary">Select your currency to personalize all calculations</p>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {Object.entries(CURRENCIES).map(([code, config]) => (
             <button
               key={code}
               onClick={() => onSelect(code)}
               className={cn(
-                "flex flex-col items-center justify-center gap-1.5 p-4 rounded-xl border relative transition-all duration-300",
+                "flex flex-col items-center justify-center gap-2 p-4 rounded-xl border transition-all duration-200",
                 currentCurrency === code 
-                  ? "bg-[#C5A880]/10 border-accent-gold/40 shadow-[0_0_20px_rgba(197,168,128,0.08)]" 
-                  : "bg-white/[0.01] border-white/[0.04] hover:border-accent-gold/25 hover:bg-[#C5A880]/5 text-text-secondary hover:text-text-primary"
+                  ? "bg-accent-gold/10 border-accent-gold shadow-[0_0_15px_rgba(240,180,41,0.2)]" 
+                  : "bg-bg-secondary border-border hover:border-border-active"
               )}
             >
-              <span className="text-xl">{code === 'USD' ? '🇺🇸' : code === 'GBP' ? '🇬🇧' : code === 'EUR' ? '🇪🇺' : code === 'CAD' ? '🇨🇦' : code === 'AUD' ? '🇦🇺' : code === 'JPY' ? '🇯🇵' : code === 'SGD' ? '🇸🇬' : code === 'INR' ? '🇮🇳' : code === 'BRL' ? '🇧🇷' : code === 'ZAR' ? '🇿🇦' : code === 'AED' ? '🇦🇪' : '🇲🇽'}</span>
+              <span className="text-2xl">{code === 'USD' ? '🇺🇸' : code === 'GBP' ? '🇬🇧' : code === 'EUR' ? '🇪🇺' : code === 'CAD' ? '🇨🇦' : code === 'AUD' ? '🇦🇺' : code === 'JPY' ? '🇯🇵' : code === 'SGD' ? '🇸🇬' : code === 'INR' ? '🇮🇳' : code === 'BRL' ? '🇧🇷' : code === 'ZAR' ? '🇿🇦' : code === 'AED' ? '🇦🇪' : '🇲🇽'}</span>
               <div className="flex flex-col items-center">
-                <span className="text-xs font-bold uppercase tracking-wider">{code}</span>
-                <span className="text-[9px] font-bold text-text-muted">{config.symbol}</span>
+                <span className="text-xs font-bold uppercase">{code}</span>
+                <span className="text-[10px] text-text-muted">{config.symbol}</span>
               </div>
               {currentCurrency === code && (
                 <div className="absolute top-2 right-2">
@@ -56,9 +54,9 @@ export function CurrencySelector({ isOpen, onSelect, currentCurrency }: Currency
         <button
           onClick={() => currentCurrency && onSelect(currentCurrency)}
           disabled={!currentCurrency}
-          className="btn-primary w-full flex items-center justify-center gap-1.5 py-3.5 text-xs font-bold uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed"
+          className="btn-primary w-full flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Let's Go <ChevronRight className="w-4 h-4" />
+          Let's Go <ChevronRight className="w-5 h-5" />
         </button>
       </motion.div>
     </div>
@@ -89,7 +87,7 @@ export function NameInput({ isOpen, onComplete }: NameInputProps) {
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-bg-void/90 backdrop-blur-md">
       <motion.div
-        initial={{ opacity: 0, scale: 0.96, y: 15 }}
+        initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         className="card max-w-md w-full p-8 space-y-6"
       >
@@ -125,8 +123,8 @@ export function NameInput({ isOpen, onComplete }: NameInputProps) {
                   className={cn(
                     "py-1.5 rounded-lg border text-xs font-bold transition-all",
                     age === option 
-                      ? "bg-[#C5A880]/15 border-accent-gold/40 text-accent-gold shadow-sm" 
-                      : "bg-white/[0.01] border-white/[0.04] hover:border-accent-gold/25 text-text-secondary hover:text-text-primary hover:bg-[#C5A880]/5"
+                      ? "bg-accent-gold/10 border-accent-gold text-accent-gold" 
+                      : "bg-bg-secondary border-border hover:border-border-active text-text-secondary"
                   )}
                 >
                   {option}

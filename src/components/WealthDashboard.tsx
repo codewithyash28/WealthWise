@@ -1,7 +1,8 @@
 import { motion } from "motion/react";
-import { TrendingUp, ShieldCheck, Target, BrainCircuit, ChevronRight, Sparkles, Wallet, PieChart, ArrowUpRight, ArrowDownRight, CheckCircle2, Info, Trophy, Settings, ChevronDown, Check, GitBranch, Download, Share2, FileJson, Copy, X } from "lucide-react";
+import { TrendingUp, ShieldCheck, Target, BrainCircuit, ChevronRight, Sparkles, Wallet, PieChart, ArrowUpRight, ArrowDownRight, CheckCircle2, Info, Trophy, Settings, ChevronDown, Check, GitBranch, Download, Share2, FileJson, Copy, X, Calendar, Lock, Flame, Sliders, BookOpen, Coins, Star, ShoppingBag } from "lucide-react";
 import { UserProfile, BudgetPlan } from "../types";
 import { formatCurrency, cn } from "../lib/utils";
+import { Logo } from "./Logo";
 import { jsPDF } from "jspdf";
 import { CURRENCIES } from "../constants";
 import { useMemo, useState } from "react";
@@ -9,6 +10,7 @@ import { generateWealthAudit } from "../lib/gemini";
 import { WealthPathChart } from "./WealthPathChart";
 import { MarketInsights } from "./MarketInsights";
 import { GitOpsControlCenter } from "./GitOpsControlCenter";
+import { SHOP_ITEMS, ShopItem } from "./QuestsHub";
 
 interface WealthDashboardProps {
   user: UserProfile;
@@ -16,15 +18,17 @@ interface WealthDashboardProps {
   onUnlockAchievement: (id: string) => void;
   onUpdateGitProvider?: (provider: "gitlab" | "github" | "bitbucket") => void;
   gitProvider?: "gitlab" | "github" | "bitbucket";
+  onUpdateProfile?: (profile: UserProfile) => void;
 }
 
-export function WealthDashboard({ user, budget, onUnlockAchievement, onUpdateGitProvider, gitProvider = "github" }: WealthDashboardProps) {
+export function WealthDashboard({ user, budget, onUnlockAchievement, onUpdateGitProvider, gitProvider = "github", onUpdateProfile }: WealthDashboardProps) {
   const [isAuditing, setIsAuditing] = useState(false);
   const [auditResult, setAuditResult] = useState<string | null>(null);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [isGitDropdownOpen, setIsGitDropdownOpen] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [copiedShareLink, setCopiedShareLink] = useState(false);
+  const [intentInput, setIntentInput] = useState("");
 
   const currency = CURRENCIES[user.currency] || CURRENCIES.USD;
 
@@ -66,11 +70,11 @@ export function WealthDashboard({ user, budget, onUnlockAchievement, onUpdateGit
   }, [user, budget, currency]);
 
   const masteryTier = useMemo(() => {
-    if (healthScore >= 80) return { label: 'Diamond', color: 'text-[#b9f2ff]', bg: 'bg-[#b9f2ff]/5', border: 'border-[#b9f2ff]/20' };
-    if (healthScore >= 60) return { label: 'Platinum', color: 'text-[#e5e4e2]', bg: 'bg-[#e5e4e2]/5', border: 'border-[#e5e4e2]/20' };
-    if (healthScore >= 40) return { label: 'Gold', color: 'text-accent-gold', bg: 'bg-accent-gold/5', border: 'border-accent-gold/20' };
-    if (healthScore >= 20) return { label: 'Silver', color: 'text-[#c0c0c0]', bg: 'bg-[#c0c0c0]/5', border: 'border-[#c0c0c0]/20' };
-    return { label: 'Bronze', color: 'text-[#cd7f32]', bg: 'bg-[#cd7f32]/5', border: 'border-[#cd7f32]/20' };
+    if (healthScore >= 80) return { label: 'Diamond', color: 'text-[#b9f2ff]', bg: 'bg-[#b9f2ff]/10', border: 'border-[#b9f2ff]/20' };
+    if (healthScore >= 60) return { label: 'Platinum', color: 'text-[#e5e4e2]', bg: 'bg-[#e5e4e2]/10', border: 'border-[#e5e4e2]/20' };
+    if (healthScore >= 40) return { label: 'Gold', color: 'text-accent-gold', bg: 'bg-accent-gold/10', border: 'border-accent-gold/20' };
+    if (healthScore >= 20) return { label: 'Silver', color: 'text-[#c0c0c0]', bg: 'bg-[#c0c0c0]/10', border: 'border-[#c0c0c0]/20' };
+    return { label: 'Bronze', color: 'text-[#cd7f32]', bg: 'bg-[#cd7f32]/10', border: 'border-[#cd7f32]/20' };
   }, [healthScore]);
 
   const handleRunAudit = async () => {
@@ -296,19 +300,21 @@ export function WealthDashboard({ user, budget, onUnlockAchievement, onUpdateGit
   return (
     <div className="container mx-auto px-6 py-12 space-y-12">
       {/* Header Section */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-4 border-b border-white/[0.04]">
-        <div className="space-y-2 text-left">
-          <motion.h1 
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-4xl md:text-5xl font-display font-medium tracking-tight flex flex-wrap items-center gap-3"
-          >
-            <span>Welcome back,</span>
-            <span className="text-accent-gold italic font-semibold">{user.name}</span>
-            <div className={cn("inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-[0.15em] border backdrop-blur-md shadow-sm", masteryTier.bg, masteryTier.color, masteryTier.border)}>
-              <Trophy className="w-3 h-3" /> {masteryTier.label} Tier
-            </div>
-          </motion.h1>
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div className="space-y-2">
+          <div className="flex items-center gap-3 flex-wrap">
+            <Logo size="md" iconOnly />
+            <motion.h1 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-5xl font-display font-bold tracking-tight flex flex-wrap items-center gap-3"
+            >
+              Welcome back, <span className="text-accent-gold">{user.name}</span>
+              <div className={cn("inline-flex items-center gap-1.5 ml-1 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border", masteryTier.bg, masteryTier.color, masteryTier.border)}>
+                <Trophy className="w-3 h-3" /> {masteryTier.label} Tier
+              </div>
+            </motion.h1>
+          </div>
           <div className="flex flex-wrap items-center gap-6">
             <p className="text-text-secondary text-lg">Your Personal Wealth Architect is ready.</p>
             
@@ -380,9 +386,10 @@ export function WealthDashboard({ user, budget, onUnlockAchievement, onUpdateGit
                 </button>
               </div>
             </div>
+
             <button 
-              onClick={() => window.location.reload()} 
-              className="text-[9px] text-accent-gold hover:underline font-bold uppercase tracking-widest"
+              onClick={() => window.location.reload()} // Simple way to trigger tutorial if we add a check for it, or I can just add a state
+              className="text-xs text-accent-gold hover:underline font-bold uppercase tracking-widest"
             >
               Restart Tutorial
             </button>
@@ -446,7 +453,7 @@ export function WealthDashboard({ user, budget, onUnlockAchievement, onUpdateGit
       </div>
 
       {/* Elite Status Summary */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         {[
           { label: "Overall Mastery", value: `${healthScore}%`, color: "text-accent-gold" },
           { label: "Savings Rate", value: budget ? `${Math.round(((budget.income - Object.values(budget.expenses).reduce((a, b) => a + b, 0)) / budget.income) * 100)}%` : "0%", color: "text-accent-emerald" },
@@ -455,15 +462,235 @@ export function WealthDashboard({ user, budget, onUnlockAchievement, onUpdateGit
         ].map((stat, i) => (
           <motion.div
             key={i}
-            initial={{ opacity: 0, y: 15 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.08 }}
-            className="card p-6 border-white/[0.04] bg-white/[0.01] hover:bg-white/[0.03] flex flex-col items-center text-center space-y-1 transition-all"
+            transition={{ delay: i * 0.1 }}
+            className="card p-6 border-border/40 bg-bg-secondary/20 flex flex-col items-center text-center space-y-1"
           >
-            <div className="text-[9px] text-text-muted font-bold uppercase tracking-[0.15em]">{stat.label}</div>
-            <div className={cn("text-2xl font-display font-semibold", stat.color)}>{stat.value}</div>
+            <div className="text-[10px] text-text-muted font-bold uppercase tracking-widest">{stat.label}</div>
+            <div className={cn("text-2xl font-display font-bold", stat.color)}>{stat.value}</div>
           </motion.div>
         ))}
+      </div>
+
+      {/* Daily Financial Intent & Consistency Calendar Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Daily Financial Intent Input Card */}
+        <motion.div 
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="card p-6 border-border/60 bg-bg-secondary/20 space-y-4"
+        >
+          <div className="flex items-center gap-2 border-b border-border/40 pb-3">
+            <Calendar className="w-5 h-5 text-accent-gold" />
+            <h3 className="text-sm font-bold uppercase tracking-wider text-text-primary flex items-center gap-1.5">
+              Daily Financial Intent <span className="animate-pulse text-[10px] bg-accent-gold/10 text-accent-gold border border-accent-gold/20 px-2.5 py-0.5 rounded-full font-mono font-bold uppercase">Focus</span>
+            </h3>
+          </div>
+
+          {(!user.dailyIntent || !user.dailyIntent.text || user.dailyIntent.date !== new Date().toLocaleDateString()) ? (
+            <div className="space-y-4">
+              <p className="text-xs text-text-secondary leading-relaxed">
+                Set a small, actionable focus for today. Consistently honoring your intent increases your academic level and awards gold coins.
+              </p>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={intentInput}
+                  onChange={(e) => setIntentInput(e.target.value)}
+                  placeholder="e.g., Read 1 economics node, skip takeout, review budget..."
+                  className="flex-1 bg-bg-void border border-border rounded-xl px-4 py-2.5 text-xs text-text-primary placeholder:text-text-muted focus:outline-hidden focus:ring-1 focus:ring-accent-gold/50"
+                />
+                <button
+                  onClick={() => {
+                    if (!intentInput.trim()) return;
+                    const updated = {
+                      ...user,
+                      dailyIntent: {
+                        text: intentInput,
+                        completed: false,
+                        date: new Date().toLocaleDateString()
+                      }
+                    };
+                    onUpdateProfile?.(updated);
+                    setIntentInput("");
+                    window.dispatchEvent(new CustomEvent('ww-trigger-alert', {
+                      detail: {
+                        type: 'info',
+                        title: 'Focus Committed! 🎯',
+                        message: `Today's intent set: "${intentInput}". Honor it to earn rewards!`
+                      }
+                    }));
+                  }}
+                  className="btn-primary px-4 py-2.5 text-xs font-bold text-bg-void whitespace-nowrap cursor-pointer rounded-xl"
+                >
+                  Commit Focus
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="flex items-start justify-between gap-4 p-4 rounded-xl bg-bg-void/40 border border-border/40">
+                <div className="space-y-1">
+                  <div className="text-[10px] text-text-muted font-bold uppercase tracking-widest font-mono">Today's Discipline Focus</div>
+                  <div className={cn("text-xs font-bold leading-relaxed", user.dailyIntent.completed ? "line-through text-text-muted" : "text-text-primary")}>
+                    {user.dailyIntent.text}
+                  </div>
+                </div>
+                {!user.dailyIntent.completed ? (
+                  <button
+                    onClick={() => {
+                      const todayStr = new Date().toLocaleDateString();
+                      const currentLogs = user.activityLogs || [];
+                      const updatedLogs = currentLogs.includes(todayStr) ? currentLogs : [...currentLogs, todayStr];
+                      
+                      const updated = {
+                        ...user,
+                        xp: (user.xp || 0) + 15,
+                        coins: (user.coins || 0) + 10,
+                        activityLogs: updatedLogs,
+                        dailyIntent: {
+                          ...user.dailyIntent!,
+                          completed: true
+                        }
+                      };
+                      onUpdateProfile?.(updated);
+                      window.dispatchEvent(new CustomEvent('ww-trigger-alert', {
+                        detail: {
+                          type: 'success',
+                          title: 'Intent Honored! 🎉',
+                          message: 'Exceptional self-discipline! You earned +15 XP and +10 Gold Coins.'
+                        }
+                      }));
+                    }}
+                    className="flex items-center gap-1 bg-accent-gold/10 hover:bg-accent-gold/25 border border-accent-gold/30 hover:border-accent-gold text-accent-gold px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all cursor-pointer shadow-sm"
+                  >
+                    <Check className="w-3.5 h-3.5" /> Mark Honored
+                  </button>
+                ) : (
+                  <div className="flex items-center gap-1.5 bg-accent-emerald/10 border border-accent-emerald/20 text-accent-emerald px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wider">
+                    <CheckCircle2 className="w-4 h-4 text-accent-emerald" /> Honored (+15 XP)
+                  </div>
+                )}
+              </div>
+              <button
+                onClick={() => {
+                  const updated = {
+                    ...user,
+                    dailyIntent: undefined
+                  };
+                  onUpdateProfile?.(updated);
+                }}
+                className="text-[10px] text-text-muted hover:text-accent-gold font-bold uppercase tracking-wider underline cursor-pointer block"
+              >
+                Change Today's Intent Focus
+              </button>
+            </div>
+          )}
+        </motion.div>
+
+        {/* Contribution Calendar component */}
+        <motion.div 
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="card p-6 border-border/60 bg-bg-secondary/20 space-y-4"
+        >
+          <div className="flex items-center justify-between border-b border-border/40 pb-3">
+            <div className="flex items-center gap-2">
+              <Flame className="w-5 h-5 text-accent-gold animate-pulse" />
+              <h3 className="text-sm font-bold uppercase tracking-wider text-text-primary flex items-center gap-1.5">
+                Consistency Heatmap <span className="text-[10px] text-accent-emerald bg-accent-emerald/10 border border-accent-emerald/20 px-2.5 py-0.5 rounded-full font-mono font-bold uppercase">Active logs</span>
+              </h3>
+            </div>
+            <button
+              onClick={() => {
+                const todayStr = new Date().toLocaleDateString();
+                const currentLogs = user.activityLogs || [];
+                if (currentLogs.includes(todayStr)) {
+                  window.dispatchEvent(new CustomEvent('ww-trigger-alert', {
+                    detail: {
+                      type: 'info',
+                      title: 'Already Logged Today 📅',
+                      message: 'Your activity has already been logged. Keep up the consistent ritual!'
+                    }
+                  }));
+                  return;
+                }
+                const updated = {
+                  ...user,
+                  xp: (user.xp || 0) + 15,
+                  coins: (user.coins || 0) + 10,
+                  activityLogs: [...currentLogs, todayStr]
+                };
+                onUpdateProfile?.(updated);
+                window.dispatchEvent(new CustomEvent('ww-trigger-alert', {
+                  detail: {
+                    type: 'success',
+                    title: 'Check-In Complete! ⚡',
+                    message: 'Daily consistency ledger updated. +15 XP and +10 Gold Coins secured.'
+                  }
+                }));
+              }}
+              className="flex items-center gap-1.5 bg-bg-void hover:bg-bg-primary border border-border hover:border-accent-gold/40 text-text-primary px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all cursor-pointer"
+            >
+              <Check className="w-3.5 h-3.5 text-accent-gold" /> Daily Check-In
+            </button>
+          </div>
+
+          <div className="space-y-3">
+            {/* 56 days contribution grid */}
+            <div className="flex items-center gap-2 overflow-x-auto py-1">
+              <div className="grid grid-flow-col grid-rows-7 gap-1 p-1 rounded-lg bg-bg-void/40">
+                {(() => {
+                  const daysList = [];
+                  for (let i = 55; i >= 0; i--) {
+                    const d = new Date();
+                    d.setDate(d.getDate() - i);
+                    daysList.push(d);
+                  }
+                  return daysList.map((day, idx) => {
+                    const dateStr = day.toLocaleDateString();
+                    const active = (user.activityLogs || []).includes(dateStr);
+                    return (
+                      <div
+                        key={idx}
+                        title={`${day.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}: ${active ? 'Active Log' : 'No Log'}`}
+                        className={cn(
+                          "w-2.5 h-2.5 rounded-2xs transition-colors cursor-help",
+                          active 
+                            ? "bg-accent-gold shadow-[0_0_8px_rgba(234,179,8,0.35)] border border-accent-gold/30" 
+                            : "bg-bg-secondary hover:bg-border/60 border border-border/20"
+                        )}
+                      />
+                    );
+                  });
+                })()}
+              </div>
+            </div>
+
+            <div className="flex justify-between items-center text-[10px] text-text-muted font-mono uppercase tracking-wider">
+              <span className="flex items-center gap-1">Less Consistency <span className="w-2 h-2 bg-bg-secondary border border-border/40 rounded-2xs"></span></span>
+              <span className="font-bold text-accent-gold">Current Streak: {
+                (() => {
+                  const logs = user.activityLogs || [];
+                  let streak = 0;
+                  const today = new Date();
+                  for (let i = 0; i < 30; i++) {
+                    const checkDate = new Date();
+                    checkDate.setDate(today.getDate() - i);
+                    if (logs.includes(checkDate.toLocaleDateString())) {
+                      streak++;
+                    } else if (i > 0) {
+                      break; 
+                    }
+                  }
+                  return streak;
+                })()
+              } Days</span>
+              <span className="flex items-center gap-1"><span className="w-2 h-2 bg-accent-gold rounded-2xs"></span> High Consistency</span>
+            </div>
+          </div>
+        </motion.div>
       </div>
 
       {/* Getting Started Checklist for New Users */}
@@ -471,16 +698,16 @@ export function WealthDashboard({ user, budget, onUnlockAchievement, onUpdateGit
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="card p-8 border-accent-gold/10 bg-accent-gold/[0.02] space-y-6"
+          className="card p-8 border-accent-gold/30 bg-accent-gold/5 space-y-6"
         >
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="space-y-1 text-left">
-              <h2 className="text-xl font-display font-medium flex items-center gap-2 text-text-primary">
-                <Sparkles className="w-5 h-5 text-accent-gold" /> Your Path to Wealth Elite
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <h2 className="text-2xl font-display font-bold flex items-center gap-2">
+                <Sparkles className="w-6 h-6 text-accent-gold" /> Your Path to Wealth Elite
               </h2>
-              <p className="text-text-secondary text-xs">Complete these baseline tasks to unlock your personalized financial audit recommendations.</p>
+              <p className="text-text-secondary text-sm">Complete these steps to unlock the full power of your Wealth Architect.</p>
             </div>
-            <div className="px-3.5 py-1.5 rounded-full bg-accent-gold/5 border border-accent-gold/15 text-accent-gold text-[9px] font-bold uppercase tracking-widest">
+            <div className="hidden sm:block px-4 py-2 rounded-full bg-accent-gold/10 border border-accent-gold/20 text-accent-gold text-xs font-bold uppercase tracking-widest">
               {checklist.filter(i => i.completed).length} / {checklist.length} Completed
             </div>
           </div>
@@ -491,23 +718,23 @@ export function WealthDashboard({ user, budget, onUnlockAchievement, onUpdateGit
                 key={item.id}
                 href={item.hash}
                 className={cn(
-                  "p-5 rounded-2xl border transition-all flex flex-col gap-3 group text-left",
+                  "p-4 rounded-xl border transition-all flex flex-col gap-3 group",
                   item.completed 
-                    ? "bg-accent-emerald/[0.02] border-accent-emerald/10 opacity-70 hover:opacity-100" 
-                    : "bg-white/[0.01] border-white/[0.04] hover:border-accent-gold/20 hover:bg-accent-gold/[0.03]"
+                    ? "bg-accent-emerald/5 border-accent-emerald/20 opacity-80" 
+                    : "bg-bg-secondary border-border hover:border-accent-gold/50 hover:bg-accent-gold/5"
                 )}
               >
                 <div className="flex items-center justify-between">
                   <div className={cn(
-                    "w-7 h-7 rounded-lg flex items-center justify-center transition-all",
-                    item.completed ? "bg-accent-emerald/10 text-accent-emerald" : "bg-bg-primary border border-white/[0.06] text-text-muted group-hover:border-accent-gold/30"
+                    "w-8 h-8 rounded-lg flex items-center justify-center",
+                    item.completed ? "bg-accent-emerald/20 text-accent-emerald" : "bg-bg-primary text-text-muted"
                   )}>
-                    {item.completed ? <CheckCircle2 className="w-4 h-4" /> : <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />}
+                    {item.completed ? <CheckCircle2 className="w-5 h-5" /> : <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />}
                   </div>
                 </div>
                 <div>
-                  <div className={cn("font-bold text-xs uppercase tracking-wide", item.completed ? "line-through text-text-muted" : "text-text-primary")}>{item.label}</div>
-                  <p className="text-[10px] text-text-secondary leading-relaxed mt-1">{item.desc}</p>
+                  <div className={cn("font-bold text-sm", item.completed && "line-through text-text-muted")}>{item.label}</div>
+                  <p className="text-[10px] text-text-muted uppercase tracking-wider mt-1">{item.desc}</p>
                 </div>
               </a>
             ))}
@@ -518,40 +745,184 @@ export function WealthDashboard({ user, budget, onUnlockAchievement, onUpdateGit
       {/* Achievements Section */}
       {(user.achievements || []).length > 0 && (
         <motion.div 
-          initial={{ opacity: 0, y: 15 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="space-y-4"
         >
           <div className="flex items-center justify-between">
-            <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-text-secondary flex items-center gap-1.5">
-              <ShieldCheck className="w-4 h-4 text-accent-gold" /> Elite Achievements
+            <h3 className="text-sm font-bold uppercase tracking-widest text-text-muted flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4" /> Elite Achievements
             </h3>
             <div className="flex items-center gap-4">
               {user.achievements && user.achievements.length < 6 && (
-                <span className="text-[9px] text-text-muted italic">Simulate more modules to unlock next achievements...</span>
+                <span className="text-[10px] text-text-muted italic">Next Milestone: Keep exploring to unlock more...</span>
               )}
-              <span className="text-[10px] text-accent-gold font-bold">{user.achievements?.length} / 6 Earned</span>
+              <span className="text-[10px] text-accent-gold font-bold">{user.achievements?.length} / 6 Unlocked</span>
             </div>
           </div>
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-4">
             {user.achievements?.map((achievement) => (
               <div 
                 key={achievement.id}
                 title={`${achievement.title}: ${achievement.description}`}
                 className="group relative"
               >
-                <div className="w-11 h-11 rounded-xl bg-white/[0.02] border border-white/[0.04] hover:border-accent-gold/30 flex items-center justify-center text-xl transition-all duration-300 hover:scale-105 hover:bg-accent-gold/5 cursor-help shadow-sm">
+                <div className="w-12 h-12 rounded-xl bg-accent-gold/10 border border-accent-gold/20 flex items-center justify-center text-2xl transition-all hover:scale-110 hover:bg-accent-gold/20 cursor-help">
                   {achievement.icon}
                 </div>
-                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-3 bg-bg-secondary border border-white/[0.06] rounded-xl text-[10px] text-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-10 shadow-xl">
-                  <div className="font-bold text-accent-gold uppercase tracking-wider">{achievement.title}</div>
-                  <div className="text-text-secondary mt-1 text-[9px] leading-relaxed">{achievement.description}</div>
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 bg-bg-void border border-border rounded-lg text-[10px] text-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 shadow-xl">
+                  <div className="font-bold text-accent-gold">{achievement.title}</div>
+                  <div className="text-text-muted mt-1">{achievement.description}</div>
                 </div>
               </div>
             ))}
           </div>
         </motion.div>
       )}
+
+      {/* Reward Shop Preview Panel */}
+      <motion.div 
+        initial={{ opacity: 0, y: 15 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-80px" }}
+        className="card p-8 border-border/60 bg-bg-secondary/10 space-y-6"
+      >
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-border/40 pb-4">
+          <div className="space-y-1">
+            <h3 className="text-lg font-bold font-display text-text-primary flex items-center gap-2">
+              <ShoppingBag className="w-5 h-5 text-accent-gold" /> Cosmic Reward Cabinet & Shop
+            </h3>
+            <p className="text-xs text-text-secondary">Spend your hard-earned gold coins to unlock exclusive visual profile auras and rare accolades.</p>
+          </div>
+          <div className="flex items-center gap-2 bg-bg-void border border-border px-4 py-2 rounded-xl">
+            <span className="text-xs font-mono text-text-muted">Vault Balance:</span>
+            <span className="text-base font-mono font-black text-accent-gold flex items-center gap-1">🪙 {user.coins || 0}</span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {SHOP_ITEMS.map((item) => {
+            const owned = (user.purchasedItems || []).includes(item.id);
+            const active = user.activeAura === item.value;
+
+            return (
+              <div 
+                key={item.id}
+                className={cn(
+                  "p-5 rounded-2xl border transition-all relative overflow-hidden flex flex-col justify-between h-[190px]",
+                  owned 
+                    ? "border-accent-gold/25 bg-accent-gold/5" 
+                    : "border-border/60 bg-bg-secondary/40 hover:border-border/100"
+                )}
+              >
+                <div className="space-y-2.5">
+                  <div className="flex justify-between items-center">
+                    <span className="text-2xl">{item.icon}</span>
+                    <span className={cn(
+                      "text-[9px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full border",
+                      item.type === "THEME" ? "bg-accent-blue/10 border-accent-blue/25 text-accent-blue" : "bg-accent-purple/10 border-accent-purple/25 text-accent-purple"
+                    )}>
+                      {item.type}
+                    </span>
+                  </div>
+                  <div className="space-y-1">
+                    <h4 className="font-bold text-sm text-text-primary font-display">{item.title}</h4>
+                    <p className="text-xs text-text-secondary leading-relaxed line-clamp-2">{item.description}</p>
+                  </div>
+                </div>
+
+                <div className="border-t border-border/40 pt-3 flex items-center justify-between">
+                  <div className="text-xs font-mono font-bold text-accent-gold">
+                    {owned ? "Owned" : `🪙 ${item.cost}`}
+                  </div>
+                  {owned ? (
+                    item.type === "THEME" ? (
+                      <button
+                        onClick={() => {
+                          const updated = {
+                            ...user,
+                            activeAura: active ? "" : item.value
+                          };
+                          onUpdateProfile?.(updated);
+                          window.dispatchEvent(new CustomEvent('ww-trigger-alert', {
+                            detail: {
+                              type: 'success',
+                              title: active ? 'Aura Deactivated' : 'Aura Equipped! ✨',
+                              message: active ? 'Aura theme removed from profile.' : `Successfully activated the "${item.title}" halo.`
+                            }
+                          }));
+                        }}
+                        className={cn(
+                          "px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer",
+                          active ? "bg-accent-gold text-bg-void" : "bg-bg-void hover:bg-bg-primary border border-border"
+                        )}
+                      >
+                        {active ? "Active" : "Equip"}
+                      </button>
+                    ) : (
+                      <span className="text-[10px] font-bold uppercase text-accent-emerald bg-accent-emerald/10 border border-accent-emerald/20 px-2.5 py-1 rounded-lg">
+                        Unlocked
+                      </span>
+                    )
+                  ) : (
+                    <button
+                      onClick={() => {
+                        const currentCoins = user.coins || 0;
+                        if (currentCoins < item.cost) {
+                          window.dispatchEvent(new CustomEvent('ww-trigger-alert', {
+                            detail: {
+                              type: 'risk',
+                              title: 'Insufficient Coins 🪙',
+                              message: `You need ${item.cost - currentCoins} more gold coins to unlock this item. Play more quests!`
+                            }
+                          }));
+                          return;
+                        }
+
+                        const updatedPurchased = [...(user.purchasedItems || []), item.id];
+                        let updatedAchievements = [...(user.achievements || [])];
+
+                        if (item.type === "BADGE") {
+                          const isAlreadyUnlocked = updatedAchievements.some(a => a.id === item.id);
+                          if (!isAlreadyUnlocked) {
+                            updatedAchievements.push({
+                              id: item.id,
+                              title: item.title,
+                              description: item.description,
+                              icon: item.icon,
+                              unlockedAt: new Date().toISOString()
+                            });
+                          }
+                        }
+
+                        const updated = {
+                          ...user,
+                          coins: currentCoins - item.cost,
+                          purchasedItems: updatedPurchased,
+                          achievements: updatedAchievements,
+                          activeAura: item.type === "THEME" ? item.value : user.activeAura
+                        };
+
+                        onUpdateProfile?.(updated);
+                        window.dispatchEvent(new CustomEvent('ww-trigger-alert', {
+                          detail: {
+                            type: 'success',
+                            title: 'Upgrade Acquired! 🛍️',
+                            message: `Successfully unlocked "${item.title}"!`
+                          }
+                        }));
+                      }}
+                      className="bg-accent-gold/10 hover:bg-accent-gold/25 border border-accent-gold/30 hover:border-accent-gold text-accent-gold px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer"
+                    >
+                      Unlock Item
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </motion.div>
 
       {/* Insights and Projection Grid */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
@@ -563,11 +934,11 @@ export function WealthDashboard({ user, budget, onUnlockAchievement, onUpdateGit
           className="xl:col-span-2 card p-8 space-y-6"
         >
           <div className="flex items-center justify-between">
-            <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-text-secondary flex items-center gap-1.5">
-              <TrendingUp className="w-4 h-4 text-accent-gold" /> Strategic Wealth Pathing
+            <h3 className="text-sm font-bold uppercase tracking-widest text-text-muted flex items-center gap-2">
+              <TrendingUp className="w-4 h-4" /> Strategic Wealth Pathing
             </h3>
-            <div className="flex bg-white/[0.02] p-1 rounded-lg border border-white/[0.04]">
-              <button className="px-3 py-1 text-[9px] font-bold bg-white/[0.04] text-accent-gold rounded-md shadow-sm uppercase tracking-wider">6M Projection</button>
+            <div className="flex bg-bg-secondary p-1 rounded-lg border border-border">
+              <button className="px-3 py-1 text-[10px] font-bold bg-bg-primary rounded-md shadow-sm">6M Projection</button>
             </div>
           </div>
           <WealthPathChart user={user} budget={budget} />
@@ -588,123 +959,117 @@ export function WealthDashboard({ user, budget, onUnlockAchievement, onUpdateGit
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Health Score Card */}
         <motion.div 
-          initial={{ opacity: 0, scale: 0.95 }}
+          initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           className="card p-8 flex flex-col items-center justify-center text-center space-y-6 relative overflow-hidden"
         >
           <div className="absolute top-0 right-0 p-4">
-            <ShieldCheck className="w-6 h-6 text-accent-gold opacity-10" />
+            <ShieldCheck className="w-6 h-6 text-accent-gold opacity-20" />
           </div>
           
-          <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-text-secondary">Financial Health Score</h3>
+          <h3 className="text-sm font-bold uppercase tracking-[0.2em] text-text-muted">Financial Health Score</h3>
           
           <div className="relative w-48 h-48 flex items-center justify-center">
             <svg className="w-full h-full transform -rotate-90">
-              <defs>
-                <linearGradient id="goldGaugeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#E2C9A1" />
-                  <stop offset="100%" stopColor="#9F8259" />
-                </linearGradient>
-              </defs>
               <circle
                 cx="96"
                 cy="96"
-                r="84"
+                r="88"
                 stroke="currentColor"
-                strokeWidth="4.5"
+                strokeWidth="8"
                 fill="transparent"
-                className="text-white/[0.02]"
+                className="text-border"
               />
               <circle
                 cx="96"
                 cy="96"
-                r="84"
-                stroke="url(#goldGaugeGrad)"
-                strokeWidth="5"
+                r="88"
+                stroke="currentColor"
+                strokeWidth="8"
                 fill="transparent"
-                strokeDasharray={527.7}
-                strokeDashoffset={527.7 - (527.7 * healthScore) / 100}
-                className="transition-all duration-1000 ease-out"
+                strokeDasharray={552.92}
+                strokeDashoffset={552.92 - (552.92 * healthScore) / 100}
+                className="text-accent-gold transition-all duration-1000 ease-out"
                 strokeLinecap="round"
               />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-6xl font-display font-light text-text-primary tracking-tighter">{healthScore}</span>
-              <span className="text-[8px] text-text-muted uppercase tracking-[0.2em] font-bold">Out of 100</span>
+              <span className="text-6xl font-display font-bold">{healthScore}</span>
+              <span className="text-xs text-text-muted uppercase tracking-widest">Out of 100</span>
             </div>
           </div>
 
-          <p className="text-xs text-text-secondary max-w-[200px] leading-relaxed">
-            {healthScore > 80 ? "Outstanding architecture! You operate in the top decile of structured financial planners." : 
-             healthScore > 60 ? "Solid framework. Fine-tuning your allocation rates could elevate your score." :
-             "Let's focus on defining a budget baseline to strengthen your core foundation."}
+          <p className="text-sm text-text-secondary max-w-[200px]">
+            {healthScore > 80 ? "Excellent! You're in the top 5% of financial planners." : 
+             healthScore > 60 ? "Good progress. A few tweaks could boost your score." :
+             "Let's focus on building your foundation."}
           </p>
         </motion.div>
 
         {/* Wealth Summary Card */}
-        <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
+        <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="card p-8 space-y-6 relative group overflow-hidden">
-            <div className="absolute top-0 right-0 p-6 opacity-[0.02] group-hover:scale-105 group-hover:opacity-[0.05] transition-all duration-300">
-              <Wallet className="w-14 h-14" />
+            <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:scale-110 transition-transform">
+              <Wallet className="w-12 h-12" />
             </div>
-            <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-text-secondary">Net Worth</h3>
+            <h3 className="text-sm font-bold uppercase tracking-widest text-text-muted">Net Worth</h3>
             <div className="space-y-1">
-              <div className="text-4xl font-display font-light text-text-primary tracking-tight">
+              <div className="text-4xl font-display font-bold">
                 {formatCurrency(user.netWorth.assets - user.netWorth.liabilities, user.currency, currency.locale)}
               </div>
               {budget && budget.history && budget.history.length > 1 && (
                 <div className={cn(
-                  "flex items-center gap-1 text-xs font-semibold uppercase tracking-wider",
-                  budget.history[budget.history.length - 1].total < budget.history[budget.history.length - 2].total ? "text-accent-emerald" : "text-[#FF6B6B]"
+                  "flex items-center gap-2 text-sm font-medium",
+                  budget.history[budget.history.length - 1].total < budget.history[budget.history.length - 2].total ? "text-accent-emerald" : "text-accent-red"
                 )}>
-                  {budget.history[budget.history.length - 1].total < budget.history[budget.history.length - 2].total ? <TrendingUp className="w-3.5 h-3.5" /> : <ArrowDownRight className="w-3.5 h-3.5" />}
+                  {budget.history[budget.history.length - 1].total < budget.history[budget.history.length - 2].total ? <TrendingUp className="w-4 h-4" /> : <ArrowDownRight className="w-4 h-4" />}
                   <span>
                     {Math.abs(Math.round(((budget.history[budget.history.length - 1].total - budget.history[budget.history.length - 2].total) / budget.history[budget.history.length - 2].total) * 100))}% vs last month
                   </span>
                 </div>
               )}
             </div>
-            <div className="pt-6 border-t border-white/[0.04] grid grid-cols-2 gap-4">
+            <div className="pt-6 border-t border-border grid grid-cols-2 gap-4">
               <div>
-                <div className="text-[9px] text-text-muted uppercase tracking-wider font-bold">Total Assets</div>
-                <div className="text-base font-mono font-bold text-text-primary">{formatCurrency(user.netWorth.assets, user.currency, currency.locale)}</div>
+                <div className="text-[10px] text-text-muted uppercase tracking-wider">Assets</div>
+                <div className="text-lg font-mono font-bold">{formatCurrency(user.netWorth.assets, user.currency, currency.locale)}</div>
               </div>
               <div>
-                <div className="text-[9px] text-text-muted uppercase tracking-wider font-bold">Total Liabilities</div>
-                <div className="text-base font-mono font-bold text-[#FF6B6B]">{formatCurrency(user.netWorth.liabilities, user.currency, currency.locale)}</div>
+                <div className="text-[10px] text-text-muted uppercase tracking-wider">Liabilities</div>
+                <div className="text-lg font-mono font-bold text-accent-red">{formatCurrency(user.netWorth.liabilities, user.currency, currency.locale)}</div>
               </div>
             </div>
           </div>
 
-          <div className="card p-8 space-y-6 relative group overflow-hidden cursor-pointer hover:border-accent-gold/20" onClick={() => window.location.hash = "#portfolio"}>
-            <div className="absolute top-0 right-0 p-6 opacity-[0.02] group-hover:scale-105 group-hover:opacity-[0.05] transition-all duration-300">
-              <PieChart className="w-14 h-14" />
+          <div className="card p-8 space-y-6 relative group overflow-hidden cursor-pointer" onClick={() => window.location.hash = "#portfolio"}>
+            <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:scale-110 transition-transform">
+              <PieChart className="w-12 h-12" />
             </div>
-            <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-text-secondary">Portfolio Allocation</h3>
+            <h3 className="text-sm font-bold uppercase tracking-widest text-text-muted">Portfolio Performance</h3>
             <div className="space-y-1">
-              <div className="text-4xl font-display font-light text-accent-gold tracking-tight">
+              <div className="text-4xl font-display font-bold text-accent-gold">
                 {formatCurrency(user.portfolio?.totalValue || 0, user.currency, currency.locale)}
               </div>
               {user.portfolio && (
                 <div className={cn(
-                  "flex items-center gap-1 text-xs font-semibold uppercase tracking-wider",
-                  user.portfolio.change24h >= 0 ? "text-accent-emerald" : "text-[#FF6B6B]"
+                  "flex items-center gap-2 text-sm font-medium",
+                  user.portfolio.change24h >= 0 ? "text-accent-emerald" : "text-accent-red"
                 )}>
-                  {user.portfolio.change24h >= 0 ? <ArrowUpRight className="w-3.5 h-3.5" /> : <ArrowDownRight className="w-3.5 h-3.5" />}
+                  {user.portfolio.change24h >= 0 ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownRight className="w-4 h-4" />}
                   <span>{user.portfolio.change24h >= 0 ? "+" : ""}{user.portfolio.change24h}% (24h)</span>
                 </div>
               )}
             </div>
-            <div className="pt-6 border-t border-white/[0.04] flex items-center justify-between">
-              <div className="space-y-0.5">
-                <div className="text-[9px] text-text-muted uppercase tracking-wider font-bold">Simulated Alpha</div>
-                <div className="text-base font-mono font-bold text-accent-emerald">
+            <div className="pt-6 border-t border-border flex items-center justify-between">
+              <div className="space-y-1">
+                <div className="text-xs text-text-muted uppercase tracking-widest font-bold">Alpha</div>
+                <div className="text-xl font-mono font-bold text-accent-emerald">
                   {user.portfolio && user.portfolio.holdings.length > 0 ? "+4.2%" : "--"}
                 </div>
               </div>
-              <div className="space-y-0.5 text-right">
-                <div className="text-[9px] text-text-muted uppercase tracking-wider font-bold">Sharpe Ratio</div>
-                <div className="text-base font-mono font-bold text-accent-gold">
+              <div className="space-y-1 text-right">
+                <div className="text-xs text-text-muted uppercase tracking-widest font-bold">Sharpe</div>
+                <div className="text-xl font-mono font-bold text-accent-gold">
                   {user.portfolio && user.portfolio.holdings.length > 0 ? "1.85" : "--"}
                 </div>
               </div>
@@ -724,18 +1089,18 @@ export function WealthDashboard({ user, budget, onUnlockAchievement, onUpdateGit
       {/* Audit Result / Action Items */}
       {auditResult && (
         <motion.div 
-          initial={{ opacity: 0, y: 25 }}
+          initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          className="card p-8 border-accent-gold/15 bg-accent-gold/[0.01] space-y-8 text-left"
+          className="card p-8 border-accent-gold/20 bg-accent-gold/5 space-y-8"
         >
-          <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="w-11 h-11 rounded-2xl bg-accent-gold/10 flex items-center justify-center shadow-inner">
-                <Sparkles className="w-5 h-5 text-accent-gold" />
+              <div className="w-12 h-12 rounded-2xl bg-accent-gold/20 flex items-center justify-center">
+                <Sparkles className="w-6 h-6 text-accent-gold" />
               </div>
               <div>
-                <h2 className="text-xl font-display font-medium text-text-primary">AI Wealth Audit Insights</h2>
-                <p className="text-text-secondary text-xs">Generated based on your local device datasets.</p>
+                <h2 className="text-2xl font-display font-bold">AI Wealth Audit Results</h2>
+                <p className="text-text-secondary text-sm">Generated just now based on your real-time data.</p>
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-3">
@@ -761,83 +1126,75 @@ export function WealthDashboard({ user, budget, onUnlockAchievement, onUpdateGit
             </div>
           </div>
           
-          <div className="prose prose-invert max-w-none prose-p:text-text-secondary prose-p:text-xs prose-p:leading-relaxed prose-strong:text-accent-gold prose-headings:text-text-primary">
+          <div className="prose prose-invert max-w-none prose-p:text-text-secondary prose-strong:text-accent-gold prose-headings:text-text-primary">
             {auditResult.split('\n').map((line, i) => (
-              <p key={i} className="mb-2.5 font-light">{line}</p>
+              <p key={i} className="mb-2">{line}</p>
             ))}
           </div>
 
-          <div className="pt-6 border-t border-white/[0.04]">
-            <p className="text-[8px] text-text-muted italic text-center uppercase tracking-widest">
-              Educational projection only. Not financial advice. Device local verification layer.
+          <div className="pt-6 border-t border-border/50">
+            <p className="text-[10px] text-text-muted italic text-center">
+              Disclaimer: This audit is generated by AI for educational purposes only and does not constitute professional financial advice. 
+              WealthWise Elite does not store your sensitive financial documents.
             </p>
           </div>
         </motion.div>
       )}
 
       {/* Quick Navigation / Mastery Modules */}
-      <div className="space-y-4 text-left">
-        <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-text-secondary flex items-center gap-1.5">
-          <BrainCircuit className="w-4 h-4 text-accent-gold" /> Core Mastery Modules
-        </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {[
-            { title: "MacroPulse Engine", desc: "Economic simulator", icon: <BrainCircuit />, hash: "#macropulse", color: "text-accent-gold" },
-            { title: "TrendMarket", desc: "Pop-culture trading", icon: <TrendingUp />, hash: "#trendmarket", color: "text-accent-emerald" },
-            { title: "LiveOrLease", desc: "Rent vs Buy engine", icon: <PieChart />, hash: "#liveorlease", color: "text-accent-blue" },
-            { title: "MockYield DeFi", desc: "Staking mastery", icon: <Sparkles />, hash: "#mockyield", color: "text-[#E2C9A1]" },
-          ].map((item, i) => (
-            <motion.a
-              key={i}
-              href={item.hash}
-              whileHover={{ y: -3, backgroundColor: "var(--color-bg-card-hover)" }}
-              className="card p-6 flex flex-col gap-4 group border-white/[0.03] transition-all text-left"
-            >
-              <div className={cn("w-10 h-10 rounded-xl bg-white/[0.02] border border-white/[0.04] flex items-center justify-center group-hover:scale-105 transition-transform", item.color)}>
-                {item.icon}
-              </div>
-              <div>
-                <h4 className="font-bold text-xs uppercase tracking-wide text-text-primary">{item.title}</h4>
-                <p className="text-[9px] text-text-secondary uppercase tracking-widest mt-1">{item.desc}</p>
-              </div>
-              <div className="pt-2 flex items-center text-[9px] font-bold text-accent-gold opacity-0 group-hover:opacity-100 transition-opacity">
-                ENTER MODULE <ChevronRight className="w-3 h-3 ml-0.5" />
-              </div>
-            </motion.a>
-          ))}
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {[
+          { title: "MacroPulse Engine", desc: "Economic simulator", icon: <BrainCircuit />, hash: "#macropulse", color: "text-accent-gold" },
+          { title: "TrendMarket", desc: "Pop-culture trading", icon: <TrendingUp />, hash: "#trendmarket", color: "text-accent-emerald" },
+          { title: "LiveOrLease", desc: "Rent vs Buy engine", icon: <PieChart />, hash: "#liveorlease", color: "text-accent-blue" },
+          { title: "MockYield DeFi", desc: "Staking mastery", icon: <Sparkles />, hash: "#mockyield", color: "text-accent-purple" },
+        ].map((item, i) => (
+          <motion.a
+            key={i}
+            href={item.hash}
+            whileHover={{ y: -5, backgroundColor: "var(--bg-card-hover)" }}
+            className="card p-6 flex flex-col gap-3 group border-border/40"
+          >
+            <div className={cn("w-12 h-12 rounded-xl bg-bg-secondary flex items-center justify-center group-hover:scale-110 transition-transform", item.color)}>
+              {item.icon}
+            </div>
+            <div>
+              <h4 className="font-bold text-sm">{item.title}</h4>
+              <p className="text-[10px] text-text-muted uppercase tracking-wider">{item.desc}</p>
+            </div>
+            <div className="pt-2 flex items-center text-[10px] font-bold text-accent-gold opacity-0 group-hover:opacity-100 transition-opacity">
+              ENTER MODULE <ChevronRight className="w-3 h-3 ml-1" />
+            </div>
+          </motion.a>
+        ))}
       </div>
 
       {/* Quick Navigation / Next Steps */}
-      <div className="space-y-4 text-left">
-        <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-text-secondary flex items-center gap-1.5">
-          <Target className="w-4 h-4 text-accent-gold" /> Strategic Management
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {[
-            { title: "Portfolio Allocation", desc: "Balance your baseline assets and alpha triggers.", icon: <PieChart />, hash: "#portfolio" },
-            { title: "Budget Architect", desc: "Optimize savings and trim redundant expenditures.", icon: <TrendingUp />, hash: "#budget" },
-            { title: "Academic Quizzes", desc: "Complete literacy exercises to lift your health score.", icon: <Target />, hash: "#quiz" },
-          ].map((item, i) => (
-            <motion.a
-              key={i}
-              href={item.hash}
-              whileHover={{ x: 3, backgroundColor: "var(--color-bg-card-hover)" }}
-              className="card p-6 flex items-center justify-between group border-white/[0.03] transition-all text-left"
-            >
-              <div className="flex items-center gap-4">
-                <div className="w-9 h-9 rounded-xl bg-white/[0.02] border border-white/[0.04] flex items-center justify-center text-accent-gold group-hover:scale-105 transition-transform">
-                  {item.icon}
-                </div>
-                <div>
-                  <h4 className="font-bold text-xs uppercase tracking-wide text-text-primary">{item.title}</h4>
-                  <p className="text-[11px] text-text-secondary mt-0.5 font-light">{item.desc}</p>
-                </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {[
+          { title: "Portfolio Overview", desc: "Track your global asset allocation.", icon: <PieChart />, hash: "#portfolio" },
+          { title: "Budget Architect", desc: "Find hidden savings in your expenditures.", icon: <TrendingUp />, hash: "#budget" },
+          { title: "Test Literacy", desc: "Boost your score with a quick quiz.", icon: <Target />, hash: "#quiz" },
+          { title: "Strategic Projection", desc: "See how your wealth grows over time.", icon: <BrainCircuit />, hash: "#simulator" },
+        ].map((item, i) => (
+          <motion.a
+            key={i}
+            href={item.hash}
+            whileHover={{ x: 5, backgroundColor: "var(--bg-card-hover)" }}
+            className="card p-6 flex items-center justify-between group"
+          >
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-xl bg-bg-secondary flex items-center justify-center text-accent-gold group-hover:scale-110 transition-transform">
+                {item.icon}
               </div>
-              <ChevronRight className="w-4 h-4 text-text-muted group-hover:text-accent-gold transition-colors" />
-            </motion.a>
-          ))}
-        </div>
+              <div>
+                <h4 className="font-bold text-sm">{item.title}</h4>
+                <p className="text-xs text-text-muted">{item.desc}</p>
+              </div>
+            </div>
+            <ChevronRight className="w-5 h-5 text-text-muted group-hover:text-accent-gold transition-colors" />
+          </motion.a>
+        ))}
       </div>
 
       {/* GitOps Settings Modal */}
@@ -849,11 +1206,14 @@ export function WealthDashboard({ user, budget, onUnlockAchievement, onUpdateGit
             className="card max-w-lg w-full p-8 space-y-6 relative border-accent-gold/30 shadow-[0_0_50px_rgba(234,179,8,0.1)] text-left"
           >
             <div className="flex items-start justify-between">
-              <div className="space-y-1">
-                <div className="inline-flex items-center gap-1.5 text-[9px] uppercase font-bold text-accent-gold tracking-widest bg-accent-gold/10 px-2.5 py-0.5 rounded-full border border-accent-gold/20">
-                  <Settings className="w-3 h-3 text-accent-gold" /> Wealth-As-Code Engine
+              <div className="flex items-center gap-3">
+                <Logo size="md" iconOnly />
+                <div className="space-y-1">
+                  <div className="inline-flex items-center gap-1.5 text-[9px] uppercase font-bold text-accent-gold tracking-widest bg-accent-gold/10 px-2.5 py-0.5 rounded-full border border-accent-gold/20">
+                    <Settings className="w-3 h-3 text-accent-gold" /> Wealth-As-Code Engine
+                  </div>
+                  <h3 className="text-2xl font-bold font-display text-text-primary">GitOps Configuration</h3>
                 </div>
-                <h3 className="text-2xl font-bold font-display text-text-primary">GitOps Configuration</h3>
               </div>
               <button
                 onClick={() => setShowSettingsModal(false)}

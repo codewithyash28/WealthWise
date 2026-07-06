@@ -34,7 +34,7 @@ export function Logo({ className = "", size = "md", iconOnly = false }: { classN
       </div>
       
       {!iconOnly && (
-        <div className={`flex items-baseline font-serif ${textSizes[size]}`}>
+        <div className={`flex items-baseline font-sans ${textSizes[size]}`}>
           <span className="font-light text-text-primary tracking-tight">WealthWise</span>
           <span className="font-bold text-accent-gold ml-1.5 tracking-tighter">Elite</span>
         </div>

@@ -126,7 +126,7 @@ export function MockYield() {
                    <input 
                      type="range" min="1" max="10" 
                      value={years} onChange={(e) => setYears(parseInt(e.target.value))}
-                     className="w-full accent-purple"
+                     className="w-full accent-accent-purple"
                    />
                  </div>
               </div>

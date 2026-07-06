@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { motion } from "motion/react";
-import { TrendingUp, Activity, DollarSign, PieChart, Info, AlertTriangle, GitBranch, Check, Terminal, RefreshCw, Send } from "lucide-react";
+import { TrendingUp, Activity, DollarSign, PieChart, Info, AlertTriangle, GitBranch, Check, Terminal, RefreshCw, Send, Cpu, MessageSquare } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { UserProfile } from "../../types";
 
@@ -16,7 +16,149 @@ export function MacroPulse({ user }: MacroPulseProps) {
   const [syncLogs, setSyncLogs] = useState<string[]>([]);
   const [syncStatus, setSyncStatus] = useState<"idle" | "running" | "success">("idle");
 
+  // Real-Time SSE Stream States for Socratic AI Advisor
+  const [streamingText, setStreamingText] = useState("");
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [chatInput, setChatInput] = useState("");
+  const [activeStreamType, setActiveStreamType] = useState<"scenario" | "chat" | null>(null);
+  const [streamError, setStreamError] = useState("");
+
   const gitProvider = user?.gitProvider || "github";
+
+  // Stream current scenario parameter analysis via Server-Sent Events (SSE)
+  const triggerScenarioStream = () => {
+    if (isStreaming) return;
+    setIsStreaming(true);
+    setStreamingText("");
+    setStreamError("");
+    setActiveStreamType("scenario");
+
+    const promptText = `Analyze this macroeconomic scenario for an elite personal wealth portfolio:
+- Annual Inflation Rate: ${inflation}%
+- Federal Reserve Interest Rate: ${interestRate}%
+- Real GDP Growth: ${gdpGrowth}%
+
+Provide an objective, Socratic analysis. Focus on:
+1. Impact on purchasing power and cash holdings.
+2. Optimal asset reallocation strategy (equities, bonds, real estate, hard assets).
+3. The principal risk vector to monitor.
+Keep the analysis concise, structured with bullet points, and elegant. Always end with a Socratic question for the user's reflection.`;
+
+    const systemInstruction = `You are the Socratic AI Macro Advisor, an elite, objective personal finance expert. Guide the user conceptually using structured bullet points, elegant explanations, and explicit warnings that simulations are for educational purposes. Do not make direct stock buy/sell recommendations. Use clear formatting, bolding, and custom bullet symbols like '•' or '⚡' to design a visually striking presentation.`;
+
+    const sseUrl = `/api/gemini/stream?prompt=${encodeURIComponent(promptText)}&systemInstruction=${encodeURIComponent(systemInstruction)}`;
+    const eventSource = new EventSource(sseUrl);
+
+    eventSource.onmessage = (event) => {
+      if (event.data === "[DONE]") {
+        eventSource.close();
+        setIsStreaming(false);
+      } else {
+        try {
+          const data = JSON.parse(event.data);
+          if (data.text) {
+            setStreamingText((prev) => prev + data.text);
+          } else if (data.error) {
+            setStreamError(data.error);
+            eventSource.close();
+            setIsStreaming(false);
+          }
+        } catch (e) {
+          console.error("JSON parse error on SSE chunk:", e);
+        }
+      }
+    };
+
+    eventSource.onerror = (err) => {
+      console.error("SSE connection error:", err);
+      setStreamError("Unable to establish live stream. Check your network or API key configuration.");
+      eventSource.close();
+      setIsStreaming(false);
+    };
+  };
+
+  // Stream custom user Socratic query via SSE
+  const triggerChatStream = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isStreaming || !chatInput.trim()) return;
+    setIsStreaming(true);
+    setStreamingText("");
+    setStreamError("");
+    setActiveStreamType("chat");
+
+    const promptText = `Regarding our active macroeconomic scenario (Inflation: ${inflation}%, Interest Rate: ${interestRate}%, GDP: ${gdpGrowth}%), answer the following question: "${chatInput}"`;
+    const systemInstruction = `You are the Socratic AI Macro Advisor, an elite personal wealth partner. Address the user's question with professional rigor and strategic depth. Keep the response compact, actionable and readable. Always include an educational disclaimer.`;
+
+    const sseUrl = `/api/gemini/stream?prompt=${encodeURIComponent(promptText)}&systemInstruction=${encodeURIComponent(systemInstruction)}`;
+    const eventSource = new EventSource(sseUrl);
+
+    eventSource.onmessage = (event) => {
+      if (event.data === "[DONE]") {
+        eventSource.close();
+        setIsStreaming(false);
+        setChatInput("");
+      } else {
+        try {
+          const data = JSON.parse(event.data);
+          if (data.text) {
+            setStreamingText((prev) => prev + data.text);
+          } else if (data.error) {
+            setStreamError(data.error);
+            eventSource.close();
+            setIsStreaming(false);
+          }
+        } catch (e) {
+          console.error("JSON parse error on SSE chunk:", e);
+        }
+      }
+    };
+
+    eventSource.onerror = (err) => {
+      console.error("SSE connection error:", err);
+      setStreamError("Unable to establish live stream. Check your network or API key configuration.");
+      eventSource.close();
+      setIsStreaming(false);
+    };
+  };
+
+  // Render markdown-like bullet structures cleanly
+  const renderFormattedText = (text: string) => {
+    if (!text) {
+      return (
+        <div className="flex flex-col items-center justify-center py-6 text-center space-y-2">
+          <MessageSquare className="w-8 h-8 text-text-muted/60" />
+          <p className="text-text-secondary text-xs italic">No stream active. Click "Analyze Active Sliders" or enter a query below.</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-3 text-text-secondary text-xs md:text-sm leading-relaxed font-sans">
+        {text.split("\n").map((line, idx) => {
+          const trimmed = line.trim();
+          if (!trimmed) return <div key={idx} className="h-2" />;
+          
+          if (trimmed.startsWith("**") && trimmed.endsWith("**")) {
+            return (
+              <h4 key={idx} className="font-bold text-accent-gold text-sm pt-2 uppercase tracking-wide">
+                {trimmed.replace(/\*\*/g, "")}
+              </h4>
+            );
+          }
+          if (trimmed.startsWith("•") || trimmed.startsWith("*") || trimmed.startsWith("-")) {
+            const bulletContent = trimmed.replace(/^[•\*\-\s]+/, "");
+            return (
+              <div key={idx} className="flex gap-2 pl-2">
+                <span className="text-accent-gold font-bold">•</span>
+                <span>{bulletContent}</span>
+              </div>
+            );
+          }
+          return <p key={idx}>{line}</p>;
+        })}
+      </div>
+    );
+  };
 
   const analysis = useMemo(() => {
     let status = "Stable";
@@ -198,6 +340,84 @@ export function MacroPulse({ user }: MacroPulseProps) {
                 </motion.div>
               )}
             </div>
+          </div>
+
+          {/* Socratic AI Macro Advisor (SSE Real-Time Stream Panel) */}
+          <div className="card p-8 space-y-6 border-accent-gold/20 relative overflow-hidden bg-bg-secondary/10 backdrop-blur-md">
+            {/* Ambient background accent */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-accent-gold/5 rounded-full blur-3xl pointer-events-none" />
+            
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/40 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="relative">
+                  <div className="w-10 h-10 rounded-full bg-accent-gold/10 flex items-center justify-center text-accent-gold">
+                    <Cpu className="w-5 h-5" />
+                  </div>
+                  {isStreaming && (
+                    <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent-emerald opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-3 w-3 bg-accent-emerald"></span>
+                    </span>
+                  )}
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold flex items-center gap-2">
+                    Socratic Macro Advisor
+                    {isStreaming && (
+                      <span className="text-[9px] uppercase font-mono px-2 py-0.5 rounded bg-accent-emerald/10 text-accent-emerald animate-pulse">
+                        Streaming
+                      </span>
+                    )}
+                  </h3>
+                  <p className="text-xs text-text-muted">Real-time Socratic scenario analysis via SSE Stream</p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={triggerScenarioStream}
+                disabled={isStreaming}
+                className="btn-primary text-[10px] font-bold uppercase tracking-widest py-2 px-4 flex items-center gap-2 shrink-0 bg-accent-gold hover:bg-accent-gold/90 text-bg-void cursor-pointer disabled:opacity-50"
+              >
+                <RefreshCw className={cn("w-3.5 h-3.5", isStreaming && activeStreamType === "scenario" && "animate-spin")} />
+                Analyze Sliders
+              </button>
+            </div>
+
+            {/* SSE Stream Viewport */}
+            <div className="min-h-[160px] bg-bg-void/40 rounded-xl border border-border/60 p-6 relative">
+              {isStreaming && streamingText === "" && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-text-muted text-xs italic">
+                  <RefreshCw className="w-4 h-4 animate-spin text-accent-gold" />
+                  Establishing connection to Server-Sent Events (SSE) stream...
+                </div>
+              )}
+              {streamError && (
+                <div className="text-accent-red text-xs bg-accent-red/5 p-4 rounded-lg border border-accent-red/20 mb-4">
+                  ⚠️ {streamError}
+                </div>
+              )}
+              {renderFormattedText(streamingText)}
+            </div>
+
+            {/* Custom Socratic Prompt Input */}
+            <form onSubmit={triggerChatStream} className="flex gap-3">
+              <input
+                type="text"
+                value={chatInput}
+                onChange={(e) => setChatInput(e.target.value)}
+                placeholder={`Ask the advisor (e.g., "What happens if stagflation sets in with interest rates at ${interestRate}%?")`}
+                disabled={isStreaming}
+                className="flex-1 bg-bg-void border border-border/80 rounded-xl px-4 py-3 text-xs md:text-sm focus:outline-none focus:border-accent-gold/60 text-text-primary disabled:opacity-60"
+              />
+              <button
+                type="submit"
+                disabled={isStreaming || !chatInput.trim()}
+                className="px-5 bg-bg-secondary hover:bg-bg-secondary/80 text-text-primary border border-border/80 rounded-xl flex items-center justify-center transition-all cursor-pointer disabled:opacity-40"
+              >
+                <Send className="w-4 h-4" />
+              </button>
+            </form>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
