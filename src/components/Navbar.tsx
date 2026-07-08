@@ -12,9 +12,10 @@ interface NavbarProps {
   onToggleTheme: () => void;
   user?: { displayName: string | null; photoURL: string | null; email?: string | null } | null;
   onSignOut?: () => void;
+  streak?: number;
 }
 
-export function Navbar({ currentHash, currency, onCurrencyClick, theme, onToggleTheme, user, onSignOut }: NavbarProps) {
+export function Navbar({ currentHash, currency, onCurrencyClick, theme, onToggleTheme, user, onSignOut, streak = 1 }: NavbarProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -34,6 +35,7 @@ export function Navbar({ currentHash, currency, onCurrencyClick, theme, onToggle
     { name: "Quests", hash: "#quests" },
     { name: "Quiz", hash: "#quiz" },
     { name: "Badges", hash: "#badges" },
+    { name: "Billing", hash: "#billing" },
   ];
 
   return (
@@ -66,7 +68,7 @@ export function Navbar({ currentHash, currency, onCurrencyClick, theme, onToggle
 
           <div className="hidden lg:flex items-center gap-1 px-2.5 py-1.5 bg-accent-gold/10 border border-accent-gold/20 rounded-full text-accent-gold mr-2 animate-pulse">
             <Flame className="w-4 h-4 fill-accent-gold" />
-            <span className="text-[10px] font-black tracking-tighter">7 DAY STREAK</span>
+            <span className="text-[10px] font-black tracking-tighter">{streak} DAY STREAK</span>
           </div>
 
           <button
@@ -76,12 +78,28 @@ export function Navbar({ currentHash, currency, onCurrencyClick, theme, onToggle
             <Sparkles className="w-3 h-3" /> Judge Mode
           </button>
 
+          {/* Prominent Animated Theme Switcher */}
           <button
             onClick={onToggleTheme}
-            className="p-2 rounded-full hover:bg-bg-secondary transition-colors text-text-primary"
+            className="relative w-14 h-7 rounded-full bg-bg-secondary border border-border/80 hover:border-accent-gold/40 transition-all p-1 flex items-center cursor-pointer select-none overflow-hidden"
             title={theme === "light" ? "Switch to Dark Mode" : "Switch to Light Mode"}
           >
-            {theme === "light" ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
+            <motion.div
+              className="absolute w-5 h-5 rounded-full bg-accent-gold flex items-center justify-center shadow-md z-10"
+              animate={{ x: theme === "light" ? 0 : 24 }}
+              transition={{ type: "spring", stiffness: 350, damping: 22 }}
+            >
+              {theme === "light" ? (
+                <Sun className="w-3 h-3 text-bg-primary fill-bg-primary" />
+              ) : (
+                <Moon className="w-3 h-3 text-bg-primary fill-bg-primary" />
+              )}
+            </motion.div>
+            
+            <div className="w-full flex justify-between px-1 pointer-events-none relative z-0">
+              <Sun className={`w-3 h-3 transition-opacity duration-200 ${theme === "light" ? "opacity-0" : "opacity-40 text-text-muted"}`} />
+              <Moon className={`w-3 h-3 transition-opacity duration-200 ${theme === "light" ? "opacity-40 text-text-muted" : "opacity-0"}`} />
+            </div>
           </button>
 
           <button

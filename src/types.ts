@@ -19,6 +19,7 @@ export interface UserProfile {
   lastVisit: string;
   visitDates: string[];
   highScore: number;
+  isPremium?: boolean;
   netWorth: {
     assets: number;
     liabilities: number;
@@ -33,6 +34,8 @@ export interface UserProfile {
   purchasedItems?: string[];
   activeAura?: string;
   activityLogs?: string[];
+  streak?: number;
+  maxStreak?: number;
   dailyIntent?: {
     text: string;
     completed: boolean;

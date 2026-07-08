@@ -383,7 +383,10 @@ export function QuestsHub({ userProfile, onUpdateProfile, onUnlockAchievement }:
 
       // Check achievements
       if (updatedCompleted.length >= 1) onUnlockAchievement("first_quest");
-      if (updatedCompleted.length === QUESTS.length) onUnlockAchievement("quests_grandmaster");
+      if (updatedCompleted.length === QUESTS.length) {
+        onUnlockAchievement("quests_grandmaster");
+        onUnlockAchievement("completion_all");
+      }
     }
 
     const updatedProfile = {

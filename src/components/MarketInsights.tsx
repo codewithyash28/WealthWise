@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Sparkles, TrendingUp, ArrowUpRight, ArrowDownRight, Loader2, BarChart3, ShieldAlert, Wifi } from "lucide-react";
+import { Sparkles, TrendingUp, ArrowUpRight, ArrowDownRight, Loader2, BarChart3, ShieldAlert, Wifi, Volume2, VolumeX } from "lucide-react";
 import { getAIResponse } from "../lib/gemini";
 
 export function MarketInsights() {
   const [insight, setInsight] = useState<string>("");
   const [loading, setLoading] = useState(true);
+  const [isPlayingSpeech, setIsPlayingSpeech] = useState(false);
   const [marketBias, setMarketBias] = useState<"neutral" | "bull" | "bear">(() => {
     const saved = localStorage.getItem("ww_market_bias");
     return (saved as "neutral" | "bull" | "bear") || "neutral";
@@ -81,13 +82,100 @@ export function MarketInsights() {
 
   const activeSet = marketData[marketBias];
 
+  // Stop speech when component unmounts
+  useEffect(() => {
+    return () => {
+      if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, []);
+
+  const handleSpeak = () => {
+    if (!window.speechSynthesis) {
+      window.dispatchEvent(new CustomEvent('ww-trigger-alert', {
+        detail: {
+          type: "info",
+          title: "Speech Synthesis Unavailable",
+          message: "Your browser does not support the Web Speech API."
+        }
+      }));
+      return;
+    }
+
+    if (isPlayingSpeech) {
+      window.speechSynthesis.cancel();
+      setIsPlayingSpeech(false);
+      return;
+    }
+
+    // Build speech text
+    const marketSummaries = activeSet.markets.map(m => 
+      `${m.name} is currently at ${m.value.replace(/[\$,]/g, '')}, which is ${m.up ? 'up' : 'down'} ${m.change}`
+    ).join(". ");
+
+    const textToSpeak = `
+      Global Market update. 
+      The current market sentiment is ${activeSet.sentiment}, with a Fear and Greed Index of ${activeSet.greedIndex} out of 100. 
+      Latest simulated performance: ${marketSummaries}. 
+      Daily strategy advice: ${insight}.
+    `;
+
+    const utterance = new SpeechSynthesisUtterance(textToSpeak);
+    
+    // Choose an English voice
+    const voices = window.speechSynthesis.getVoices();
+    const englishVoice = voices.find(v => v.lang.startsWith('en')) || voices[0];
+    if (englishVoice) {
+      utterance.voice = englishVoice;
+    }
+    utterance.rate = 1.0;
+    utterance.pitch = 1.0;
+
+    utterance.onend = () => {
+      setIsPlayingSpeech(false);
+    };
+
+    utterance.onerror = () => {
+      setIsPlayingSpeech(false);
+    };
+
+    setIsPlayingSpeech(true);
+    window.speechSynthesis.speak(utterance);
+  };
+
   return (
     <div className="card p-8 space-y-8 text-left">
       <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6">
         <div className="space-y-1.5">
-          <h3 className="text-xl font-bold flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-accent-gold" /> Global Market Intel
-          </h3>
+          <div className="flex items-center gap-3 flex-wrap">
+            <h3 className="text-xl font-bold flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-accent-gold" /> Global Market Intel
+            </h3>
+            
+            {/* Read Aloud Trigger */}
+            <button
+              onClick={handleSpeak}
+              className={`flex items-center gap-1.5 px-3 py-1 text-[10px] font-bold uppercase tracking-wider rounded-lg border transition-all cursor-pointer ${
+                isPlayingSpeech 
+                  ? "bg-accent-gold/20 border-accent-gold text-accent-gold animate-pulse" 
+                  : "bg-bg-secondary/60 border-border hover:border-accent-gold/40 text-text-secondary hover:text-text-primary"
+              }`}
+              title={isPlayingSpeech ? "Stop reading updates" : "Listen to market updates"}
+            >
+              {isPlayingSpeech ? (
+                <>
+                  <VolumeX className="w-3.5 h-3.5" />
+                  <span>Mute Speech</span>
+                </>
+              ) : (
+                <>
+                  <Volume2 className="w-3.5 h-3.5" />
+                  <span>Read Aloud</span>
+                </>
+              )}
+            </button>
+          </div>
           <p className="text-[11px] text-text-muted leading-none">
             Real-time simulated global averages & algorithmic sentiment tracking.
           </p>

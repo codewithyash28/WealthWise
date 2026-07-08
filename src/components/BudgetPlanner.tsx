@@ -253,6 +253,70 @@ export function BudgetPlanner({ user, onSave, initialPlan, gitProvider = "gitlab
     }, 2000);
   };
 
+  const handleExportCSV = () => {
+    // Compile CSV sections
+    let csvContent = "";
+
+    // 1. Title and Metadata
+    csvContent += "=== WEALTHWISE ELITE 2.0 FINANCIAL SUMMARY & BUDGET REPORT ===\n";
+    csvContent += `Generated At,${new Date().toISOString()}\n`;
+    csvContent += `User,${user.name || "Elite Client"}\n`;
+    csvContent += `Preferred Currency,${user.currency}\n\n`;
+
+    // 2. Core Financial Metrics Summary
+    csvContent += "=== CORE METRICS SUMMARY ===\n";
+    csvContent += "Metric,Value,Percentage of Income\n";
+    csvContent += `Monthly Gross Income,${income},100%\n`;
+    csvContent += `Total Monthly Expenses,${totalExpenses},${income > 0 ? Math.round((totalExpenses / income) * 100) : 0}%\n`;
+    csvContent += `Monthly Savings Surplus,${savings},${savingsRate}%\n`;
+    csvContent += `Needs Expenses (Housing/Food/Transport/Health/Loans),${needs},${needsPercent}%\n`;
+    csvContent += `Wants Expenses (Entertainment/Other),${wants},${wantsPercent}%\n\n`;
+
+    // 3. Category Breakdown & Targets
+    csvContent += "=== CATEGORY BUDGET BREAKDOWN ===\n";
+    csvContent += "Category,Current Allocated Expense,Goal/Target Budget,Variance\n";
+    Object.keys(expenses).forEach((cat) => {
+      const expValue = (expenses as any)[cat] || 0;
+      const goalValue = (goals as any)[cat] || 0;
+      const variance = goalValue - expValue;
+      csvContent += `${cat.toUpperCase()},${expValue},${goalValue},${variance}\n`;
+    });
+    csvContent += "\n";
+
+    // 4. Transaction Ledger
+    if (transactions && transactions.length > 0) {
+      csvContent += "=== TRANSACTION LEDGER ===\n";
+      csvContent += "Date,Description,Category,Amount\n";
+      transactions.forEach((t: any) => {
+        const cleanDesc = (t.description || "").replace(/,/g, " ");
+        csvContent += `${t.date || ""},${cleanDesc},${t.category || ""},${t.amount || 0}\n`;
+      });
+    } else {
+      csvContent += "=== TRANSACTION LEDGER ===\n";
+      csvContent += "No active synchronized bank transactions reported.\n";
+    }
+
+    // Trigger download
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `wealthwise_report_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    // Alert User of success
+    window.dispatchEvent(new CustomEvent('ww-trigger-alert', {
+      detail: {
+        type: 'success',
+        title: 'CSV Report Downloaded! 📊',
+        message: 'Your structured financial summary and category budgets have been exported successfully.'
+      }
+    }));
+  };
+
   const updateTransactionCategory = (id: number, category: string) => {
     setTransactions(prev => prev.map(t => t.id === id ? { ...t, category } : t));
   };
@@ -379,14 +443,26 @@ export function BudgetPlanner({ user, onSave, initialPlan, gitProvider = "gitlab
           <h1 className="text-4xl font-display font-bold">Budget Architect</h1>
           <p className="text-text-secondary">Analyze your expenditures and optimize your financial strategy</p>
         </div>
-        <button 
-          onClick={handleConnectBank}
-          disabled={isConnecting}
-          className="btn-primary flex items-center gap-2"
-        >
-          {isConnecting ? <RotateCcw className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />}
-          {isConnecting ? "Synchronizing..." : "Synchronize Accounts"}
-        </button>
+        
+        <div className="flex items-center gap-3 flex-wrap">
+          <button 
+            onClick={handleExportCSV}
+            className="px-5 py-2.5 bg-bg-secondary border border-border hover:border-accent-gold/40 text-text-primary text-xs font-bold uppercase tracking-widest rounded-xl hover:bg-bg-primary transition-all flex items-center gap-2 cursor-pointer"
+            title="Export Summary & Budget to CSV"
+          >
+            <Download className="w-4.5 h-4.5 text-accent-gold" />
+            <span>Export CSV</span>
+          </button>
+
+          <button 
+            onClick={handleConnectBank}
+            disabled={isConnecting}
+            className="btn-primary flex items-center gap-2"
+          >
+            {isConnecting ? <RotateCcw className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />}
+            {isConnecting ? "Synchronizing..." : "Synchronize Accounts"}
+          </button>
+        </div>
       </div>
 
       {/* Strategic Emergency Incident & GitLab Auditing Console */}

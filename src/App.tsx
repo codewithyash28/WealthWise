@@ -83,6 +83,8 @@ class ModuleErrorBoundary extends Component<{ children: ReactNode, moduleName: s
   }
 }
 import { Navbar } from "./components/Navbar";
+import { useClerkAuth, ClerkStatusBanner, ClerkSignInWidget } from "./lib/clerk";
+import { StripeBillingCenter } from "./components/StripeBillingCenter";
 import { Footer } from "./components/Footer";
 import { LandingPage } from "./components/LandingPage";
 import { WealthDashboard } from "./components/WealthDashboard";
@@ -156,6 +158,7 @@ export default function App() {
 }
 
 function AppContent() {
+  const clerkAuth = useClerkAuth();
   const [user, setUser] = useState<LocalUser | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [budget, setBudget] = useState<BudgetPlan | null>(null);
@@ -278,27 +281,177 @@ function AppContent() {
     const savedProfile = localStorage.getItem("ww_profile");
     const savedBudget = localStorage.getItem("ww_budget");
 
+    let parsedProfile: UserProfile | null = null;
+
     if (savedUser) {
       setUser(JSON.parse(savedUser));
     }
     if (savedProfile) {
-      const parsedProfile = JSON.parse(savedProfile);
-      setProfile(parsedProfile);
-      if (parsedProfile.gitProvider) {
+      parsedProfile = JSON.parse(savedProfile);
+      if (parsedProfile?.gitProvider) {
         setGitProvider(parsedProfile.gitProvider);
       }
     }
     if (savedBudget) {
       setBudget(JSON.parse(savedBudget));
     }
+
+    // Process daily engagement streak
+    if (parsedProfile) {
+      const todayStr = new Date().toISOString().split('T')[0];
+      const lastVisitStr = parsedProfile.lastVisit;
+      
+      let currentStreak = parsedProfile.streak || 1;
+      let maxStreak = parsedProfile.maxStreak || 1;
+      let achievements = parsedProfile.achievements || [];
+      let streakUpdated = false;
+      let alertToDispatch: { type: string, title: string, message: string } | null = null;
+      let badgeUnlockedName = "";
+
+      if (lastVisitStr) {
+        const lastVisitDate = new Date(lastVisitStr);
+        const todayDate = new Date();
+        
+        // Normalize dates to midnight to compare calendar days
+        const d1 = new Date(lastVisitDate.getFullYear(), lastVisitDate.getMonth(), lastVisitDate.getDate());
+        const d2 = new Date(todayDate.getFullYear(), todayDate.getMonth(), todayDate.getDate());
+        const diffTime = d2.getTime() - d1.getTime();
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+        if (diffDays === 1) {
+          // Consecutive daily visit
+          currentStreak += 1;
+          maxStreak = Math.max(maxStreak, currentStreak);
+          parsedProfile.streak = currentStreak;
+          parsedProfile.maxStreak = maxStreak;
+          parsedProfile.lastVisit = new Date().toISOString();
+          
+          if (!parsedProfile.visitDates) parsedProfile.visitDates = [];
+          if (!parsedProfile.visitDates.includes(todayStr)) {
+            parsedProfile.visitDates.push(todayStr);
+          }
+          streakUpdated = true;
+          alertToDispatch = {
+            type: "success",
+            title: "Daily Streak Extended! 🔥",
+            message: `Your login streak is now ${currentStreak} days. Keep up the great financial focus!`
+          };
+        } else if (diffDays > 1) {
+          // Broken streak
+          currentStreak = 1;
+          parsedProfile.streak = currentStreak;
+          parsedProfile.lastVisit = new Date().toISOString();
+          
+          if (!parsedProfile.visitDates) parsedProfile.visitDates = [];
+          if (!parsedProfile.visitDates.includes(todayStr)) {
+            parsedProfile.visitDates.push(todayStr);
+          }
+          streakUpdated = true;
+          alertToDispatch = {
+            type: "info",
+            title: "Streak Reset",
+            message: "Your consecutive login streak has reset. Keep visiting daily to earn premium rewards!"
+          };
+        } else {
+          // Same day visit
+          if (parsedProfile.streak === undefined) {
+            parsedProfile.streak = 1;
+            parsedProfile.maxStreak = 1;
+            streakUpdated = true;
+          }
+        }
+      } else {
+        // Initial fallback
+        parsedProfile.streak = 1;
+        parsedProfile.maxStreak = 1;
+        parsedProfile.lastVisit = new Date().toISOString();
+        if (!parsedProfile.visitDates) parsedProfile.visitDates = [];
+        if (!parsedProfile.visitDates.includes(todayStr)) {
+          parsedProfile.visitDates.push(todayStr);
+        }
+        streakUpdated = true;
+      }
+
+      // Check milestones for streak-based badges
+      const checkAndUnlockBadge = (id: string) => {
+        if (!achievements.some(a => a.id === id)) {
+          const achDef = ACHIEVEMENTS.find(a => a.id === id);
+          if (achDef) {
+            achievements.push({
+              ...achDef,
+              unlockedAt: new Date().toISOString()
+            });
+            streakUpdated = true;
+            badgeUnlockedName = achDef.title;
+          }
+        }
+      };
+
+      if (currentStreak >= 3) {
+        checkAndUnlockBadge('streak_3');
+      }
+      if (currentStreak >= 7) {
+        checkAndUnlockBadge('streak_7');
+      }
+      if (parsedProfile.completedQuests && parsedProfile.completedQuests.length >= 4) {
+        checkAndUnlockBadge('completion_all');
+      }
+
+      if (streakUpdated) {
+        parsedProfile.achievements = achievements;
+        setProfile(parsedProfile);
+        localStorage.setItem("ww_profile", JSON.stringify(parsedProfile));
+
+        if (alertToDispatch) {
+          const alertCopy = alertToDispatch;
+          const badgeCopy = badgeUnlockedName;
+          setTimeout(() => {
+            window.dispatchEvent(new CustomEvent('ww-trigger-alert', { detail: alertCopy }));
+            if (badgeCopy) {
+              window.dispatchEvent(new CustomEvent('ww-trigger-alert', { 
+                detail: {
+                  type: "success",
+                  title: "New Badge Unlocked! 🏆",
+                  message: `You earned the '${badgeCopy}' achievement badge!`
+                }
+              }));
+            }
+          }, 1500);
+        }
+      } else {
+        setProfile(parsedProfile);
+      }
+    }
     
     setIsAuthReady(true);
   }, []);
 
+  // Synchronize Clerk auth state into AppContent user/profile state
+  useEffect(() => {
+    if (clerkAuth.isLoaded) {
+      if (clerkAuth.isSignedIn && clerkAuth.user) {
+        const clerkUserObj = {
+          uid: clerkAuth.user.uid,
+          displayName: clerkAuth.user.displayName,
+          email: clerkAuth.user.email,
+          photoURL: clerkAuth.user.photoURL
+        };
+        setUser(clerkUserObj);
+        clerkAuth.syncWithAppProfile(setProfile, setBudget);
+      } else {
+        if (user && (user.uid.startsWith("clerk_") || user.uid.startsWith("clerk-"))) {
+          setUser(null);
+          setProfile(null);
+          setBudget(null);
+        }
+      }
+    }
+  }, [clerkAuth.isLoaded, clerkAuth.isSignedIn, clerkAuth.user]);
+
   // Sync state tracking variables
   const [authEmail, setAuthEmail] = useState("");
   const [authPassword, setAuthPassword] = useState("");
-  const [authMode, setAuthMode] = useState<"guest" | "mongodb_register" | "mongodb_login">("mongodb_login");
+  const [authMode, setAuthMode] = useState<"guest" | "mongodb_register" | "mongodb_login" | "clerk">("clerk");
   const [dbHealth, setDbHealth] = useState<{ status: string, database: string, connectionString?: string } | null>(null);
   const [authError, setAuthError] = useState<string | null>(null);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
@@ -493,6 +646,7 @@ function AppContent() {
     localStorage.removeItem("ww_profile");
     localStorage.removeItem("ww_budget");
     localStorage.removeItem("ww_sync_enabled");
+    clerkAuth.signOut();
     window.location.hash = "#home";
   };
 
@@ -597,6 +751,12 @@ function AppContent() {
                 {/* Visual tabs to choose auth mechanism */}
                 <div className="flex border-b border-border/50">
                   <button
+                    onClick={() => { setAuthMode("clerk"); setAuthError(null); }}
+                    className={`flex-1 pb-3 text-xs uppercase tracking-wider font-extrabold transition-all border-b-2 ${authMode === "clerk" ? "border-accent-gold text-accent-gold" : "border-transparent text-text-muted hover:text-text-primary"}`}
+                  >
+                    Clerk Secure SSO
+                  </button>
+                  <button
                     onClick={() => { setAuthMode("mongodb_login"); setAuthError(null); }}
                     className={`flex-1 pb-3 text-xs uppercase tracking-wider font-extrabold transition-all border-b-2 ${authMode === "mongodb_login" ? "border-accent-gold text-accent-gold" : "border-transparent text-text-muted hover:text-text-primary"}`}
                   >
@@ -627,7 +787,18 @@ function AppContent() {
                 )}
 
                 <AnimatePresence mode="wait">
-                  {authMode === "guest" ? (
+                  {authMode === "clerk" ? (
+                    <motion.div
+                      key="clerk-auth-card"
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="space-y-6 text-left py-2"
+                    >
+                      <ClerkStatusBanner />
+                      <ClerkSignInWidget />
+                    </motion.div>
+                  ) : authMode === "guest" ? (
                     <motion.div
                       key="guest-card"
                       initial={{ opacity: 0, scale: 0.95 }}
@@ -901,7 +1072,16 @@ function AppContent() {
             case "#macropulse": 
               return (
                 <ModuleErrorBoundary moduleName="MacroPulse Simulation Engine">
-                  <div className="container mx-auto px-6 py-12"><MacroPulse user={profile} /></div>
+                  <div className="container mx-auto px-6 py-12">
+                    <MacroPulse 
+                      user={profile} 
+                      onUpdateProfile={(updated) => {
+                        setProfile(updated);
+                        localStorage.setItem("ww_profile", JSON.stringify(updated));
+                        triggerSyncToCloud(updated, budget);
+                      }} 
+                    />
+                  </div>
                 </ModuleErrorBoundary>
               );
             case "#trendmarket": 
@@ -1019,6 +1199,17 @@ function AppContent() {
                   </div>
                 </ModuleErrorBoundary>
               );
+            case "#billing":
+              return (
+                <ModuleErrorBoundary moduleName="Stripe Premium Subscription & Billing">
+                  <div className="container mx-auto px-6 py-12">
+                    <StripeBillingCenter user={profile} onUpdateProfile={(updated) => {
+                      setProfile(updated);
+                      localStorage.setItem("ww_profile", JSON.stringify(updated));
+                    }} />
+                  </div>
+                </ModuleErrorBoundary>
+              );
             default: return <LandingPage />;
           }
         })()}
@@ -1032,11 +1223,14 @@ function AppContent() {
       <div className="aurora-2 bottom-[-100px] right-[-100px]" />
       <div className="grid-overlay" />
 
-      <PulseAlert 
-        alerts={alerts} 
-        onClose={(id) => setAlerts(prev => prev.filter(a => a.id !== id))} 
-        onClearAll={() => setAlerts([])}
-      />
+      {/* Anchored Alerts Container */}
+      <div className="fixed bottom-8 right-8 z-50 flex flex-col gap-4 max-w-sm">
+        <PulseAlert 
+          alerts={alerts} 
+          onClose={(id) => setAlerts(prev => prev.filter(a => a.id !== id))} 
+          onClearAll={() => setAlerts([])}
+        />
+      </div>
 
       <QuickTips hash={currentHash} />
 
@@ -1101,6 +1295,7 @@ function AppContent() {
         onToggleTheme={toggleTheme}
         user={user}
         onSignOut={handleSignOut}
+        streak={profile?.streak || 1}
       />
 
       <main className="flex-1 pt-24">

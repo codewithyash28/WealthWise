@@ -132,5 +132,10 @@ export const ACHIEVEMENTS: Achievement[] = [
   { id: 'goal_setter', title: 'Future Visionary', description: 'Defined a major life goal', icon: '🔭' },
   { id: 'networth_positive', title: 'Wealth Builder', description: 'Assets exceed your liabilities', icon: '📈' },
   { id: 'simulation_expert', title: 'Scenario Master', description: 'Ran a What-If life simulation', icon: '🎮' },
-  { id: 'audit_elite', title: 'AI Optimized', description: 'Completed a deep-dive AI audit', icon: '💎' }
+  { id: 'audit_elite', title: 'AI Optimized', description: 'Completed a deep-dive AI audit', icon: '💎' },
+  { id: 'first_quest', title: 'Quest Init', description: 'Completed your first financial learning quest', icon: '🎯' },
+  { id: 'quests_grandmaster', title: 'Economic Scholar', description: 'Completed all available learning quests', icon: '🏅' },
+  { id: 'streak_3', title: 'Daily Disciple', description: 'Maintained a 3-day consecutive login streak', icon: '🔥' },
+  { id: 'streak_7', title: 'Habit Warrior', description: 'Maintained a 7-day consecutive login streak', icon: '⚡' },
+  { id: 'completion_all', title: 'Socratic Sage', description: 'Completed all core learning modules', icon: '👑' }
 ];

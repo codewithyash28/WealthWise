@@ -23,6 +23,8 @@ export function Dashboard({ user, budget, onUpdateNetWorth }: DashboardProps) {
   const currency = CURRENCIES[user.currency] || CURRENCIES.USD;
   const netWorth = assets - liabilities;
 
+  const [isInfiniteMode, setIsInfiniteMode] = useState(false);
+
   const calculateHealthScore = () => {
     let score = 0;
     if (budget) score += 20;
@@ -38,9 +40,10 @@ export function Dashboard({ user, budget, onUpdateNetWorth }: DashboardProps) {
     return Math.round(score);
   };
 
-  const healthScore = calculateHealthScore();
+  const healthScore = isInfiniteMode ? 999999 : calculateHealthScore();
 
   const getHealthGrade = (score: number) => {
+    if (score > 100) return { text: "Infinite Wealth Master ♾️", color: "text-accent-gold animate-pulse", border: "border-accent-gold" };
     if (score >= 81) return { text: "Excellent Financial Health", color: "text-accent-emerald", border: "border-accent-emerald" };
     if (score >= 61) return { text: "Good Financial Health", color: "text-accent-gold", border: "border-accent-gold" };
     if (score >= 31) return { text: "Fair Financial Health", color: "text-accent-orange", border: "border-accent-orange" };
@@ -288,30 +291,67 @@ export function Dashboard({ user, budget, onUpdateNetWorth }: DashboardProps) {
 
       {/* Financial Health Score */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-1 card p-8 flex flex-col items-center justify-center text-center space-y-6">
-          <h3 className="text-xl font-bold">Financial Health Score</h3>
-          <div className="relative w-48 h-48">
-            <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
+        <div className={cn(
+          "lg:col-span-1 card p-8 flex flex-col items-center justify-center text-center space-y-6 transition-all duration-500 relative overflow-hidden",
+          isInfiniteMode && "border-accent-gold/50 shadow-[0_0_30px_rgba(240,180,41,0.25)] bg-gradient-to-b from-bg-secondary via-bg-secondary/40 to-accent-gold/5"
+        )}>
+          {isInfiniteMode && (
+            <div className="absolute inset-0 bg-stars opacity-15 pointer-events-none" />
+          )}
+          <h3 className="text-xl font-bold flex items-center gap-1.5">
+            Financial Health Score
+            {isInfiniteMode && <span className="text-xs text-accent-gold animate-pulse">✨</span>}
+          </h3>
+          <div 
+            onClick={() => {
+              const newMode = !isInfiniteMode;
+              setIsInfiniteMode(newMode);
+              window.dispatchEvent(new CustomEvent('ww-trigger-alert', {
+                detail: {
+                  type: 'success',
+                  title: newMode ? 'Infinite Mode Activated! ♾️' : 'Infinite Mode Deactivated',
+                  message: newMode 
+                    ? 'Congratulations! You have unlocked Infinite Wealth Score / 100.' 
+                    : 'Restored standard Socratic financial calculations.'
+                }
+              }));
+            }}
+            className="relative w-48 h-48 cursor-pointer group active:scale-95 transition-all duration-300"
+            title="Click to toggle Infinite Score Mode!"
+          >
+            <svg viewBox="0 0 100 100" className={cn("w-full h-full -rotate-90", isInfiniteMode && "animate-[spin_12s_linear_infinite]")}>
               <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" strokeWidth="8" className="text-border" />
               <motion.circle
                 cx="50" cy="50" r="45" fill="none" stroke="currentColor" strokeWidth="8"
                 strokeDasharray="282.7"
                 initial={{ strokeDashoffset: 282.7 }}
-                animate={{ strokeDashoffset: 282.7 - (282.7 * healthScore) / 100 }}
+                animate={{ strokeDashoffset: isInfiniteMode ? 0 : 282.7 - (282.7 * healthScore) / 100 }}
                 transition={{ duration: 1.5, ease: "easeOut" }}
                 className={cn(
-                  healthScore >= 81 ? "text-accent-emerald" : healthScore >= 61 ? "text-accent-gold" : healthScore >= 31 ? "text-accent-orange" : "text-accent-red"
+                  isInfiniteMode ? "text-accent-gold" : healthScore >= 81 ? "text-accent-emerald" : healthScore >= 61 ? "text-accent-gold" : healthScore >= 31 ? "text-accent-orange" : "text-accent-red"
                 )}
               />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-5xl font-mono font-bold">{healthScore}</span>
-              <span className="text-text-muted text-sm">/ 100</span>
+              <span className={cn(
+                "font-mono font-bold transition-all duration-300 select-none", 
+                isInfiniteMode ? "text-6xl text-accent-gold drop-shadow-[0_0_15px_rgba(240,180,41,0.6)] animate-[pulse_1.5s_infinite]" : "text-5xl"
+              )}>
+                {isInfiniteMode ? "∞" : healthScore}
+              </span>
+              <span className="text-text-muted text-sm select-none">/ 100</span>
+            </div>
+            
+            {/* Soft hint bubble on hover */}
+            <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-all duration-300 bg-bg-void/90 border border-border text-[9px] font-mono text-accent-gold px-2 py-0.5 rounded shadow-lg whitespace-nowrap z-10 pointer-events-none">
+              Click to activate Infinite Mode!
             </div>
           </div>
           <div className="space-y-1">
-            <div className={cn("text-lg font-bold", healthGrade.color)}>{healthGrade.text}</div>
-            <p className="text-text-secondary text-sm">Based on your activity and data</p>
+            <div className={cn("text-lg font-bold transition-colors duration-300", healthGrade.color)}>{healthGrade.text}</div>
+            <p className="text-text-secondary text-sm">
+              {isInfiniteMode ? "Boundless monetary horizons unlocked" : "Based on your activity and data"}
+            </p>
           </div>
         </div>
 

@@ -10,6 +10,7 @@ import { generateWealthAudit } from "../lib/gemini";
 import { WealthPathChart } from "./WealthPathChart";
 import { MarketInsights } from "./MarketInsights";
 import { GitOpsControlCenter } from "./GitOpsControlCenter";
+import { AgentOperationsLogs } from "./AgentOperationsLogs";
 import { SHOP_ITEMS, ShopItem } from "./QuestsHub";
 
 interface WealthDashboardProps {
@@ -670,24 +671,82 @@ export function WealthDashboard({ user, budget, onUnlockAchievement, onUpdateGit
 
             <div className="flex justify-between items-center text-[10px] text-text-muted font-mono uppercase tracking-wider">
               <span className="flex items-center gap-1">Less Consistency <span className="w-2 h-2 bg-bg-secondary border border-border/40 rounded-2xs"></span></span>
-              <span className="font-bold text-accent-gold">Current Streak: {
-                (() => {
-                  const logs = user.activityLogs || [];
-                  let streak = 0;
-                  const today = new Date();
-                  for (let i = 0; i < 30; i++) {
-                    const checkDate = new Date();
-                    checkDate.setDate(today.getDate() - i);
-                    if (logs.includes(checkDate.toLocaleDateString())) {
-                      streak++;
-                    } else if (i > 0) {
-                      break; 
-                    }
-                  }
-                  return streak;
-                })()
-              } Days</span>
+              <span className="font-bold text-accent-gold">Current Streak: {user.streak || 1} Days</span>
               <span className="flex items-center gap-1"><span className="w-2 h-2 bg-accent-gold rounded-2xs"></span> High Consistency</span>
+            </div>
+
+            {/* Gamified Milestone Rewards Section */}
+            <div className="border-t border-border/40 pt-4 mt-4 space-y-3">
+              <div className="flex justify-between items-center">
+                <div className="text-[11px] font-bold text-accent-gold uppercase tracking-wider font-mono">Streak & Module Milestones</div>
+                <div className="text-[10px] font-mono text-text-muted">Unlock rewards instantly</div>
+              </div>
+              
+              <div className="grid grid-cols-3 gap-3">
+                {[
+                  { 
+                    id: 'streak_3', 
+                    title: '3-Day Streak', 
+                    desc: 'Daily Disciple', 
+                    icon: '🔥', 
+                    unlocked: (user.streak || 1) >= 3 || (user.achievements || []).some(a => a.id === 'streak_3')
+                  },
+                  { 
+                    id: 'streak_7', 
+                    title: '7-Day Streak', 
+                    desc: 'Habit Warrior', 
+                    icon: '⚡', 
+                    unlocked: (user.streak || 1) >= 7 || (user.achievements || []).some(a => a.id === 'streak_7')
+                  },
+                  { 
+                    id: 'completion_all', 
+                    title: 'All Quests', 
+                    desc: 'Socratic Sage', 
+                    icon: '👑', 
+                    unlocked: (user.completedQuests || []).length >= 4 || (user.achievements || []).some(a => a.id === 'completion_all')
+                  }
+                ].map((m) => (
+                  <div 
+                    key={m.id} 
+                    className={cn(
+                      "p-2.5 rounded-xl border text-center relative overflow-hidden transition-all duration-300",
+                      m.unlocked 
+                        ? "bg-accent-gold/5 border-accent-gold/30 text-text-primary shadow-[0_0_12px_rgba(234,179,8,0.05)]" 
+                        : "bg-bg-void/40 border-border/40 text-text-muted"
+                    )}
+                  >
+                    <div className="text-xl mb-1">{m.icon}</div>
+                    <div className="text-[10px] font-black truncate">{m.title}</div>
+                    <div className="text-[9px] text-text-secondary truncate">{m.desc}</div>
+                    <div className="mt-1.5 flex justify-center">
+                      <span className={cn(
+                        "text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-sm font-mono border",
+                        m.unlocked 
+                          ? "bg-accent-emerald/15 border-accent-emerald/20 text-accent-emerald" 
+                          : "bg-bg-secondary/40 border-border/40 text-text-muted"
+                      )}>
+                        {m.unlocked ? "Unlocked" : "Locked"}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              
+              {/* Stats overview breakdown panel */}
+              <div className="bg-bg-void/40 p-3 rounded-xl border border-border/40 text-[11px] space-y-1.5">
+                <div className="flex justify-between font-mono">
+                  <span className="text-text-secondary">Current Login Streak:</span>
+                  <span className="font-bold text-accent-gold">{user.streak || 1} { (user.streak || 1) === 1 ? 'Day' : 'Days' }</span>
+                </div>
+                <div className="flex justify-between font-mono">
+                  <span className="text-text-secondary">Consecutive Max Streak:</span>
+                  <span className="font-bold text-text-primary">{user.maxStreak || user.streak || 1} Days</span>
+                </div>
+                <div className="flex justify-between font-mono">
+                  <span className="text-text-secondary">Module Progress:</span>
+                  <span className="font-bold text-accent-emerald">{(user.completedQuests || []).length} / 4 Cleared</span>
+                </div>
+              </div>
             </div>
           </div>
         </motion.div>
@@ -1085,6 +1144,9 @@ export function WealthDashboard({ user, budget, onUnlockAchievement, onUpdateGit
         gitProvider={gitProvider}
         onUnlockAchievement={onUnlockAchievement}
       />
+
+      {/* Autonomous Agent Operations Log Terminal */}
+      <AgentOperationsLogs />
 
       {/* Audit Result / Action Items */}
       {auditResult && (
