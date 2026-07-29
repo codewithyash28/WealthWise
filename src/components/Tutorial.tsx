@@ -12,7 +12,7 @@ interface TutorialStep {
 
 const steps: TutorialStep[] = [
   {
-    title: "Welcome to WealthWise Elite",
+    title: "Welcome to Wexa AI",
     description: "Your journey to financial freedom starts here. Let's take a quick tour of your new command center.",
     icon: <Sparkles className="w-8 h-8 text-accent-gold" />,
     feature: "Dashboard"

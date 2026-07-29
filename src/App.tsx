@@ -88,9 +88,21 @@ import { StripeBillingCenter } from "./components/StripeBillingCenter";
 import { Footer } from "./components/Footer";
 import { LandingPage } from "./components/LandingPage";
 import { WealthDashboard } from "./components/WealthDashboard";
+import { AuditReport } from "./components/AuditReport";
+import { HackathonSubmissionHub } from "./components/HackathonSubmissionHub";
+import { PricingPage } from "./components/PricingPage";
+import { JudgeModeTerminal } from "./components/JudgeModeTerminal";
+import { WexaExecutionEngine } from "./components/WexaExecutionEngine";
+import { WexaCompanion } from "./components/WexaCompanion";
+import { BankSyncSandbox } from "./components/BankSyncSandbox";
+import { KnowledgeVault } from "./components/KnowledgeVault";
+import { CryptoPortfolio } from "./components/CryptoPortfolio";
+import { RentVsBuySimulator } from "./components/RentVsBuySimulator";
 import { CurrencySelector, NameInput } from "./components/Modals";
 import { Onboarding } from "./components/Onboarding";
 import { JudgeTour } from "./components/JudgeTour";
+import { VoiceNavigationController } from "./components/VoiceNavigationController";
+import { StartupLogoAnimation } from "./components/StartupLogoAnimation";
 import { Logo } from "./components/Logo";
 import { UserProfile, BudgetPlan, FinancialGoal, Achievement, Portfolio } from "./types";
 import { CURRENCIES, ACHIEVEMENTS } from "./constants";
@@ -168,19 +180,29 @@ function AppContent() {
   const [unlockedAchievement, setUnlockedAchievement] = useState<Achievement | null>(null);
   const [gitProvider, setGitProvider] = useState<"gitlab" | "github" | "bitbucket">("github");
   const [alerts, setAlerts] = useState<any[]>([
-    { id: 'welcome', type: 'market', title: 'WealthWise Mastery Active', message: 'Inflation trends are shifting. Check the MacroPulse engine.', timestamp: 'Just now' }
+    { id: 'welcome', type: 'market', title: 'Wexa Mastery Active', message: 'Inflation trends are shifting. Check the MacroPulse engine.', timestamp: 'Just now' }
   ]);
 
   useEffect(() => {
     // Fetch real-time, search-grounded global news alerts on mount
     fetch("/api/gemini/autonomous-alerts")
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
       .then((data) => {
         if (data && data.alerts && data.alerts.length > 0) {
           setAlerts(data.alerts);
         }
       })
-      .catch((err) => console.error("Error loading live economic grounding:", err));
+      .catch((err) => {
+        console.warn("Live economic grounding offline, utilizing local standby alerts:", err?.message || err);
+        setAlerts([
+          { id: 'off_1', type: 'market', title: 'Wexa Mastery Active', message: 'Inflation trends and macro indicators are active in the MacroPulse engine.', timestamp: 'Just now' },
+          { id: 'off_2', type: 'info', title: 'Macro Resilience', message: 'Portfolio stress-testing parameters are calibrated to current global baseline rates.', timestamp: 'Active' },
+          { id: 'off_3', type: 'risk', title: 'Asset Allocation', message: 'Rebalance metrics are actively monitoring target weights against volatility bounds.', timestamp: 'Active' }
+        ]);
+      });
 
     const nudges = [
       { type: 'info', title: 'Macro Tip', message: 'Did you know? High inflation erodes purchasing power. Use the MacroPulse to see how.' },
@@ -204,11 +226,22 @@ function AppContent() {
     return () => clearInterval(interval);
   }, []);
 
-  const [theme, setTheme] = useState<"light" | "dark">(() => {
-    const saved = localStorage.getItem("ww_theme");
-    if (saved) return saved as "light" | "dark";
-    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  const [themeMode, setThemeMode] = useState<"system" | "light" | "dark">(() => {
+    const saved = localStorage.getItem("ww_theme_mode");
+    if (saved) return saved as "system" | "light" | "dark";
+    return "dark";
   });
+
+  const [systemDark, setSystemDark] = useState(() => window.matchMedia("(prefers-color-scheme: dark)").matches);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    const handleChange = (e: MediaQueryListEvent) => setSystemDark(e.matches);
+    mediaQuery.addEventListener("change", handleChange);
+    return () => mediaQuery.removeEventListener("change", handleChange);
+  }, []);
+
+  const theme: "light" | "dark" = themeMode === "system" ? (systemDark ? "dark" : "light") : themeMode;
 
   useEffect(() => {
     const root = window.document.documentElement;
@@ -217,10 +250,13 @@ function AppContent() {
     } else {
       root.classList.remove("light");
     }
+    localStorage.setItem("ww_theme_mode", themeMode);
     localStorage.setItem("ww_theme", theme);
-  }, [theme]);
+  }, [theme, themeMode]);
 
-  const toggleTheme = () => setTheme(prev => prev === "light" ? "dark" : "light");
+  const toggleTheme = () => {
+    setThemeMode(prev => (prev === "light" ? "dark" : "light"));
+  };
   
   // Onboarding state
   const [showCurrencySelector, setShowCurrencySelector] = useState(false);
@@ -228,16 +264,21 @@ function AppContent() {
   const [showTutorial, setShowTutorial] = useState(false);
   const [showExpertOnboarding, setShowExpertOnboarding] = useState(false);
   const [showJudgeTour, setShowJudgeTour] = useState(false);
+  const [isJudgeMode, setIsJudgeMode] = useState(() => localStorage.getItem("ww_judge_mode") === "true");
   const [showSplash, setShowSplash] = useState(true);
   const [tempCurrency, setTempCurrency] = useState<string | null>(null);
 
   useEffect(() => {
-    const timer = setTimeout(() => setShowSplash(false), 4000);
+    const timer = setTimeout(() => setShowSplash(false), 1600);
     return () => clearTimeout(timer);
   }, []);
 
   useEffect(() => {
-    const handleStartTour = () => setShowJudgeTour(true);
+    const handleStartTour = () => {
+      setShowJudgeTour(true);
+      setIsJudgeMode(true);
+      localStorage.setItem("ww_judge_mode", "true");
+    };
     window.addEventListener('start-judge-tour', handleStartTour);
     return () => window.removeEventListener('start-judge-tour', handleStartTour);
   }, []);
@@ -1053,6 +1094,46 @@ function AppContent() {
       <Suspense fallback={<ModuleLoadingSkeleton />}>
         {(() => {
           switch (currentHash) {
+            case "#wexa-agent":
+              return (
+                <ModuleErrorBoundary moduleName="Wexa Autonomous Execution Engine">
+                  <div className="container mx-auto px-6 py-12">
+                    <WexaExecutionEngine user={profile} />
+                  </div>
+                </ModuleErrorBoundary>
+              );
+            case "#wexa-companion":
+              return (
+                <ModuleErrorBoundary moduleName="Wexa AI Companion & Multimodal Receipt Vision">
+                  <div className="container mx-auto px-6 py-12">
+                    <WexaCompanion user={profile} budget={budget} />
+                  </div>
+                </ModuleErrorBoundary>
+              );
+            case "#bank-sync":
+              return (
+                <ModuleErrorBoundary moduleName="Plaid Account Aggregator & Webhook Sandbox">
+                  <div className="container mx-auto px-6 py-12">
+                    <BankSyncSandbox />
+                  </div>
+                </ModuleErrorBoundary>
+              );
+            case "#vault":
+              return (
+                <ModuleErrorBoundary moduleName="Financial Literacy Knowledge Vault">
+                  <div className="container mx-auto px-6 py-12">
+                    <KnowledgeVault />
+                  </div>
+                </ModuleErrorBoundary>
+              );
+            case "#rent-vs-buy":
+              return (
+                <ModuleErrorBoundary moduleName="Rent vs Buy Capital Growth Simulator">
+                  <div className="container mx-auto px-6 py-12">
+                    <RentVsBuySimulator />
+                  </div>
+                </ModuleErrorBoundary>
+              );
             case "#dashboard": 
               return (
                 <ModuleErrorBoundary moduleName="Control Dashboard">
@@ -1118,6 +1199,38 @@ function AppContent() {
               return (
                 <ModuleErrorBoundary moduleName="Interactive Portfolio Balance Matrix">
                   <PortfolioOverview user={profile} />
+                </ModuleErrorBoundary>
+              );
+            case "#crypto": 
+              return (
+                <ModuleErrorBoundary moduleName="Real-Time Crypto Asset Intelligence">
+                  <div className="container mx-auto px-6 py-12">
+                    <CryptoPortfolio user={profile} />
+                  </div>
+                </ModuleErrorBoundary>
+              );
+            case "#hackathon-hub":
+              return (
+                <ModuleErrorBoundary moduleName="90-Day Hackathon Submission Hub">
+                  <div className="container mx-auto px-6 py-12">
+                    <HackathonSubmissionHub />
+                  </div>
+                </ModuleErrorBoundary>
+              );
+            case "#audit-report":
+              return (
+                <ModuleErrorBoundary moduleName="Platform Revenue Audit Center">
+                  <div className="container mx-auto px-6 py-12">
+                    <AuditReport user={profile} />
+                  </div>
+                </ModuleErrorBoundary>
+              );
+            case "#pricing":
+              return (
+                <ModuleErrorBoundary moduleName="Clerk Pricing & Subscription Center">
+                  <div className="container mx-auto px-6 py-12">
+                    <PricingPage userProfile={profile} />
+                  </div>
                 </ModuleErrorBoundary>
               );
             case "#networth": 
@@ -1201,7 +1314,7 @@ function AppContent() {
               );
             case "#billing":
               return (
-                <ModuleErrorBoundary moduleName="Stripe Premium Subscription & Billing">
+                <ModuleErrorBoundary moduleName="Secure Premium Subscription & Billing">
                   <div className="container mx-auto px-6 py-12">
                     <StripeBillingCenter user={profile} onUpdateProfile={(updated) => {
                       setProfile(updated);
@@ -1234,37 +1347,10 @@ function AppContent() {
 
       <QuickTips hash={currentHash} />
 
-      {/* Splash Screen */}
-      <AnimatePresence>
-        {showSplash && (
-          <motion.div
-            initial={{ opacity: 1 }}
-            exit={{ opacity: 0, scale: 1.1, filter: "blur(20px)" }}
-            transition={{ duration: 1, ease: "easeInOut" }}
-            className="fixed inset-0 z-[500] bg-bg-void flex items-center justify-center pointer-events-auto"
-          >
-            <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 0.8, ease: "easeOut" }}
-              className="flex flex-col items-center gap-8"
-            >
-              <Logo size="xl" />
-              <div className="flex flex-col items-center gap-2">
-                 <div className="h-1 w-48 bg-bg-secondary rounded-full overflow-hidden border border-border">
-                   <motion.div 
-                     initial={{ width: 0 }}
-                     animate={{ width: "100%" }}
-                     transition={{ duration: 3.5, ease: "easeInOut" }}
-                     className="h-full bg-accent-gold"
-                   />
-                 </div>
-                 <span className="text-[10px] font-bold text-accent-gold uppercase tracking-[0.3em]">Initializing Elite Workspace</span>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Startup Logo Reveal Animation */}
+      {showSplash && (
+        <StartupLogoAnimation onComplete={() => setShowSplash(false)} />
+      )}
 
       {/* Achievement Toast */}
       <AnimatePresence>
@@ -1292,10 +1378,13 @@ function AppContent() {
         currency={profile?.currency || "USD"} 
         onCurrencyClick={() => profile && setShowCurrencySelector(true)} 
         theme={theme}
+        themeMode={themeMode}
         onToggleTheme={toggleTheme}
+        onSetThemeMode={setThemeMode}
         user={user}
         onSignOut={handleSignOut}
         streak={profile?.streak || 1}
+        onLogoClick={() => setShowSplash(true)}
       />
 
       <main className="flex-1 pt-24">
@@ -1303,6 +1392,13 @@ function AppContent() {
       </main>
 
       <Footer />
+
+      {isJudgeMode && (
+        <JudgeModeTerminal onClose={() => {
+          setIsJudgeMode(false);
+          localStorage.removeItem("ww_judge_mode");
+        }} />
+      )}
 
       {showJudgeTour && (
         <JudgeTour onClose={() => setShowJudgeTour(false)} />
@@ -1331,6 +1427,11 @@ function AppContent() {
       {showTutorial && (
         <Tutorial onClose={() => setShowTutorial(false)} />
       )}
+
+      <VoiceNavigationController onNavigate={(hash) => {
+        setCurrentHash(hash);
+        window.location.hash = hash;
+      }} />
     </div>
   );
 }

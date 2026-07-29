@@ -23,7 +23,7 @@ export function StripeBillingCenter({ user, onUpdateProfile }: StripeBillingCent
     ];
     if (user?.isPremium) {
       setSimulatedReceipts([
-        { id: "TX_5829", date: "Today", amount: "$19.99", status: "Processed", plan: "Socratic Live Plan (Stripe Live)" },
+        { id: "TX_5829", date: "Today", amount: "$19.99", status: "Processed", plan: "Socratic Live Plan (Gateway Live)" },
         ...baseReceipts
       ]);
     } else {
@@ -35,8 +35,8 @@ export function StripeBillingCenter({ user, onUpdateProfile }: StripeBillingCent
   const revTotal = simulatedReceipts.reduce((sum, r) => sum + parseFloat(r.amount.replace('$', '')) || 0, 0);
   const costAI = 4.50;
   const costInfra = 2.10;
-  const costStripeFee = +(revTotal * 0.03).toFixed(2);
-  const totalCosts = costAI + costInfra + costStripeFee;
+  const costGatewayFee = +(revTotal * 0.03).toFixed(2);
+  const totalCosts = costAI + costInfra + costGatewayFee;
   const netMargin = +(revTotal - totalCosts).toFixed(2);
 
   const handleExportPnLCSV = () => {
@@ -51,7 +51,7 @@ export function StripeBillingCenter({ user, onUpdateProfile }: StripeBillingCent
     const costItems = [
       { item: "Vertex AI Studio LLM API Calls", id: "COST_AI_001", category: "AI Operation Cost", type: "Cost", amount: costAI },
       { item: "Google Cloud Run Storage Server", id: "COST_INFRA_002", category: "Infrastructure Cost", type: "Cost", amount: costInfra },
-      { item: "Stripe Processing Gateway Fee (3%)", id: "COST_GATE_003", category: "Transaction Fees", type: "Cost", amount: costStripeFee }
+      { item: "Payment Gateway Fee (3%)", id: "COST_GATE_003", category: "Transaction Fees", type: "Cost", amount: costGatewayFee }
     ];
 
     const allItems = [...revenueItems, ...costItems];
@@ -60,9 +60,9 @@ export function StripeBillingCenter({ user, onUpdateProfile }: StripeBillingCent
     const netProfit = +(totalRev - totalCost).toFixed(2);
 
     let csvContent = "data:text/csv;charset=utf-8,";
-    csvContent += "--- WEALTHWISE ELITE P&L COMPLIANCE REVENUE EVIDENCE REPORT ---\n";
+    csvContent += "--- WEXA AI P&L COMPLIANCE REVENUE EVIDENCE REPORT ---\n";
     csvContent += `Generated On,${new Date().toLocaleString()}\n`;
-    csvContent += `Account Email,${user?.email || "practice@wealthwise.com"}\n`;
+    csvContent += `Account Email,${user?.email || "practice@wexa.ai"}\n`;
     csvContent += `Subscription Status,${user?.isPremium ? "Premium Active" : "Free Tier"}\n\n`;
     csvContent += "Item,ID/Reference,Category,Type,Amount (USD),Margin Impact\n";
 
@@ -80,7 +80,7 @@ export function StripeBillingCenter({ user, onUpdateProfile }: StripeBillingCent
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `wealthwise_revenue_pnl_evidence_${user?.uid || "user"}.csv`);
+    link.setAttribute("download", `wexa_revenue_pnl_evidence_${user?.uid || "user"}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -110,7 +110,7 @@ export function StripeBillingCenter({ user, onUpdateProfile }: StripeBillingCent
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to create Stripe checkout session: HTTP status ${response.status}`);
+        throw new Error(`Failed to create checkout session: HTTP status ${response.status}`);
       }
 
       const data = await response.json();
@@ -174,15 +174,24 @@ export function StripeBillingCenter({ user, onUpdateProfile }: StripeBillingCent
       <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-4">
         <div>
           <h2 className="text-3xl font-display font-black tracking-tight text-text-primary">
-            Stripe Premium Subscription billing
+            Elite Premium Subscription & Billing
           </h2>
           <p className="text-sm text-text-secondary mt-1">
             Configure premium tier parameters, manage payment checkouts, and inspect receipt historical ledgers.
           </p>
         </div>
-        <div className="flex items-center gap-1.5 px-3 py-1 bg-accent-gold/10 border border-accent-gold/20 rounded-full text-accent-gold text-xs font-bold font-mono">
-          <CreditCard className="w-3.5 h-3.5" />
-          <span>Stripe Integration Core</span>
+        <div className="flex flex-wrap items-center gap-2">
+          <a 
+            href="#pricing"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 bg-accent-gold/20 border border-accent-gold/50 rounded-xl text-accent-gold text-xs font-bold font-mono hover:bg-accent-gold hover:text-bg-void transition-all shadow-sm"
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>Clerk Pricing Page ($1/mo)</span>
+          </a>
+          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-bg-secondary border border-border rounded-xl text-text-secondary text-xs font-bold font-mono">
+            <CreditCard className="w-3.5 h-3.5 text-accent-gold" />
+            <span>Plan: cplan_3HBQInrzaqKZFDfnri0roNKvCmv</span>
+          </div>
         </div>
       </div>
 
@@ -206,7 +215,7 @@ export function StripeBillingCenter({ user, onUpdateProfile }: StripeBillingCent
                   {user?.isPremium ? "Active Subscription" : "Free Explorer Tier"}
                 </span>
                 <h3 className="text-2xl font-bold text-text-primary mt-2">
-                  {user?.isPremium ? "WealthWise Elite - Socratic Live" : "Standard Sandbox Access"}
+                  {user?.isPremium ? "Wexa AI - Socratic Live" : "Standard Sandbox Access"}
                 </h3>
               </div>
               <div className="p-3 bg-bg-void/40 border border-border/80 rounded-2xl">
@@ -268,7 +277,7 @@ export function StripeBillingCenter({ user, onUpdateProfile }: StripeBillingCent
                   ) : (
                     <Sparkles className="w-4 h-4 text-bg-void fill-bg-void" />
                   )}
-                  <span>Upgrade with Stripe Checkout</span>
+                  <span>Upgrade with Secure Checkout</span>
                 </button>
               )}
               
@@ -298,17 +307,17 @@ export function StripeBillingCenter({ user, onUpdateProfile }: StripeBillingCent
             )}
           </div>
 
-          {/* Core Stripe Sandbox explanation card */}
+          {/* Core Payment Sandbox explanation card */}
           <div className="card p-6 border-border/80 bg-bg-secondary/10 text-xs text-text-muted leading-relaxed space-y-3">
             <h4 className="font-extrabold uppercase tracking-widest text-text-primary flex items-center gap-2 text-[10px]">
               <HelpCircle className="w-4 h-4 text-accent-gold" />
-              Stripe Integration Blueprint Details
+              Secure Integration Blueprint Details
             </h4>
             <p>
-              When a developer inserts their <code className="text-accent-gold font-bold font-mono">STRIPE_SECRET_KEY</code> inside the workspace's environment secrets list, the backend router automatically initializes the official Stripe Node.js SDK and crafts real Checkout Sessions.
+              When a developer inserts their <code className="text-accent-gold font-bold font-mono">BILLING_SECRET_KEY</code> inside the workspace's environment secrets list, the backend router automatically initializes the official Secure Payment SDK and crafts real Checkout Sessions.
             </p>
             <p>
-              If the key is omitted, the frontend automatically triggers an incredibly clean sandbox popup mimicking Stripe's payment gateway. This allows you to inspect the full user experience, success redirection triggers, and state mutation callbacks effortlessly.
+              If the key is omitted, the frontend automatically triggers an incredibly clean sandbox popup mimicking the secure payment gateway. This allows you to inspect the full user experience, success redirection triggers, and state mutation callbacks effortlessly.
             </p>
           </div>
         </div>
@@ -319,7 +328,7 @@ export function StripeBillingCenter({ user, onUpdateProfile }: StripeBillingCent
           <div className="card p-6 bg-gradient-to-br from-bg-secondary via-bg-secondary to-bg-void/80 border-border/80 relative overflow-hidden h-52 flex flex-col justify-between">
             <div className="absolute bottom-[-50px] right-[-50px] w-48 h-48 bg-accent-gold/5 rounded-full blur-3xl pointer-events-none" />
             <div className="flex justify-between items-start">
-              <span className="text-[10px] font-mono tracking-widest text-text-muted uppercase font-bold">WealthWise Premium Card</span>
+              <span className="text-[10px] font-mono tracking-widest text-text-muted uppercase font-bold">Wexa Premium Card</span>
               <span className="text-sm font-black italic text-accent-gold">VISA</span>
             </div>
             <div className="space-y-4">
@@ -369,7 +378,7 @@ export function StripeBillingCenter({ user, onUpdateProfile }: StripeBillingCent
             </div>
 
             <div className="text-[10px] text-text-muted leading-relaxed font-sans">
-              Consolidated subscription activity margins including Vertex API usage logs and mock Stripe processing fee deltas.
+              Consolidated subscription activity margins including Vertex API usage logs and mock processing fee deltas.
             </div>
 
             <button
@@ -430,7 +439,7 @@ export function StripeBillingCenter({ user, onUpdateProfile }: StripeBillingCent
                 <div className="w-12 h-12 bg-accent-gold/10 border border-accent-gold/20 rounded-full flex items-center justify-center mx-auto text-accent-gold animate-bounce">
                   <CreditCard className="w-6 h-6" />
                 </div>
-                <h3 className="text-xl font-bold text-text-primary">Stripe Checkout Simulator</h3>
+                <h3 className="text-xl font-bold text-text-primary">Secure Checkout Simulator</h3>
                 <p className="text-xs text-text-muted">
                   Sandbox Simulation Mode — Mock payment gateway
                 </p>
@@ -439,7 +448,7 @@ export function StripeBillingCenter({ user, onUpdateProfile }: StripeBillingCent
               <div className="space-y-4 bg-bg-secondary/40 p-4 rounded-xl border border-border/40 text-xs">
                 <div className="flex justify-between font-mono">
                   <span className="text-text-muted">Vendor</span>
-                  <span className="font-bold text-text-primary">WealthWise Elite 2.0</span>
+                  <span className="font-bold text-text-primary">Wexa AI 2.0</span>
                 </div>
                 <div className="flex justify-between font-mono">
                   <span className="text-text-muted">Plan Selected</span>

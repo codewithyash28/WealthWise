@@ -1,11 +1,13 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { motion } from "motion/react";
-import { PieChart, TrendingUp, TrendingDown, Wallet, ArrowUpRight, ArrowDownRight, Briefcase, Globe, Activity, Layers, Sparkles, ShieldAlert } from "lucide-react";
+import { PieChart, TrendingUp, TrendingDown, Wallet, ArrowUpRight, ArrowDownRight, Briefcase, Globe, Activity, Layers, Sparkles, ShieldAlert, Download, PieChart as RechartsIcon } from "lucide-react";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, PointElement, LineElement, Title } from 'chart.js';
-import { Doughnut, Line } from 'react-chartjs-2';
+import { Doughnut } from 'react-chartjs-2';
+import { PieChart as RechartsPieChart, Pie, Cell, Tooltip as RechartsTooltip, ResponsiveContainer, Legend as RechartsLegend } from 'recharts';
 import { formatCurrency, cn } from "../lib/utils";
 import { CURRENCIES } from "../constants";
 import { UserProfile, Portfolio } from "../types";
+import { CryptoPortfolio } from "./CryptoPortfolio";
 
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, PointElement, LineElement, Title);
 
@@ -15,6 +17,48 @@ interface PortfolioOverviewProps {
 
 export function PortfolioOverview({ user }: PortfolioOverviewProps) {
   const currency = CURRENCIES[user.currency] || CURRENCIES.USD;
+
+  const handleExportCSV = () => {
+    const netWorth = user.netWorth.assets - user.netWorth.liabilities;
+    
+    let csvContent = "data:text/csv;charset=utf-8,";
+    csvContent += "--- WEXA AI PORTFOLIO ALLOCATION & NET WORTH REPORT ---\n";
+    csvContent += `Generated On,${new Date().toLocaleString()}\n`;
+    csvContent += `Account Holder,${user.name || "Elite Member"}\n`;
+    csvContent += `Preferred Currency,${user.currency}\n\n`;
+    
+    csvContent += "=== SECTION 1: NET WORTH SUMMARY ===\n";
+    csvContent += "Metric,Amount (USD Value)\n";
+    csvContent += `Total Assets,$${user.netWorth.assets.toLocaleString()}\n`;
+    csvContent += `Total Liabilities,$${user.netWorth.liabilities.toLocaleString()}\n`;
+    csvContent += `Calculated Net Worth,$${netWorth.toLocaleString()}\n\n`;
+    
+    csvContent += "=== SECTION 2: PORTFOLIO ASSET ALLOCATION ===\n";
+    csvContent += "Asset Class,Allocation (%),Value (USD Value)\n";
+    
+    portfolio.holdings.forEach((holding: any) => {
+      const pct = Math.round((holding.value / portfolio.totalValue) * 100) || 0;
+      csvContent += `"${holding.name}",${pct}%,$${holding.value.toLocaleString()}\n`;
+    });
+    
+    csvContent += `\nTotal Portfolio Net Value,,$${portfolio.totalValue.toLocaleString()}\n`;
+    
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `wexa_portfolio_export_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    window.dispatchEvent(new CustomEvent('ww-trigger-alert', {
+      detail: {
+        type: 'success',
+        title: 'Export Successful! 📊',
+        message: 'Your current portfolio allocation and net worth summary has been exported as a formatted CSV file.'
+      }
+    }));
+  };
 
   // Load or generate dynamic high fidelity mock holdings so list is never sad
   const portfolio: Portfolio = useMemo(() => {
@@ -77,38 +121,13 @@ export function PortfolioOverview({ user }: PortfolioOverviewProps) {
     });
   }, [dropThreshold, portfolio.holdings]);
 
-  const chartData = {
-    labels: ['Stocks', 'Bonds', 'Crypto', 'Cash', 'Real Estate'],
-    datasets: [{
-      data: [
-        portfolio.allocation.stocks,
-        portfolio.allocation.bonds,
-        portfolio.allocation.crypto,
-        portfolio.allocation.cash,
-        portfolio.allocation.realEstate
-      ],
-      backgroundColor: ['#F0B429', '#3B82F6', '#10D9A0', '#94A3B8', '#F97316'],
-      borderWidth: 0,
-      hoverOffset: 15,
-    }],
-  };
-
-  const chartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: { display: false },
-      tooltip: {
-        backgroundColor: '#111827',
-        titleFont: { family: 'Syne', size: 14 },
-        bodyFont: { family: 'Outfit', size: 12 },
-        borderColor: 'rgba(240,180,41,0.2)',
-        borderWidth: 1,
-        padding: 12,
-      }
-    },
-    cutout: '75%',
-  };
+  const rechartsData = useMemo(() => [
+    { name: 'Stocks', value: portfolio.allocation.stocks || 45, color: '#F0B429', usdValue: (portfolio.totalValue * (portfolio.allocation.stocks || 45)) / 100 },
+    { name: 'Bonds', value: portfolio.allocation.bonds || 20, color: '#3B82F6', usdValue: (portfolio.totalValue * (portfolio.allocation.bonds || 20)) / 100 },
+    { name: 'Crypto', value: portfolio.allocation.crypto || 15, color: '#10D9A0', usdValue: (portfolio.totalValue * (portfolio.allocation.crypto || 15)) / 100 },
+    { name: 'Cash', value: portfolio.allocation.cash || 10, color: '#94A3B8', usdValue: (portfolio.totalValue * (portfolio.allocation.cash || 10)) / 100 },
+    { name: 'Real Estate', value: portfolio.allocation.realEstate || 10, color: '#F97316', usdValue: (portfolio.totalValue * (portfolio.allocation.realEstate || 10)) / 100 },
+  ], [portfolio.allocation, portfolio.totalValue]);
 
   return (
     <div className="container mx-auto px-6 py-12 space-y-12">
@@ -133,33 +152,89 @@ export function PortfolioOverview({ user }: PortfolioOverviewProps) {
               {Math.abs(portfolio.change24h)}%
             </div>
           </div>
-          <a 
-            href="#rebalancer" 
-            className="flex items-center justify-center px-4 py-2 bg-accent-gold/10 border border-accent-gold/25 text-accent-gold text-xs font-bold uppercase tracking-wider rounded-xl hover:bg-accent-gold/20 transition-all font-mono"
-          >
-            Rebalance Asset Mix
-          </a>
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              onClick={handleExportCSV}
+              className="flex items-center justify-center gap-1.5 px-4 py-2 bg-accent-emerald/10 border border-accent-emerald/25 text-accent-emerald text-xs font-bold uppercase tracking-wider rounded-xl hover:bg-accent-emerald/20 transition-all font-mono cursor-pointer select-none"
+              title="Download portfolio allocation and net worth details as CSV"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>Export Data</span>
+            </button>
+            <a 
+              href="#rebalancer" 
+              className="flex items-center justify-center px-4 py-2 bg-accent-gold/10 border border-accent-gold/25 text-accent-gold text-xs font-bold uppercase tracking-wider rounded-xl hover:bg-accent-gold/20 transition-all font-mono"
+            >
+              Rebalance Asset Mix
+            </a>
+          </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Allocation Chart */}
-        <div className="lg:col-span-1 card p-8 flex flex-col items-center justify-center relative min-h-[400px]">
-          <h3 className="text-xl font-bold w-full text-left mb-8 flex items-center gap-2">
-            <Layers className="w-5 h-5 text-accent-gold" /> Asset Allocation
-          </h3>
-          <div className="relative w-full h-[250px]">
-            <Doughnut data={chartData} options={chartOptions} />
+        {/* Allocation Chart using Recharts PieChart */}
+        <div className="lg:col-span-1 card p-8 flex flex-col items-center justify-between relative min-h-[420px]">
+          <div className="w-full flex items-center justify-between mb-4">
+            <h3 className="text-xl font-bold flex items-center gap-2">
+              <Layers className="w-5 h-5 text-accent-gold" /> Recharts Asset Allocation
+            </h3>
+            <span className="px-2 py-0.5 rounded-full bg-accent-gold/10 border border-accent-gold/30 text-[10px] font-mono font-bold text-accent-gold uppercase tracking-wider">
+              Interactive
+            </span>
+          </div>
+
+          <div className="relative w-full h-[260px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <RechartsPieChart>
+                <Pie
+                  data={rechartsData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={65}
+                  outerRadius={95}
+                  paddingAngle={4}
+                  dataKey="value"
+                  animationDuration={1000}
+                >
+                  {rechartsData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} stroke="rgba(15, 23, 42, 0.6)" strokeWidth={2} />
+                  ))}
+                </Pie>
+                <RechartsTooltip
+                  content={({ active, payload }) => {
+                    if (active && payload && payload.length) {
+                      const data = payload[0].payload;
+                      return (
+                        <div className="bg-bg-void/95 border border-accent-gold/40 p-3 rounded-xl shadow-2xl backdrop-blur-md text-xs font-mono">
+                          <div className="font-bold text-text-primary flex items-center gap-2 mb-1">
+                            <span className="w-2.5 h-2.5 rounded-full inline-block" style={{ backgroundColor: data.color }} />
+                            {data.name}
+                          </div>
+                          <div className="text-accent-gold font-bold">{data.value}% Allocation</div>
+                          <div className="text-text-muted text-[10px]">{formatCurrency(data.usdValue, user.currency, currency.locale)}</div>
+                        </div>
+                      );
+                    }
+                    return null;
+                  }}
+                />
+              </RechartsPieChart>
+            </ResponsiveContainer>
+
             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-              <div className="text-text-muted text-[10px] uppercase tracking-widest">Diversification</div>
-              <div className="text-xl font-bold">{portfolio.totalValue > 0 ? "Optimal" : "N/A"}</div>
+              <div className="text-text-muted text-[10px] uppercase tracking-widest font-mono">Diversification</div>
+              <div className="text-lg font-extrabold text-text-primary">{portfolio.totalValue > 0 ? "Optimal" : "N/A"}</div>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4 w-full mt-8">
-            {chartData.labels.map((label, i) => (
-              <div key={label} className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: chartData.datasets[0].backgroundColor[i] }} />
-                <span className="text-[10px] text-text-secondary uppercase tracking-wider font-bold">{label}</span>
+
+          <div className="grid grid-cols-2 gap-3 w-full mt-4 pt-4 border-t border-border/40">
+            {rechartsData.map((item) => (
+              <div key={item.name} className="flex items-center justify-between text-xs">
+                <div className="flex items-center gap-2">
+                  <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }} />
+                  <span className="text-[11px] text-text-secondary font-medium">{item.name}</span>
+                </div>
+                <span className="font-mono font-bold text-accent-gold text-[11px]">{item.value}%</span>
               </div>
             ))}
           </div>
@@ -257,6 +332,9 @@ export function PortfolioOverview({ user }: PortfolioOverviewProps) {
           </div>
         </div>
       </div>
+
+      {/* Real-time Crypto Tracking Suite */}
+      <CryptoPortfolio user={user} />
 
       {/* Performance Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

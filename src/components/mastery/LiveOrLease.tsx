@@ -222,7 +222,7 @@ export function LiveOrLease() {
                     <h4 className="font-bold">Tax Savings Insight</h4>
                  </div>
                  <p className="text-sm text-text-secondary leading-relaxed">
-                    Buying a property allows you to deduct interest payments from your income tax. However, renting allows for HRA (House Rent Allowance) claims. WealthWise Elite automatically weights these for you.
+                    Buying a property allows you to deduct interest payments from your income tax. However, renting allows for HRA (House Rent Allowance) claims. Wexa AI automatically weights these for you.
                  </p>
               </div>
 

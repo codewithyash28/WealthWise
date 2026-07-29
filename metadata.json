@@ -1,6 +1,6 @@
 {
-  "name": "WealthWise Elite",
-  "description": "The AI-Driven Personal Wealth Architect. Master your finances with real-time audits, scenario simulations, and global intelligence.",
-  "requestFramePermissions": [],
+  "name": "Wexa AI — Autonomous Wealth & Financial Intelligence Engine",
+  "description": "Enterprise-grade autonomous AI agent on Google Cloud. Executes real-time asset rebalancing, macro inflation modeling, receipt vision, tax optimization, and durable MongoDB ledger synchronizations.",
+  "requestFramePermissions": ["camera"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

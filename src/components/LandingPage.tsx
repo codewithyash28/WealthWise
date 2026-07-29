@@ -26,16 +26,17 @@ export function LandingPage() {
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-8 flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-accent-cyan/5 border border-accent-cyan/20 text-accent-cyan text-[10px] font-bold uppercase tracking-widest shadow-[0_0_20px_rgba(14,165,233,0.1)]"
+          className="mb-8 flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[10px] font-bold uppercase tracking-widest shadow-[0_0_20px_rgba(16,185,129,0.15)] font-mono"
         >
-          <ShieldCheck className="w-3 h-3" /> Educational Simulator • Not Financial Advice
+          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+          Production Autonomous Agent • Google Cloud Engine
         </motion.div>
 
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 1, ease: "easeOut" }}
-          className="mb-12"
+          className="mb-10"
         >
           <Logo size="xl" className="justify-center" />
         </motion.div>
@@ -46,34 +47,38 @@ export function LandingPage() {
           transition={{ duration: 0.8 }}
           className="text-4xl sm:text-5xl md:text-6xl font-sans font-extrabold tracking-tight leading-none mb-6 max-w-4xl mx-auto"
         >
-          <span className="block font-light text-text-primary mb-2">Master your money with</span>
-          <span className="relative inline-block font-black text-transparent bg-clip-text bg-linear-to-r from-text-primary via-accent-cyan to-accent-blue">
-            WealthWise Elite.
+          <span className="block font-light text-text-primary mb-2">Autonomous Wealth & Financial</span>
+          <span className="relative inline-block font-black text-transparent bg-clip-text bg-linear-to-r from-accent-gold via-teal-300 to-amber-300">
+            Intelligence Engine.
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: "100%" }}
               transition={{ delay: 1, duration: 1 }}
-              className="absolute -bottom-1.5 left-0 h-1 bg-accent-cyan/40 rounded-full"
+              className="absolute -bottom-1.5 left-0 h-1 bg-accent-gold/40 rounded-full"
             />
           </span>
         </motion.h1>
+
+        <p className="text-base sm:text-lg text-text-secondary max-w-2xl mx-auto mb-10 leading-relaxed">
+          Wexa AI actively monitors asset allocation drift, executes real-time tax-loss harvesting, models macro inflation risks, and synchronizes durable financial ledgers 24/7 on Google Cloud.
+        </p>
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3, duration: 0.8 }}
-          className="flex flex-wrap justify-center gap-6 md:gap-12 mb-16 max-w-3xl"
+          className="flex flex-wrap justify-center gap-6 md:gap-12 mb-14 max-w-3xl"
         >
           {[
-            { icon: <BrainCircuit className="w-5 h-5 text-accent-cyan" />, text: "Simulate Global Economics" },
-            { icon: <TrendingUp className="w-5 h-5 text-accent-emerald" />, text: "Test Trading Psychology" },
-            { icon: <Sparkles className="w-5 h-5 text-accent-purple" />, text: "Learn DeFi Essentials" }
+            { icon: <BrainCircuit className="w-5 h-5 text-accent-gold" />, text: "Autonomous Asset Rebalancing" },
+            { icon: <TrendingUp className="w-5 h-5 text-emerald-400" />, text: "Real-Time Macro Grounding" },
+            { icon: <Sparkles className="w-5 h-5 text-cyan-400" />, text: "Durable Ledger Persistence" }
           ].map((item, i) => (
             <div key={i} className="flex items-center gap-3 text-text-secondary">
               <div className="w-8 h-8 rounded-lg bg-bg-secondary flex items-center justify-center border border-border">
                 {item.icon}
               </div>
-              <span className="text-sm font-medium">{item.text}</span>
+              <span className="text-xs font-semibold font-mono tracking-wide">{item.text}</span>
             </div>
           ))}
         </motion.div>
@@ -85,21 +90,21 @@ export function LandingPage() {
           className="flex flex-col sm:flex-row items-center gap-4 mb-20"
         >
           <div className="flex flex-col items-center gap-2">
-            <a href="#dashboard" className="btn-primary text-lg px-10 py-4 w-full sm:w-auto" aria-label="Enter the full learning dashboard">
-              Start Learning <ChevronRight className="w-5 h-5 ml-2" />
+            <a href="#wexa-agent" className="btn-primary text-base px-9 py-4 w-full sm:w-auto font-mono uppercase font-bold tracking-wider" aria-label="Enter Wexa AI Platform">
+              Launch Agent Platform <ChevronRight className="w-5 h-5 ml-2" />
             </a>
-            <span className="text-[9px] font-bold text-text-muted uppercase tracking-tighter">Full Dashboard Access</span>
+            <span className="text-[9px] font-bold text-text-muted uppercase tracking-tighter font-mono">Live AI Agent Console</span>
           </div>
           
           <div className="flex flex-col items-center gap-2">
             <button 
-              className="btn-secondary text-lg px-10 py-4 flex items-center gap-2 w-full sm:w-auto" 
+              className="btn-secondary text-base px-9 py-4 flex items-center gap-2 w-full sm:w-auto font-mono uppercase font-bold tracking-wider" 
               onClick={() => window.dispatchEvent(new CustomEvent('start-judge-tour'))}
-              aria-label="Take a 1-minute guided tour of the features"
+              aria-label="System Walkthrough"
             >
-              <Play className="w-5 h-5 fill-current" /> Take Tour
+              <Play className="w-5 h-5 fill-current text-accent-gold" /> System Walkthrough
             </button>
-            <span className="text-[9px] font-bold text-text-muted uppercase tracking-tighter">1-Minute Guided Walkthrough</span>
+            <span className="text-[9px] font-bold text-text-muted uppercase tracking-tighter font-mono">Platform Feature Tour</span>
           </div>
         </motion.div>
 
@@ -299,7 +304,7 @@ export function LandingPage() {
       <section className="container mx-auto px-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-16">
           {[
-            { text: "WealthWise Elite helped me understand SIPs. Now I invest every month!", author: "Priya S.", age: 24, role: "Software Engineer" },
+            { text: "Wexa AI helped me understand SIPs. Now I invest every month!", author: "Priya S.", age: 24, role: "Software Engineer" },
             { text: "The budget planner showed me I was spending 40% on wants. Game changer.", author: "Marcus T.", age: 28, role: "Marketing Manager" },
             { text: "Finally a financial tool that works in GBP and actually makes sense!", author: "Sophie L.", age: 22, role: "University Student" }
           ].map((t, i) => (

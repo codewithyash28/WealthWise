@@ -1,9 +1,10 @@
 export async function getAIResponse(prompt: string, history: any = []) {
   try {
+    const isJudgeMode = localStorage.getItem("ww_judge_mode") === "true";
     const res = await fetch("/api/gemini/insight", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt, history })
+      body: JSON.stringify({ prompt, history, isJudgeMode })
     });
     if (!res.ok) {
       throw new Error(`HTTP error ${res.status}`);
@@ -18,10 +19,11 @@ export async function getAIResponse(prompt: string, history: any = []) {
 
 export async function generateWealthAudit(user: any, budget: any) {
   try {
+    const isJudgeMode = localStorage.getItem("ww_judge_mode") === "true";
     const res = await fetch("/api/gemini/audit", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ user, budget })
+      body: JSON.stringify({ user, budget, isJudgeMode })
     });
     if (!res.ok) {
       throw new Error(`HTTP error ${res.status}`);

@@ -111,7 +111,7 @@ export function QuickTips({ hash }: QuickTipsProps) {
   }, [isOpen]);
 
   const activeInfo = QUICK_TIPS[hash] || {
-    title: "WealthWise Elite Hub",
+    title: "Wexa AI Hub",
     subtitle: "Your sandbox for microeconomics & literacy",
     tips: [
       "Version Control: Use the GitOps branch features to manage your learning roadmap.",

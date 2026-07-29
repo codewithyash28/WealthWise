@@ -1,5 +1,5 @@
 import { motion } from "motion/react";
-import { Award, Lock, CheckCircle2, Star, Target, ShieldCheck, Flame, Trophy, Sparkles, Coins, HelpCircle } from "lucide-react";
+import { Award, Lock, CheckCircle2, Star, Target, ShieldCheck, Flame, Trophy, Sparkles, Coins, HelpCircle, Download, Share2 } from "lucide-react";
 import { Achievement, UserProfile } from "../types";
 import { ACHIEVEMENTS } from "../constants";
 import { cn } from "../lib/utils";
@@ -38,6 +38,127 @@ export function Badges({ user, unlockedAchievements }: BadgesProps) {
   const nextLevelXp = level * 150;
   const prevLevelXp = (level - 1) * 150;
   const progressPercent = Math.min(100, Math.max(0, ((currentXP - prevLevelXp) / 150) * 100));
+
+  const handleDownloadAchievementCard = () => {
+    const canvas = document.createElement("canvas");
+    canvas.width = 1200;
+    canvas.height = 700;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    // Background Gradient
+    const bgGrad = ctx.createLinearGradient(0, 0, 1200, 700);
+    bgGrad.addColorStop(0, "#0B0F19");
+    bgGrad.addColorStop(0.5, "#111827");
+    bgGrad.addColorStop(1, "#030712");
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, 1200, 700);
+
+    // Decorative Gold Outer Frame
+    ctx.strokeStyle = "rgba(240, 180, 41, 0.4)";
+    ctx.lineWidth = 6;
+    ctx.strokeRect(20, 20, 1160, 660);
+
+    ctx.strokeStyle = "rgba(240, 180, 41, 0.15)";
+    ctx.lineWidth = 1;
+    ctx.strokeRect(32, 32, 1136, 636);
+
+    // Header Title
+    ctx.fillStyle = "#F0B429";
+    ctx.font = "bold 14px monospace";
+    ctx.fillText("WEALTHWISE ELITE • FINANCIAL ACHIEVEMENT CERTIFICATE", 60, 75);
+
+    // User Name
+    ctx.fillStyle = "#FFFFFF";
+    ctx.font = "bold 36px sans-serif";
+    ctx.fillText(user?.name || "Wealth Elite Practitioner", 60, 125);
+
+    // Stats
+    ctx.fillStyle = "#94A3B8";
+    ctx.font = "16px sans-serif";
+    ctx.fillText(`Level ${level} Scholar  •  ${currentXP} Total XP  •  ${user?.coins || 0} Gold Coins`, 60, 155);
+
+    // Badges Grid
+    const unlockedList = ALL_BADGE_TEMPLATES.filter(b => isUnlocked(b.id));
+    const badgesToDraw = unlockedList.length > 0 ? unlockedList.slice(0, 6) : ALL_BADGE_TEMPLATES.slice(0, 6);
+
+    const startX = 60;
+    const startY = 200;
+    const cardWidth = 340;
+    const cardHeight = 130;
+
+    badgesToDraw.forEach((badge, idx) => {
+      const col = idx % 3;
+      const row = Math.floor(idx / 3);
+      const x = startX + col * (cardWidth + 20);
+      const y = startY + row * (cardHeight + 20);
+
+      const unlocked = isUnlocked(badge.id);
+
+      // Card Box
+      ctx.fillStyle = unlocked ? "rgba(240, 180, 41, 0.05)" : "rgba(255, 255, 255, 0.02)";
+      ctx.beginPath();
+      ctx.roundRect(x, y, cardWidth, cardHeight, 16);
+      ctx.fill();
+
+      ctx.strokeStyle = unlocked ? "rgba(240, 180, 41, 0.4)" : "rgba(148, 163, 184, 0.2)";
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // Icon Box
+      ctx.fillStyle = unlocked ? "rgba(240, 180, 41, 0.15)" : "rgba(148, 163, 184, 0.1)";
+      ctx.beginPath();
+      ctx.roundRect(x + 15, y + 25, 60, 60, 12);
+      ctx.fill();
+
+      ctx.font = "30px sans-serif";
+      ctx.fillText(badge.icon || "🏆", x + 28, y + 67);
+
+      // Title
+      ctx.fillStyle = unlocked ? "#F0B429" : "#64748B";
+      ctx.font = "bold 15px sans-serif";
+      ctx.fillText(badge.title, x + 90, y + 45);
+
+      // Description
+      ctx.fillStyle = "#94A3B8";
+      ctx.font = "11px sans-serif";
+      const shortDesc = badge.description.length > 36 ? badge.description.slice(0, 33) + "..." : badge.description;
+      ctx.fillText(shortDesc, x + 90, y + 70);
+
+      // Status
+      ctx.fillStyle = unlocked ? "#10B981" : "#64748B";
+      ctx.font = "bold 10px monospace";
+      ctx.fillText(unlocked ? "✓ UNLOCKED & VERIFIED" : "🔒 LOCKED MILESTONE", x + 90, y + 95);
+    });
+
+    // Verification Footer
+    ctx.fillStyle = "rgba(240, 180, 41, 0.2)";
+    ctx.fillRect(60, 580, 1080, 1);
+
+    ctx.fillStyle = "#94A3B8";
+    ctx.font = "12px monospace";
+    ctx.fillText("VERIFIED BY WEXA AI GITOPS AGENT • GOOGLE AI STUDIO", 60, 615);
+
+    ctx.fillStyle = "#F0B429";
+    ctx.font = "bold 12px monospace";
+    ctx.fillText(`ISSUED: ${new Date().toLocaleDateString()}`, 940, 615);
+
+    // Download PNG
+    const link = document.createElement("a");
+    link.download = `wexa_financial_achievements_${user?.name?.replace(/\s+/g, '_') || "scholar"}.png`;
+    link.href = canvas.toDataURL("image/png");
+    link.click();
+
+    window.dispatchEvent(
+      new CustomEvent("ww-trigger-alert", {
+        detail: {
+          type: "success",
+          title: "Achievement Card Downloaded! 📸",
+          message: "Your financial achievement image card has been rendered and saved as a high-res PNG.",
+        },
+      })
+    );
+  };
 
   // Active Aura configuration
   const activeAura = user?.activeAura || "";
@@ -158,13 +279,21 @@ export function Badges({ user, unlockedAchievements }: BadgesProps) {
 
       {/* Badge Cabinet (Interactive Badge Case) */}
       <div className="space-y-6">
-        <div className="flex items-center justify-between border-b border-border/60 pb-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-border/60 pb-3 gap-3">
           <h3 className="text-lg font-bold font-display flex items-center gap-2 text-text-primary">
             <Award className="w-5 h-5 text-accent-gold" /> Prestigious Achievements Cabinet
           </h3>
-          <span className="text-xs font-mono text-text-muted uppercase tracking-widest bg-bg-secondary px-3 py-1 rounded border">
-            Interactive Grid Cabinet
-          </span>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleDownloadAchievementCard}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-accent-gold/20 to-amber-500/20 border border-accent-gold/40 hover:border-accent-gold text-accent-gold font-mono font-bold text-xs shadow-md transition-all cursor-pointer hover:scale-105"
+            >
+              <Download className="w-3.5 h-3.5" /> Download Badges Card (PNG)
+            </button>
+            <span className="text-xs font-mono text-text-muted uppercase tracking-widest bg-bg-secondary px-3 py-1.5 rounded-xl border hidden md:inline-block">
+              Interactive Grid Cabinet
+            </span>
+          </div>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 gap-6" id="badge-case-grid">

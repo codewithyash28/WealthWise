@@ -1,17 +1,17 @@
 {
-  "short_name": "WealthWise",
-  "name": "WealthWise Elite",
-  "description": "The AI-Driven Personal Wealth Architect. Master your finances with real-time audits, scenario simulations, and global intelligence.",
+  "short_name": "Wexa AI",
+  "name": "Wexa AI — Autonomous Financial Agent",
+  "description": "Wexa is an autonomous AI agent that actively manages and executes your money decisions in production.",
   "icons": [
     {
-      "src": "/logo.svg",
-      "type": "image/svg+xml",
-      "sizes": "any",
+      "src": "/wexa-avatar.jpg",
+      "type": "image/jpeg",
+      "sizes": "512x512",
       "purpose": "any maskable"
     },
     {
-      "src": "/app-icon.png",
-      "type": "image/png",
+      "src": "/logo.svg",
+      "type": "image/svg+xml",
       "sizes": "512x512"
     }
   ],

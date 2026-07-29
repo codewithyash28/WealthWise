@@ -19,7 +19,7 @@ const TIMELINE = [
   },
   {
     stage: "Implementation Evolution",
-    title: "WealthWise Elite Implementation",
+    title: "Wexa AI Implementation",
     desc: "Refined the visual language to Prestige Gold and Obsidian Void, ensuring brand consistency across all 15+ sub-components.",
     icon: <Zap className="w-5 h-5" />,
     color: "text-accent-gold"
@@ -175,7 +175,7 @@ export function CaseStudy({ user, onUpdateGitProvider }: CaseStudyProps) {
                        <span className="font-black text-xs uppercase tracking-tighter text-accent-gold">WW Elite</span>
                     </div>
                     <div>
-                       <h4 className="font-bold text-accent-gold">WealthWise Elite (Final Release)</h4>
+                       <h4 className="font-bold text-accent-gold">Wexa AI (Final Release)</h4>
                        <p className="text-xs text-text-secondary leading-relaxed">Rebranded for a global hacker audience. The identity now aligns with professional wealth management dashboards, with an 'Elite' emphasis on high financial literacy levels.</p>
                     </div>
                  </div>

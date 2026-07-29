@@ -21,7 +21,7 @@ export function CurrencySelector({ isOpen, onSelect, currentCurrency }: Currency
         className="card max-w-lg w-full p-8 space-y-8"
       >
         <div className="text-center space-y-2">
-          <h2 className="text-3xl font-display font-bold text-accent-gold">🌍 Welcome to WealthWise Elite</h2>
+          <h2 className="text-3xl font-display font-bold text-accent-gold">🌍 Welcome to Wexa AI</h2>
           <p className="text-text-secondary">Select your currency to personalize all calculations</p>
         </div>
 
@@ -185,7 +185,7 @@ export function NameInput({ isOpen, onComplete }: NameInputProps) {
             type="button"
             className="btn-primary w-full py-2.5 flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Welcome to WealthWise Elite <ChevronRight className="w-4 h-4" />
+            Welcome to Wexa AI <ChevronRight className="w-4 h-4" />
           </button>
         </div>
       </motion.div>

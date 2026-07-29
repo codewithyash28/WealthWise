@@ -41,7 +41,7 @@ export function GitOpsControlCenter({ user, budget, gitProvider, onUnlockAchieve
 
   // Generated dynamic files
   const dynamicProfileCode = JSON.stringify({
-    "$schema": "https://wealthwise.elite/schemas/profile.v1.json",
+    "$schema": "https://wexa.ai/schemas/profile.v1.json",
     "owner": user.name,
     "currency": user.currency,
     "netWorthState": {
@@ -57,7 +57,7 @@ export function GitOpsControlCenter({ user, budget, gitProvider, onUnlockAchieve
   }, null, 2);
 
   const dynamicBudgetCode = JSON.stringify({
-    "$schema": "https://wealthwise.elite/schemas/budget.v2.json",
+    "$schema": "https://wexa.ai/schemas/budget.v2.json",
     "income": budget ? budget.income : 6500,
     "expenses": budget ? budget.expenses : {
       "housing": 2000,
@@ -105,7 +105,7 @@ jobs:
       
       - name: Simulation Stress-Test Audit
         run: |
-          wealthwise-agent --stress-inflation 6.5 --profile ./wealth-policies/user-profile.json
+          wexa-agent --stress-inflation 6.5 --profile ./wealth-policies/user-profile.json
           echo "Sync State: COMPLIANT WITH ${gitProvider.toUpperCase()}"`;
 
   // Update editor content when tabs/user details load
@@ -185,7 +185,7 @@ jobs:
     
     // Determine branch based on user selection or config fallback
     const branchToUse = action.type === "push" ? selectedBranch : action.branch;
-    const commitMessageToUse = customCommitMessage.trim() || `chore(wealth-as-code): sync structural policy configuration from WealthWise console`;
+    const commitMessageToUse = customCommitMessage.trim() || `chore(wealth-as-code): sync structural policy configuration from Wexa console`;
 
     // Simulate terminal outputs line-by-line
     const mockTerminalLogs = [

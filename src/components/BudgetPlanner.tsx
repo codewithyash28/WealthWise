@@ -7,6 +7,7 @@ import { formatCurrency, cn } from "../lib/utils";
 import { CURRENCIES } from "../constants";
 import { UserProfile, BudgetPlan } from "../types";
 import { ConfirmationDialog } from "./ConfirmationDialog";
+import { jsPDF } from "jspdf";
 
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title);
 
@@ -258,7 +259,7 @@ export function BudgetPlanner({ user, onSave, initialPlan, gitProvider = "gitlab
     let csvContent = "";
 
     // 1. Title and Metadata
-    csvContent += "=== WEALTHWISE ELITE 2.0 FINANCIAL SUMMARY & BUDGET REPORT ===\n";
+    csvContent += "=== WEXA AI 2.0 FINANCIAL SUMMARY & BUDGET REPORT ===\n";
     csvContent += `Generated At,${new Date().toISOString()}\n`;
     csvContent += `User,${user.name || "Elite Client"}\n`;
     csvContent += `Preferred Currency,${user.currency}\n\n`;
@@ -301,7 +302,7 @@ export function BudgetPlanner({ user, onSave, initialPlan, gitProvider = "gitlab
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", url);
-    link.setAttribute("download", `wealthwise_report_${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute("download", `wexa_report_${new Date().toISOString().split('T')[0]}.csv`);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
@@ -315,6 +316,125 @@ export function BudgetPlanner({ user, onSave, initialPlan, gitProvider = "gitlab
         message: 'Your structured financial summary and category budgets have been exported successfully.'
       }
     }));
+  };
+
+  const handleExportPDF = () => {
+    const doc = new jsPDF();
+
+    // Dark Gold Header Banner
+    doc.setFillColor(15, 23, 42);
+    doc.rect(0, 0, 210, 42, "F");
+
+    doc.setFont("Helvetica", "bold");
+    doc.setFontSize(20);
+    doc.setTextColor(240, 180, 41);
+    doc.text("WEALTHWISE ELITE • FINANCIAL HEALTH REPORT", 15, 24);
+
+    doc.setFont("Helvetica", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(148, 163, 184);
+    doc.text(`MONTHLY AUDIT REPORT — ${new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase()}`, 15, 33);
+
+    // Section 1: User & Monthly Summary
+    doc.setFont("Helvetica", "bold");
+    doc.setFontSize(12);
+    doc.setTextColor(15, 23, 42);
+    doc.text("1. MONTHLY FINANCIAL HEALTH & NET WORTH SUMMARY", 15, 54);
+    doc.line(15, 57, 195, 57);
+
+    doc.setFont("Helvetica", "normal");
+    doc.setFontSize(9.5);
+    doc.setTextColor(51, 65, 85);
+
+    doc.text(`Client Name: ${user.name || "Wealth Scholar"}`, 15, 66);
+    doc.text(`Reporting Currency: ${user.currency} (${currency.name})`, 15, 73);
+    doc.text(`Gross Monthly Income: ${currency.symbol} ${income.toLocaleString()}`, 15, 80);
+    doc.text(`Total Monthly Expenses: ${currency.symbol} ${totalExpenses.toLocaleString()}`, 15, 87);
+
+    const healthScore = Math.min(100, Math.max(20, Math.round((savingsRate * 2.5) + 30)));
+    doc.text(`Financial Health Index: ${healthScore} / 100`, 115, 66);
+    doc.text(`Monthly Savings Surplus: ${currency.symbol} ${savings.toLocaleString()} (${savingsRate}%)`, 115, 73);
+    doc.text(`Needs Expense Ratio: ${needsPercent}% of Income`, 115, 80);
+    doc.text(`Discretionary Ratio: ${wantsPercent}% of Income`, 115, 87);
+
+    // Section 2: Budget Allocation
+    doc.setFont("Helvetica", "bold");
+    doc.setFontSize(12);
+    doc.setTextColor(15, 23, 42);
+    doc.text("2. BUDGET CATEGORY ALLOCATION BREAKDOWN", 15, 102);
+    doc.line(15, 105, 195, 105);
+
+    doc.setFont("Helvetica", "bold");
+    doc.setFontSize(9);
+    doc.setTextColor(100, 116, 139);
+    doc.text("Category", 15, 114);
+    doc.text("Allocated Expense", 80, 114);
+    doc.text("Goal/Target Budget", 130, 114);
+    doc.text("Status", 175, 114);
+
+    doc.setFont("Helvetica", "normal");
+    doc.setFontSize(9);
+    let y = 122;
+
+    Object.keys(expenses).forEach((cat) => {
+      const expVal = (expenses as any)[cat] || 0;
+      const goalVal = (goals as any)[cat] || 0;
+      const statusText = expVal <= goalVal ? "On Track" : "Over Budget";
+
+      doc.setTextColor(51, 65, 85);
+      doc.text(cat.toUpperCase(), 15, y);
+      doc.text(`${currency.symbol} ${expVal.toLocaleString()}`, 80, y);
+      doc.text(`${currency.symbol} ${goalVal.toLocaleString()}`, 130, y);
+      
+      doc.setTextColor(expVal <= goalVal ? 16 : 225, expVal <= goalVal ? 185 : 29, expVal <= goalVal ? 129 : 72);
+      doc.text(statusText, 175, y);
+      
+      y += 8;
+    });
+
+    // Section 3: Strategic AI Health Insights
+    doc.setFont("Helvetica", "bold");
+    doc.setFontSize(12);
+    doc.setTextColor(15, 23, 42);
+    doc.text("3. STRATEGIC AI HEALTH INSIGHTS & RECOMMENDATIONS", 15, y + 10);
+    doc.line(15, y + 13, 195, y + 13);
+
+    let insY = y + 22;
+    doc.setFont("Helvetica", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(51, 65, 85);
+
+    insights.forEach((ins) => {
+      doc.text(`• ${ins.text}`, 15, insY);
+      insY += 7;
+    });
+
+    if (insights.length === 0) {
+      doc.text("• Your budget is balanced and aligned with global 50/30/20 wealth accumulation targets.", 15, insY);
+      insY += 7;
+    }
+
+    // Verification Footer
+    doc.setFillColor(240, 180, 41);
+    doc.rect(15, 270, 180, 0.5, "F");
+
+    doc.setFont("Helvetica", "bold");
+    doc.setFontSize(8);
+    doc.setTextColor(100, 116, 139);
+    doc.text("WEXA AI GITOPS ENGINE • CONFIDENTIAL MONTHLY FINANCIAL REPORT", 15, 277);
+    doc.text(`PAGE 1 OF 1 • ISSUED ${new Date().toLocaleDateString()}`, 145, 277);
+
+    doc.save(`Wexa_Monthly_Financial_Health_Report_${new Date().toISOString().split('T')[0]}.pdf`);
+
+    window.dispatchEvent(
+      new CustomEvent("ww-trigger-alert", {
+        detail: {
+          type: "success",
+          title: "Financial Health Report Exported! 📄",
+          message: "Your summarized monthly financial health PDF report has been generated and downloaded.",
+        },
+      })
+    );
   };
 
   const updateTransactionCategory = (id: number, category: string) => {
@@ -445,6 +565,15 @@ export function BudgetPlanner({ user, onSave, initialPlan, gitProvider = "gitlab
         </div>
         
         <div className="flex items-center gap-3 flex-wrap">
+          <button 
+            onClick={handleExportPDF}
+            className="px-5 py-2.5 bg-accent-gold/10 border border-accent-gold/30 hover:border-accent-gold text-accent-gold text-xs font-bold uppercase tracking-widest rounded-xl hover:bg-accent-gold/20 transition-all flex items-center gap-2 cursor-pointer shadow-sm"
+            title="Export Summarized Monthly Financial Health Report (PDF)"
+          >
+            <Download className="w-4.5 h-4.5 text-accent-gold" />
+            <span>Export Health Report (PDF)</span>
+          </button>
+
           <button 
             onClick={handleExportCSV}
             className="px-5 py-2.5 bg-bg-secondary border border-border hover:border-accent-gold/40 text-text-primary text-xs font-bold uppercase tracking-widest rounded-xl hover:bg-bg-primary transition-all flex items-center gap-2 cursor-pointer"
@@ -723,7 +852,7 @@ export function BudgetPlanner({ user, onSave, initialPlan, gitProvider = "gitlab
                       New limits applied:
                       <pre className="bg-bg-void text-accent-gold p-2 mt-2 rounded border border-border/50 text-[10px] text-left">
 {`{
-  "$schema": "https://wealthwise.elite/schemas/budget-laws.v2.json",
+  "$schema": "https://wexa.ai/schemas/budget-laws.v2.json",
   "anomaly": "MEDICAL_CRUNCH_30",
   "limits_applied": {
     "entertainment": 150,

@@ -322,7 +322,7 @@ export function AssetRebalancer({ user, onUpdatePortfolio, onUnlockAchievement }
     );
     const dlAnchor = document.createElement('a');
     dlAnchor.setAttribute("href", dataStr);
-    dlAnchor.setAttribute("download", `wealthwise_rebalance_blueprint_${riskPreset.toLowerCase()}.json`);
+    dlAnchor.setAttribute("download", `wexa_rebalance_blueprint_${riskPreset.toLowerCase()}.json`);
     document.body.appendChild(dlAnchor);
     dlAnchor.click();
     dlAnchor.remove();
@@ -338,7 +338,7 @@ export function AssetRebalancer({ user, onUpdatePortfolio, onUnlockAchievement }
       return `[${t.isSell ? "SELL 🚨" : "BUY  🟢"}] ${formatCurrency(t.amount, user.currency)} of ${t.category} (${t.percentage.toFixed(1)}% drift deviation)`;
     }).join("\n");
 
-    const fullText = `### WEALTHWISE CLASSIC REBALANCE RECIPE ###\nDrift Deviation Index: ${driftScore}%\nTotal Liquidity Base: ${formatCurrency(totalCurrentValue, user.currency)}\nPreset Profile: ${riskPreset}\n\nPrescribed Trade Operations:\n${bullets}\n\nGenerated secure offline via WealthWise personal architecture.`;
+    const fullText = `### WEXA AI CLASSIC REBALANCE RECIPE ###\nDrift Deviation Index: ${driftScore}%\nTotal Liquidity Base: ${formatCurrency(totalCurrentValue, user.currency)}\nPreset Profile: ${riskPreset}\n\nPrescribed Trade Operations:\n${bullets}\n\nGenerated secure offline via Wexa personal architecture.`;
 
     navigator.clipboard.writeText(fullText).then(() => {
       setCopiedScript(true);

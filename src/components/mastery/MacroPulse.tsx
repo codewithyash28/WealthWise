@@ -58,7 +58,7 @@ export function MacroPulse({ user, onUpdateProfile }: MacroPulseProps) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          email: user?.name ? `${user.name.toLowerCase().replace(/\s+/g, "")}@example.com` : "mastery@wealthwise.com",
+          email: user?.name ? `${user.name.toLowerCase().replace(/\s+/g, "")}@example.com` : "mastery@wexa.ai",
           uid: user?.uid,
         }),
       });
@@ -493,14 +493,14 @@ Keep the analysis concise, structured with bullet points, and elegant. Always en
               </form>
             </div>
 
-            {/* Premium Stripe Gating Upgrade Box Overlay */}
+            {/* Premium Gating Upgrade Box Overlay */}
             {(!user || !user.isPremium) && (
               <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-8 bg-bg-secondary/75 backdrop-blur-md text-center">
                 <div className="w-16 h-16 rounded-full bg-accent-gold/15 flex items-center justify-center text-accent-gold mb-4 border border-accent-gold/30 shadow-lg shadow-accent-gold/10">
                   <Cpu className="w-8 h-8 animate-pulse" />
                 </div>
                 <h3 className="text-2xl font-display font-bold text-text-primary tracking-tight">Socratic AI Advisor</h3>
-                <p className="text-accent-gold text-xs font-mono font-bold uppercase tracking-widest mt-1">WealthWise Pro Feature</p>
+                <p className="text-accent-gold text-xs font-mono font-bold uppercase tracking-widest mt-1">Wexa Pro Feature</p>
                 
                 <p className="text-text-secondary text-xs max-w-md mt-3 leading-relaxed">
                   Lock in advanced Socratic multi-step projections, real-time macroeconomic event streaming, and unlimited AI audits to safeguard your wealth under rising inflation.
@@ -509,11 +509,11 @@ Keep the analysis concise, structured with bullet points, and elegant. Always en
                 <div className="bg-bg-void/60 border border-border/80 rounded-xl p-4 my-5 w-full max-w-sm flex items-center justify-between text-left">
                   <div>
                     <div className="text-xs text-text-muted">SUBSCRIPTION PLAN</div>
-                    <div className="text-sm font-bold text-text-primary">WealthWise Elite Socratic Pro</div>
+                    <div className="text-sm font-bold text-text-primary">Wexa AI Socratic Pro</div>
                   </div>
                   <div className="text-right">
                     <div className="text-lg font-bold text-accent-gold font-mono">$19.99<span className="text-[10px] text-text-muted font-normal font-sans">/mo</span></div>
-                    <div className="text-[8px] text-accent-emerald font-mono tracking-wider uppercase font-bold">Stripe Checkout</div>
+                    <div className="text-[8px] text-accent-emerald font-mono tracking-wider uppercase font-bold">Secure Checkout</div>
                   </div>
                 </div>
 
@@ -528,10 +528,10 @@ Keep the analysis concise, structured with bullet points, and elegant. Always en
                   ) : (
                     <Send className="w-4 h-4" />
                   )}
-                  {isCheckingOut ? "Connecting to Stripe..." : "Unlock with Stripe Checkout"}
+                  {isCheckingOut ? "Connecting to Gateway..." : "Unlock with Secure Checkout"}
                 </button>
                 <div className="text-[10px] text-text-muted mt-3 flex items-center gap-1">
-                  🔒 Secured securely by Stripe Billing • Cancel anytime
+                  🔒 Secured securely by Premium Billing • Cancel anytime
                 </div>
               </div>
             )}
@@ -580,7 +580,7 @@ Keep the analysis concise, structured with bullet points, and elegant. Always en
                   <DollarSign className="w-5 h-5" />
                 </div>
                 <div>
-                  <h4 className="text-sm font-bold text-text-primary uppercase tracking-wider font-sans">Stripe Sandbox</h4>
+                  <h4 className="text-sm font-bold text-text-primary uppercase tracking-wider font-sans">Gateway Sandbox</h4>
                   <p className="text-[10px] text-text-muted font-mono leading-none mt-0.5">Simulator Mode • Direct Payment Ingress</p>
                 </div>
               </div>
@@ -597,7 +597,7 @@ Keep the analysis concise, structured with bullet points, and elegant. Always en
             <div className="p-6 space-y-6">
               <div className="bg-bg-void/40 p-4 rounded-xl border border-border/80 space-y-2">
                 <div className="flex justify-between items-center text-xs">
-                  <span className="text-text-secondary font-sans">WealthWise Socratic Pro Subscription</span>
+                  <span className="text-text-secondary font-sans">Wexa AI Socratic Pro Subscription</span>
                   <span className="font-bold text-text-primary font-mono">$19.99 / mo</span>
                 </div>
                 <div className="flex justify-between items-center text-xs border-t border-border/40 pt-2">

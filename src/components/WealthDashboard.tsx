@@ -1,17 +1,21 @@
 import { motion } from "motion/react";
-import { TrendingUp, ShieldCheck, Target, BrainCircuit, ChevronRight, Sparkles, Wallet, PieChart, ArrowUpRight, ArrowDownRight, CheckCircle2, Info, Trophy, Settings, ChevronDown, Check, GitBranch, Download, Share2, FileJson, Copy, X, Calendar, Lock, Flame, Sliders, BookOpen, Coins, Star, ShoppingBag } from "lucide-react";
+import { TrendingUp, ShieldCheck, Target, BrainCircuit, ChevronRight, Sparkles, Wallet, PieChart, ArrowUpRight, ArrowDownRight, CheckCircle2, Info, Trophy, Settings, ChevronDown, Check, GitBranch, Download, Share2, FileJson, Copy, X, Calendar, Lock, Flame, Sliders, BookOpen, Coins, Star, ShoppingBag, Image as ImageIcon } from "lucide-react";
+import confetti from "canvas-confetti";
 import { UserProfile, BudgetPlan } from "../types";
 import { formatCurrency, cn } from "../lib/utils";
 import { Logo } from "./Logo";
 import { jsPDF } from "jspdf";
 import { CURRENCIES } from "../constants";
 import { useMemo, useState } from "react";
+import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip as RechartsTooltip, CartesianGrid } from "recharts";
 import { generateWealthAudit } from "../lib/gemini";
 import { WealthPathChart } from "./WealthPathChart";
 import { MarketInsights } from "./MarketInsights";
 import { GitOpsControlCenter } from "./GitOpsControlCenter";
 import { AgentOperationsLogs } from "./AgentOperationsLogs";
+import { DailyMarketPulse } from "./DailyMarketPulse";
 import { SHOP_ITEMS, ShopItem } from "./QuestsHub";
+import { WealthGalaxy } from "./WealthGalaxy";
 
 interface WealthDashboardProps {
   user: UserProfile;
@@ -32,6 +36,56 @@ export function WealthDashboard({ user, budget, onUnlockAchievement, onUpdateGit
   const [intentInput, setIntentInput] = useState("");
 
   const currency = CURRENCIES[user.currency] || CURRENCIES.USD;
+
+  const netWorthTrendData = useMemo(() => {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const currentMonthIndex = new Date().getMonth();
+    const data = [];
+    const netWorth = user.netWorth.assets - user.netWorth.liabilities;
+    
+    for (let i = 5; i >= 0; i--) {
+      const monthIdx = (currentMonthIndex - i + 12) % 12;
+      // Growth trajectory ending precisely at currentNetWorth
+      const factor = 1 - (i * 0.045) + (Math.sin((5 - i) * 1.2) * 0.012);
+      data.push({
+        name: months[monthIdx],
+        "Net Worth": Math.round(netWorth * factor)
+      });
+    }
+    return data;
+  }, [user.netWorth, user.currency]);
+
+  const activeGoals = useMemo(() => {
+    if (user.goals && user.goals.length > 0) {
+      return user.goals;
+    }
+    return [
+      {
+        id: "default_retirement",
+        title: "Elite Retirement Nest Egg",
+        targetAmount: 500000,
+        currentAmount: 125000,
+        deadline: "2045-12-31",
+        category: "RETIREMENT" as const
+      },
+      {
+        id: "default_house",
+        title: "Sovereign Penthouse Downpayment",
+        targetAmount: 150000,
+        currentAmount: 45000,
+        deadline: "2029-06-30",
+        category: "HOUSE" as const
+      },
+      {
+        id: "default_other",
+        title: "Alpha Growth Emergency Fund",
+        targetAmount: 30000,
+        currentAmount: 18000,
+        deadline: "2027-12-31",
+        category: "OTHER" as const
+      }
+    ];
+  }, [user.goals]);
 
   const hasBudget = !!budget;
   const hasGoals = (user.goals || []).length > 0;
@@ -102,7 +156,7 @@ export function WealthDashboard({ user, budget, onUnlockAchievement, onUpdateGit
     doc.setFont("Helvetica", "bold");
     doc.setFontSize(22);
     doc.setTextColor(234, 179, 8); // Golden sun
-    doc.text("WEALTHWISE ELITE", 20, 25);
+    doc.text("WEXA AI — AUTONOMOUS FINANCIAL AGENT", 20, 25);
     
     doc.setFont("Helvetica", "normal");
     doc.setFontSize(10);
@@ -179,7 +233,7 @@ export function WealthDashboard({ user, budget, onUnlockAchievement, onUpdateGit
       doc.setFont("Helvetica", "bold");
       doc.setFontSize(11);
       doc.setTextColor(234, 179, 8);
-      doc.text("WEALTHWISE ELITE - COMPREHENSIVE FINANCIAL AUDIT REPORT", 20, 13);
+      doc.text("WEXA AI - COMPREHENSIVE FINANCIAL AUDIT REPORT", 20, 13);
       
       doc.setFontSize(13);
       doc.setTextColor(17, 24, 39);
@@ -204,7 +258,7 @@ export function WealthDashboard({ user, budget, onUnlockAchievement, onUpdateGit
           doc.setFont("Helvetica", "bold");
           doc.setFontSize(11);
           doc.setTextColor(234, 179, 8);
-          doc.text("WEALTHWISE ELITE - COMPREHENSIVE FINANCIAL AUDIT REPORT", 20, 13);
+          doc.text("WEXA AI - COMPREHENSIVE FINANCIAL AUDIT REPORT", 20, 13);
           
           doc.setFont("Helvetica", "normal");
           doc.setFontSize(9.5);
@@ -217,10 +271,98 @@ export function WealthDashboard({ user, budget, onUnlockAchievement, onUpdateGit
     }
     
     // Save generated PDF
-    doc.save(`${user.name.replace(/\s+/g, "_")}_WealthWise_Executive_Audit.pdf`);
+    doc.save(`${user.name.replace(/\s+/g, "_")}_Wexa_Executive_Audit.pdf`);
     
     // Trigger success achievement check
     onUnlockAchievement('pdf_downloaded');
+  };
+
+  const handleExportChartPNG = () => {
+    const canvas = document.createElement("canvas");
+    canvas.width = 1200;
+    canvas.height = 630;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    // Dark canvas theme background
+    ctx.fillStyle = "#0a0f1d";
+    ctx.fillRect(0, 0, 1200, 630);
+
+    // Glowing border frame
+    ctx.strokeStyle = "rgba(234, 179, 8, 0.4)";
+    ctx.lineWidth = 4;
+    ctx.strokeRect(12, 12, 1176, 606);
+
+    // Header Title
+    ctx.fillStyle = "#fbbf24";
+    ctx.font = "bold 32px sans-serif";
+    ctx.fillText("WEXA AI — FINANCIAL PROGRESS & NET WORTH REPORT", 50, 70);
+
+    ctx.fillStyle = "#9ca3af";
+    ctx.font = "16px sans-serif";
+    ctx.fillText(`Account Holder: ${user.name || "Wexa Member"} | Generated: ${new Date().toLocaleDateString()}`, 50, 105);
+
+    // Net worth summary
+    const totalNetWorth = user.netWorth.assets - user.netWorth.liabilities;
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "bold 44px sans-serif";
+    ctx.fillText(`Calculated Net Worth: $${totalNetWorth.toLocaleString()}`, 50, 175);
+
+    ctx.fillStyle = "#34d399";
+    ctx.font = "18px sans-serif";
+    ctx.fillText(`Assets: $${user.netWorth.assets.toLocaleString()}`, 50, 215);
+
+    ctx.fillStyle = "#f87171";
+    ctx.fillText(`Liabilities: $${user.netWorth.liabilities.toLocaleString()}`, 320, 215);
+
+    // Chart Trajectory Curve
+    ctx.strokeStyle = "#fbbf24";
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    const paddingX = 80;
+    const chartWidth = 1040;
+    const startY = 510;
+    const minVal = Math.min(...netWorthTrendData.map(d => d["Net Worth"]));
+    const maxVal = Math.max(...netWorthTrendData.map(d => d["Net Worth"])) || 1;
+
+    netWorthTrendData.forEach((point, i) => {
+      const x = paddingX + (i / (netWorthTrendData.length - 1)) * chartWidth;
+      const norm = (point["Net Worth"] - minVal) / (maxVal - minVal || 1);
+      const y = startY - norm * 220;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+
+      // Node circles
+      ctx.fillStyle = "#fbbf24";
+      ctx.beginPath();
+      ctx.arc(x, y, 7, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Month labels
+      ctx.fillStyle = "#9ca3af";
+      ctx.font = "14px monospace";
+      ctx.fillText(point.name, x - 12, startY + 35);
+    });
+    ctx.stroke();
+
+    // Footer Branding
+    ctx.fillStyle = "#2dd4bf";
+    ctx.font = "bold 15px sans-serif";
+    ctx.fillText("Generated by Wexa AI — Autonomous Wealth Engine", 50, 580);
+
+    // Download trigger
+    const link = document.createElement("a");
+    link.download = `wexa_net_worth_trend_${new Date().toISOString().split('T')[0]}.png`;
+    link.href = canvas.toDataURL("image/png");
+    link.click();
+
+    window.dispatchEvent(new CustomEvent('ww-trigger-alert', {
+      detail: {
+        type: 'success',
+        title: 'Chart Exported! 📊',
+        message: 'Downloaded high-resolution Net Worth trend report image (.png).'
+      }
+    }));
   };
 
   const handleDownloadJSON = () => {
@@ -257,7 +399,7 @@ export function WealthDashboard({ user, budget, onUnlockAchievement, onUpdateGit
     downloadAnchor.setAttribute("href", jsonString);
     downloadAnchor.setAttribute(
       "download",
-      `${user.name.replace(/\s+/g, "_")}_WealthWise_Portfolio_Audit.json`
+      `${user.name.replace(/\s+/g, "_")}_Wexa_Portfolio_Audit.json`
     );
     document.body.appendChild(downloadAnchor);
     downloadAnchor.click();
@@ -275,7 +417,7 @@ export function WealthDashboard({ user, budget, onUnlockAchievement, onUpdateGit
     onUnlockAchievement("json_downloaded");
   };
 
-  const shareSnippet = `I just analyzed my wealth statistics on WealthWise Elite! I scored a ${healthScore}/100 Financial Health score and achieved status of ${masteryTier.label} Status Tier! Check out your dynamic investment and budget roadmap rules:`;
+  const shareSnippet = `I just analyzed my wealth statistics on Wexa AI! I scored a ${healthScore}/100 Financial Health score and achieved status of ${masteryTier.label} Status Tier! Check out your dynamic investment and budget roadmap rules:`;
   const shareLink = `${window.location.origin}/?invite=true&score=${healthScore}&tier=${masteryTier.label.toLowerCase()}&name=${encodeURIComponent(user.name)}`;
 
   const handleCopyShare = async () => {
@@ -300,7 +442,46 @@ export function WealthDashboard({ user, budget, onUnlockAchievement, onUpdateGit
 
   return (
     <div className="container mx-auto px-6 py-12 space-y-12">
-      {/* Header Section */}
+      {/* Wexa Autonomous Financial Agent Quick Launch Banner */}
+      <div className="bg-gradient-to-r from-teal-950 via-slate-900 to-teal-950 border border-teal-800/60 rounded-2xl p-6 shadow-xl relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-80 h-80 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="space-y-2">
+            <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-teal-500/10 border border-teal-500/30 text-teal-300 text-[10px] font-mono font-bold uppercase tracking-wider">
+              <BrainCircuit className="w-3.5 h-3.5 text-teal-400" />
+              Wexa Autonomous Financial Agent
+            </div>
+            <h2 className="text-xl font-bold text-white">
+              "The AI that runs your money, not just shows it to you."
+            </h2>
+            <p className="text-xs text-teal-100/80 max-w-2xl leading-relaxed">
+              Auto-categorize transactions, sweep surplus into savings goals, pause unused subscriptions, and scan receipt images with Gemini Vision.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3 shrink-0">
+            <a
+              href="#wexa-agent"
+              className="px-4 py-2.5 bg-teal-500 hover:bg-teal-400 text-slate-950 text-xs font-extrabold uppercase tracking-wider rounded-xl transition-all shadow-lg flex items-center gap-2 cursor-pointer"
+            >
+              <span>Wexa Execution Engine</span>
+              <ChevronRight className="w-4 h-4" />
+            </a>
+            <a
+              href="#wexa-companion"
+              className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-teal-300 text-xs font-semibold rounded-xl transition-all flex items-center gap-2 cursor-pointer"
+            >
+              Receipt Vision & Q&A
+            </a>
+            <a
+              href="#bank-sync"
+              className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 text-xs font-semibold rounded-xl transition-all flex items-center gap-2 cursor-pointer"
+            >
+              Plaid Sandbox
+            </a>
+          </div>
+        </div>
+      </div>
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div className="space-y-2">
           <div className="flex items-center gap-3 flex-wrap">
@@ -411,6 +592,19 @@ export function WealthDashboard({ user, budget, onUnlockAchievement, onUpdateGit
             className="flex items-center justify-center h-12 w-12 border border-border/80 hover:border-accent-blue/40 text-text-secondary hover:text-accent-blue transition-all cursor-pointer rounded-xl bg-bg-secondary/20"
           >
             <Share2 className="w-5 h-5 text-accent-blue" />
+          </motion.button>
+
+          {/* Export Chart Image (PNG) button */}
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={handleExportChartPNG}
+            type="button"
+            title="Export Net Worth & Budget Trend Chart as Image (PNG)"
+            className="flex items-center justify-center gap-2 px-4 py-3 border border-border/80 hover:border-accent-emerald/40 text-text-secondary hover:text-accent-emerald transition-all cursor-pointer rounded-xl bg-bg-secondary/20 text-xs font-bold h-12"
+          >
+            <ImageIcon className="w-4 h-4 text-accent-emerald" />
+            <span className="hidden sm:inline">Export Chart PNG</span>
           </motion.button>
 
           {/* New Offline JSON Download button */}
@@ -983,6 +1177,26 @@ export function WealthDashboard({ user, budget, onUnlockAchievement, onUpdateGit
         </div>
       </motion.div>
 
+      {/* Live Daily Market Pulse Module */}
+      <motion.div
+        initial={{ opacity: 0, y: 15 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-80px" }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+      >
+        <DailyMarketPulse />
+      </motion.div>
+
+      {/* 3D Wealth Galaxy Spatial Representation */}
+      <motion.div
+        initial={{ opacity: 0, y: 15 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-80px" }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+      >
+        <WealthGalaxy />
+      </motion.div>
+
       {/* Insights and Projection Grid */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
         <motion.div 
@@ -1088,6 +1302,38 @@ export function WealthDashboard({ user, budget, onUnlockAchievement, onUpdateGit
                 </div>
               )}
             </div>
+
+            {/* Recharts Monthly Trend Line */}
+            <div className="h-24 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={netWorthTrendData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
+                  <defs>
+                    <linearGradient id="netWorthGlow" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#eab308" stopOpacity={0.25}/>
+                      <stop offset="95%" stopColor="#eab308" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <XAxis dataKey="name" stroke="#888888" fontSize={9} tickLine={false} axisLine={false} />
+                  <RechartsTooltip
+                    content={({ active, payload }) => {
+                      if (active && payload && payload.length) {
+                        return (
+                          <div className="bg-bg-void/90 border border-border/80 px-2.5 py-1.5 rounded-lg text-[10px] font-mono shadow-xl">
+                            <p className="text-text-muted">{payload[0].payload.name}</p>
+                            <p className="font-bold text-accent-gold">
+                              {formatCurrency(payload[0].value as number, user.currency, currency.locale)}
+                            </p>
+                          </div>
+                        );
+                      }
+                      return null;
+                    }}
+                  />
+                  <Area type="monotone" dataKey="Net Worth" stroke="#eab308" strokeWidth={2} fillOpacity={1} fill="url(#netWorthGlow)" />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+
             <div className="pt-6 border-t border-border grid grid-cols-2 gap-4">
               <div>
                 <div className="text-[10px] text-text-muted uppercase tracking-wider">Assets</div>
@@ -1136,6 +1382,123 @@ export function WealthDashboard({ user, budget, onUnlockAchievement, onUpdateGit
           </div>
         </div>
       </div>
+
+      {/* Financial Savings Goals Tracker */}
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        className="card p-8 space-y-6 mt-8"
+      >
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="space-y-1">
+            <h3 className="text-xl font-bold font-display text-text-primary flex items-center gap-2">
+              <Target className="w-5 h-5 text-accent-gold" /> Active Financial Goals
+            </h3>
+            <p className="text-xs text-text-secondary">Track your real-time compounding milestones and savings targets.</p>
+          </div>
+          <a
+            href="#simulator"
+            className="flex items-center gap-1.5 px-4 py-2 bg-accent-gold/10 hover:bg-accent-gold/20 border border-accent-gold/25 rounded-xl text-accent-gold text-xs font-bold uppercase tracking-wider font-mono transition-all"
+          >
+            <Sliders className="w-3.5 h-3.5" /> Adjust Goals
+          </a>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {activeGoals.map((goal) => {
+            const pct = Math.min(100, Math.round((goal.currentAmount / goal.targetAmount) * 100));
+            // Select an appropriate icon based on category
+            const GoalIcon = () => {
+              switch (goal.category) {
+                case "RETIREMENT": return <Coins className="w-5 h-5 text-accent-gold" />;
+                case "HOUSE": return <Wallet className="w-5 h-5 text-accent-emerald" />;
+                case "CAR": return <Star className="w-5 h-5 text-accent-blue" />;
+                case "EDUCATION": return <BookOpen className="w-5 h-5 text-accent-cyan" />;
+                default: return <Target className="w-5 h-5 text-accent-gold" />;
+              }
+            };
+
+            return (
+              <div key={goal.id} className="p-5 rounded-2xl bg-bg-secondary border border-border/60 hover:border-accent-gold/30 transition-all space-y-4 relative group overflow-hidden">
+                <div className="flex items-start justify-between">
+                  <div className="space-y-1">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-text-muted bg-bg-primary px-2.5 py-1 border border-border rounded-md font-mono">
+                      {goal.category}
+                    </span>
+                    <h4 className="text-sm font-bold text-text-primary group-hover:text-accent-gold transition-colors pt-2">{goal.title}</h4>
+                    <p className="text-[10px] text-text-muted">Target Deadline: {new Date(goal.deadline).toLocaleDateString()}</p>
+                  </div>
+                  <div className="w-9 h-9 rounded-xl bg-bg-primary border border-border/80 flex items-center justify-center">
+                    <GoalIcon />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-end justify-between text-xs">
+                    <span className="text-text-secondary font-medium">
+                      Saved: <strong className="font-mono text-text-primary">{formatCurrency(goal.currentAmount, user.currency, currency.locale)}</strong>
+                    </span>
+                    <span className="font-mono font-bold text-accent-gold">{pct}%</span>
+                  </div>
+
+                  {/* Progress Bar Container */}
+                  <div className="h-2 w-full bg-bg-primary rounded-full overflow-hidden border border-border/40 relative">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      whileInView={{ width: `${pct}%` }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 1, ease: "easeOut" }}
+                      className={cn(
+                        "h-full rounded-full transition-all",
+                        pct >= 100 ? "bg-accent-emerald" :
+                        pct >= 50 ? "bg-accent-gold" : "bg-accent-gold/70"
+                      )}
+                    />
+                  </div>
+                  
+                  <div className="flex justify-between items-center text-[10px] text-text-muted font-mono pt-1">
+                    <span>0%</span>
+                    <span>Target: {formatCurrency(goal.targetAmount, user.currency, currency.locale)}</span>
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      confetti({
+                        particleCount: 120,
+                        spread: 80,
+                        origin: { y: 0.6 }
+                      });
+                      const updatedGoals = (user.goals || activeGoals).map(g => {
+                        if (g.id === goal.id) {
+                          return { ...g, currentAmount: g.targetAmount };
+                        }
+                        return g;
+                      });
+                      onUpdateProfile?.({
+                        ...user,
+                        goals: updatedGoals,
+                        xp: (user.xp || 0) + 100,
+                        coins: (user.coins || 0) + 50
+                      });
+                      window.dispatchEvent(new CustomEvent('ww-trigger-alert', {
+                        detail: {
+                          type: 'success',
+                          title: '🎉 Goal Achieved!',
+                          message: `Congratulations! Marked "${goal.title}" as 100% completed. +100 XP & +50 Coins awarded!`
+                        }
+                      }));
+                    }}
+                    className="w-full mt-2 py-1.5 px-3 rounded-xl bg-accent-gold/10 hover:bg-accent-gold/25 border border-accent-gold/30 text-accent-gold text-[10px] font-mono font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    <CheckCircle2 className="w-3.5 h-3.5" /> Mark Goal Completed 🎉
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </motion.div>
 
       {/* GitOps Policy Control Center */}
       <GitOpsControlCenter 
@@ -1197,7 +1560,7 @@ export function WealthDashboard({ user, budget, onUnlockAchievement, onUpdateGit
           <div className="pt-6 border-t border-border/50">
             <p className="text-[10px] text-text-muted italic text-center">
               Disclaimer: This audit is generated by AI for educational purposes only and does not constitute professional financial advice. 
-              WealthWise Elite does not store your sensitive financial documents.
+              Wexa AI does not store your sensitive financial documents.
             </p>
           </div>
         </motion.div>
@@ -1287,7 +1650,7 @@ export function WealthDashboard({ user, budget, onUnlockAchievement, onUpdateGit
             </div>
 
             <p className="text-text-secondary text-xs leading-relaxed">
-              WealthWise Elite allows you to compile and track your entire wealth architecture (portfolios, simulations, budget laws, inflation buffers) using Git version control rules. Select your preferred provider below to dynamically adjust the AI agent's tracking logic.
+              Wexa AI allows you to compile and track your entire wealth architecture (portfolios, simulations, budget laws, inflation buffers) using Git version control rules. Select your preferred provider below to dynamically adjust the AI agent's tracking logic.
             </p>
 
             <div className="grid grid-cols-1 gap-3">

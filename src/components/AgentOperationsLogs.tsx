@@ -211,7 +211,7 @@ export function AgentOperationsLogs() {
             <span className="w-2.5 h-2.5 rounded-full bg-accent-red/30" />
             <span className="w-2.5 h-2.5 rounded-full bg-accent-gold/30" />
             <span className="w-2.5 h-2.5 rounded-full bg-accent-emerald/30" />
-            <span className="ml-2">stdout@wealthwise-agent-orchestrator:~</span>
+            <span className="ml-2">stdout@wexa-agent-orchestrator:~</span>
           </div>
           <span className="text-[9px] font-bold text-accent-emerald uppercase tracking-widest flex items-center gap-1">
             <ShieldCheck className="w-3.5 h-3.5" /> SECURE AUDIT LOG

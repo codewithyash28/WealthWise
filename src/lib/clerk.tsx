@@ -5,6 +5,7 @@ import {
   useAuth as useRealAuth,
   useClerk as useRealClerkInstance
 } from "@clerk/clerk-react";
+import { shadcn } from "@clerk/ui/themes";
 import { KeyRound, ShieldCheck, HelpCircle, LogIn, LogOut, User, Sparkles, Mail, Database, CreditCard, RefreshCw } from "lucide-react";
 
 // Types matching application's user structure
@@ -29,7 +30,10 @@ interface ClerkAuthContextType {
 
 const ClerkAuthContext = createContext<ClerkAuthContextType | undefined>(undefined);
 
-const CLERK_PUBLISHABLE_KEY = (((import.meta as any).env?.VITE_CLERK_PUBLISHABLE_KEY || "") as string).trim();
+const CLERK_PUBLISHABLE_KEY = (
+  ((import.meta as any).env?.VITE_CLERK_PUBLISHABLE_KEY as string) || 
+  "pk_test_dXAtZWxlcGhhbnQtNTYuY2xlcmsuYWNjb3VudHMuZGV2JA"
+).trim();
 const isClerkConfigured = typeof CLERK_PUBLISHABLE_KEY === "string" && 
   (CLERK_PUBLISHABLE_KEY.startsWith("pk_test_") || CLERK_PUBLISHABLE_KEY.startsWith("pk_live_"));
 
@@ -241,7 +245,7 @@ function RealClerkContextAdapter({ children }: { children: ReactNode }) {
 export function MasterClerkProvider({ children }: { children: ReactNode }) {
   if (isClerkConfigured) {
     return (
-      <RealClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY}>
+      <RealClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY} appearance={{ theme: shadcn }}>
         <RealClerkContextAdapter>
           {children}
         </RealClerkContextAdapter>
@@ -289,7 +293,15 @@ export function ClerkStatusBanner() {
         </div>
       </div>
       
-      {!isClerkActive && (
+      {isClerkActive ? (
+        <div className="flex flex-col gap-2 w-full md:w-auto">
+          <div className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-3 py-1.5 rounded-lg border border-emerald-500/30 flex items-center gap-1.5">
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+            <code className="text-emerald-300 font-bold">VITE_CLERK_PUBLISHABLE_KEY</code>
+            <span className="text-emerald-400/80">Configured (.env)</span>
+          </div>
+        </div>
+      ) : (
         <div className="flex flex-col gap-2 w-full md:w-auto">
           <div className="text-[10px] font-mono text-text-muted bg-bg-void/60 px-3 py-1.5 rounded-lg border border-border flex items-center gap-1.5">
             <code className="text-accent-gold font-bold">VITE_CLERK_PUBLISHABLE_KEY</code>

@@ -36,7 +36,7 @@ export function Footer() {
           <div>
             <h4 className="font-display font-bold text-lg mb-6">Global Impact</h4>
             <p className="text-text-secondary mb-6">
-              Join learners worldwide mastering their personal finances with WealthWise Elite.
+              Join learners worldwide mastering their personal finances with Wexa AI.
             </p>
             <div className="flex items-center gap-2 text-text-muted text-sm">
               <div className="flex -space-x-2">
@@ -53,7 +53,7 @@ export function Footer() {
 
         <div className="pt-10 border-t border-border flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
           <div className="text-text-muted text-sm">
-            © WealthWise Elite · Educational content only · Not financial advice
+            © Wexa AI · Educational content only · Not financial advice
           </div>
           <div className="flex items-center gap-4 text-text-muted text-xs">
             <span>HTML5</span>
