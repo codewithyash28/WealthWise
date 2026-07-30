@@ -102,6 +102,7 @@ import { CurrencySelector, NameInput } from "./components/Modals";
 import { Onboarding } from "./components/Onboarding";
 import { JudgeTour } from "./components/JudgeTour";
 import { VoiceNavigationController } from "./components/VoiceNavigationController";
+import { GoalCelebrationOverlay } from "./components/GoalCelebration";
 import { StartupLogoAnimation } from "./components/StartupLogoAnimation";
 import { Logo } from "./components/Logo";
 import { UserProfile, BudgetPlan, FinancialGoal, Achievement, Portfolio } from "./types";
@@ -1432,6 +1433,8 @@ function AppContent() {
         setCurrentHash(hash);
         window.location.hash = hash;
       }} />
+
+      <GoalCelebrationOverlay />
     </div>
   );
 }

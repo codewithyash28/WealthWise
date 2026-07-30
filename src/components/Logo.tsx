@@ -12,7 +12,14 @@ export function Logo({
   iconOnly?: boolean;
   onClick?: () => void;
 }) {
-  const [imgError, setImgError] = useState(false);
+  const [imgIdx, setImgIdx] = useState(0);
+  const imageSources = ["/logo-designed.png", "/logo.svg", "/wexa-avatar.jpg", "/app-icon.png"];
+
+  const handleImgError = () => {
+    if (imgIdx < imageSources.length - 1) {
+      setImgIdx(prev => prev + 1);
+    }
+  };
 
   const sizes = {
     sm: "w-7 h-7",
@@ -49,9 +56,9 @@ export function Logo({
           className="w-full h-full rounded-full p-[2px] bg-gradient-to-tr from-teal-400 via-amber-300 to-teal-200 shadow-xl relative z-10 overflow-hidden"
         >
           <img
-            src={imgError ? "/logo.svg" : "/wexa-avatar.jpg"}
+            src={imageSources[imgIdx]}
             alt="Wexa AI Logo"
-            onError={() => setImgError(true)}
+            onError={handleImgError}
             className="w-full h-full object-cover rounded-full bg-slate-950 border border-slate-900"
           />
         </motion.div>
@@ -69,4 +76,5 @@ export function Logo({
     </div>
   );
 }
+
 

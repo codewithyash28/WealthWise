@@ -231,25 +231,132 @@ export function Navbar({
             <span className="text-[11px] font-medium uppercase">{currency}</span>
           </button>
 
+          {/* User Profile Avatar with Visual Streak Progress Ring */}
           {user ? (
             <div className="hidden sm:flex items-center gap-2.5 ml-1">
-              <div className="w-7 h-7 rounded-full overflow-hidden border border-border bg-bg-secondary flex items-center justify-center">
-                {user.photoURL ? (
-                  <img src={user.photoURL} alt={user.displayName || "User"} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                ) : (
-                  <span className="text-[10px] font-bold text-accent-gold">
-                    {(user.displayName || "U").charAt(0).toUpperCase()}
-                  </span>
-                )}
-              </div>
-              <button onClick={onSignOut} className="text-[11px] text-text-secondary hover:text-text-primary transition-colors font-medium">
+              {(() => {
+                const milestones = [3, 7, 14, 30, 60, 100, 365];
+                const nextMilestone = milestones.find((m) => m > streak) || (Math.floor(streak / 50) + 1) * 50;
+                const progressPct = Math.min(100, Math.max(12, Math.round((streak / nextMilestone) * 100)));
+                const size = 38;
+                const strokeWidth = 2.5;
+                const center = size / 2;
+                const radius = center - strokeWidth;
+                const circumference = 2 * Math.PI * radius;
+                const strokeDashoffset = circumference - (circumference * progressPct) / 100;
+
+                return (
+                  <div 
+                    className="relative flex items-center justify-center group cursor-pointer"
+                    title={`🔥 Streak: ${streak} Days | ${progressPct}% toward ${nextMilestone}-Day Milestone`}
+                  >
+                    {/* SVG Progress Ring */}
+                    <svg width={size} height={size} className="transform -rotate-90">
+                      {/* Background Track Circle */}
+                      <circle
+                        cx={center}
+                        cy={center}
+                        r={radius}
+                        stroke="rgba(240, 180, 41, 0.2)"
+                        strokeWidth={strokeWidth}
+                        fill="transparent"
+                      />
+                      {/* Animated Progress Circle */}
+                      <circle
+                        cx={center}
+                        cy={center}
+                        r={radius}
+                        stroke="url(#streakGradient)"
+                        strokeWidth={strokeWidth}
+                        strokeDasharray={circumference}
+                        strokeDashoffset={strokeDashoffset}
+                        strokeLinecap="round"
+                        fill="transparent"
+                        className="transition-all duration-700 ease-out"
+                      />
+                      <defs>
+                        <linearGradient id="streakGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                          <stop offset="0%" stopColor="#f0b429" />
+                          <stop offset="50%" stopColor="#fbbf24" />
+                          <stop offset="100%" stopColor="#10b981" />
+                        </linearGradient>
+                      </defs>
+                    </svg>
+
+                    {/* Avatar Container */}
+                    <div className="absolute w-[30px] h-[30px] rounded-full overflow-hidden border border-border bg-bg-secondary flex items-center justify-center">
+                      {user.photoURL ? (
+                        <img src={user.photoURL} alt={user.displayName || "User"} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                      ) : (
+                        <span className="text-[10px] font-black text-accent-gold">
+                          {(user.displayName || "U").charAt(0).toUpperCase()}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Hover Progress Tooltip */}
+                    <div className="absolute top-full mt-2 hidden group-hover:flex flex-col items-center z-50 whitespace-nowrap">
+                      <div className="bg-bg-void/95 border border-accent-gold/40 px-3 py-1.5 rounded-xl shadow-2xl backdrop-blur-md text-[10px] font-mono text-text-primary">
+                        <div className="flex items-center gap-1.5 font-bold text-accent-gold">
+                          <Flame className="w-3 h-3 fill-accent-gold" />
+                          <span>{streak}-Day Active Streak</span>
+                        </div>
+                        <div className="text-text-muted mt-0.5">
+                          {progressPct}% to <span className="text-emerald-400 font-bold">{nextMilestone}-Day Milestone</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              <button onClick={onSignOut} className="text-[11px] text-text-secondary hover:text-text-primary transition-colors font-medium cursor-pointer">
                 Sign Out
               </button>
             </div>
           ) : (
-            <a href="#dashboard" className="hidden sm:flex px-4 py-1.5 bg-bg-secondary border border-border text-text-primary text-[11px] font-bold uppercase tracking-widest rounded-xl hover:bg-bg-primary transition-all">
-              Sign In
-            </a>
+            <div className="hidden sm:flex items-center gap-2">
+              {/* Guest Progress Ring Preview */}
+              {(() => {
+                const milestones = [3, 7, 14, 30];
+                const nextMilestone = milestones.find((m) => m > streak) || 7;
+                const progressPct = Math.min(100, Math.max(15, Math.round((streak / nextMilestone) * 100)));
+                const size = 36;
+                const strokeWidth = 2;
+                const center = size / 2;
+                const radius = center - strokeWidth;
+                const circumference = 2 * Math.PI * radius;
+                const strokeDashoffset = circumference - (circumference * progressPct) / 100;
+
+                return (
+                  <div 
+                    className="relative flex items-center justify-center group cursor-pointer"
+                    title={`🔥 Guest Streak: ${streak} Day | ${progressPct}% to ${nextMilestone}-Day Milestone`}
+                  >
+                    <svg width={size} height={size} className="transform -rotate-90">
+                      <circle cx={center} cy={center} r={radius} stroke="rgba(240, 180, 41, 0.2)" strokeWidth={strokeWidth} fill="transparent" />
+                      <circle
+                        cx={center}
+                        cy={center}
+                        r={radius}
+                        stroke="#f0b429"
+                        strokeWidth={strokeWidth}
+                        strokeDasharray={circumference}
+                        strokeDashoffset={strokeDashoffset}
+                        strokeLinecap="round"
+                        fill="transparent"
+                      />
+                    </svg>
+                    <div className="absolute w-[28px] h-[28px] rounded-full overflow-hidden border border-border bg-bg-secondary flex items-center justify-center">
+                      <Flame className="w-3.5 h-3.5 text-accent-gold" />
+                    </div>
+                  </div>
+                );
+              })()}
+              <a href="#dashboard" className="px-4 py-1.5 bg-bg-secondary border border-border text-text-primary text-[11px] font-bold uppercase tracking-widest rounded-xl hover:bg-bg-primary transition-all">
+                Sign In
+              </a>
+            </div>
           )}
 
           <button

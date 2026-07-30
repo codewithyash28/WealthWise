@@ -46,6 +46,27 @@ export const WexaCompanion: React.FC<WexaCompanionProps> = ({ user, budget, onRe
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  const [advisorPersona, setAdvisorPersona] = useState<"conservative" | "aggressive">(
+    () => (localStorage.getItem("ww_advisor_persona") as "conservative" | "aggressive") || "conservative"
+  );
+
+  useEffect(() => {
+    const handlePersonaChange = (e: any) => {
+      if (e.detail?.persona) {
+        setAdvisorPersona(e.detail.persona);
+      }
+    };
+    window.addEventListener("ww-advisor-persona-changed", handlePersonaChange);
+    return () => window.removeEventListener("ww-advisor-persona-changed", handlePersonaChange);
+  }, []);
+
+  const toggleAdvisorPersona = () => {
+    const nextPersona = advisorPersona === "conservative" ? "aggressive" : "conservative";
+    setAdvisorPersona(nextPersona);
+    localStorage.setItem("ww_advisor_persona", nextPersona);
+    window.dispatchEvent(new CustomEvent("ww-advisor-persona-changed", { detail: { persona: nextPersona } }));
+  };
+
   const speakText = (text: string) => {
     if (!voiceEnabled || !("speechSynthesis" in window)) return;
     window.speechSynthesis.cancel();
@@ -66,12 +87,16 @@ export const WexaCompanion: React.FC<WexaCompanionProps> = ({ user, budget, onRe
 
     try {
       const isJudgeMode = localStorage.getItem("ww_judge_mode") === "true";
+      const personaInstruction = advisorPersona === "aggressive"
+        ? "ADVISOR PERSONA: AGGRESSIVE & GROWTH-FOCUSED. Encourage high-yield capital deployment, strategic leverage, tech growth, and calculated market risk for maximum long-term wealth compounding."
+        : "ADVISOR PERSONA: CONSERVATIVE & RISK-AVERSE. Prioritize capital preservation, debt-free runway, cash emergency buffers, and defensive asset allocations.";
+
       const res = await fetch("/api/gemini/insight", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          prompt: `User ask: "${promptToUse}". User financial profile: Age ${user?.age || 25}, Assets $${user?.netWorth?.assets || 5000}, Currency ${user?.currency || "USD"}. 
-          Answer directly in plain, friendly language. State YES, NO, or EXACT NUMBER first in 1 sentence, then give 1 sentence of context. Never use dense jargon without explaining it.`,
+          prompt: `${personaInstruction}\nUser ask: "${promptToUse}". User financial profile: Age ${user?.age || 25}, Assets $${user?.netWorth?.assets || 5000}, Currency ${user?.currency || "USD"}. 
+          Answer directly in plain, friendly language. State YES, NO, or EXACT NUMBER first in 1 sentence, then give 1 sentence of context aligned with your financial advisor persona.`,
           history: [],
           isJudgeMode
         })
@@ -81,12 +106,16 @@ export const WexaCompanion: React.FC<WexaCompanionProps> = ({ user, budget, onRe
         throw new Error(`HTTP error ${res.status}`);
       }
       const data = await res.json();
-      const reply = data.text || "You have $145.00 safe-to-spend left in your weekly budget after accounting for upcoming bills.";
+      const reply = data.text || (advisorPersona === "aggressive" 
+        ? "You have $145.00 available! Deploying this into high-yield momentum assets or tech growth opportunities will accelerate your wealth compounding velocity."
+        : "You have $145.00 safe-to-spend left in your weekly budget after setting aside cash for defensive liquidity and upcoming liabilities.");
       
       setMessages(prev => [...prev, { sender: "wexa", text: reply, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }]);
       speakText(reply);
     } catch (err) {
-      const fallback = "Yes! You have $145.00 remaining in your unallocated weekly entertainment buffer, so a $45 dinner is completely within your safe spending limit.";
+      const fallback = advisorPersona === "aggressive"
+        ? "Yes! You have $145.00 remaining in your liquid discretionary pool. In an aggressive growth posture, investing this into high-beta equities or yield staking could maximize your long-term wealth upside."
+        : "Yes! You have $145.00 remaining in your unallocated weekly entertainment buffer, so a $45 dinner is within your safe spending limit without compromising your emergency cash buffer.";
       setMessages(prev => [...prev, { sender: "wexa", text: fallback, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }]);
       speakText(fallback);
     } finally {
@@ -166,20 +195,44 @@ export const WexaCompanion: React.FC<WexaCompanionProps> = ({ user, budget, onRe
             </div>
           </div>
 
-          <button
-            onClick={() => {
-              setVoiceEnabled(!voiceEnabled);
-              if (voiceEnabled) window.speechSynthesis?.cancel();
-            }}
-            className={`p-2.5 rounded-xl border transition-all cursor-pointer ${
-              voiceEnabled 
-                ? "bg-teal-500/20 border-teal-500/50 text-teal-300 shadow-lg shadow-teal-500/20" 
-                : "bg-slate-800 border-slate-700 text-slate-400 hover:text-white"
-            }`}
-            title={voiceEnabled ? "Mute Voice Narration" : "Enable Voice Narration"}
-          >
-            {voiceEnabled ? <Volume2 className="w-4 h-4 text-teal-400" /> : <VolumeX className="w-4 h-4" />}
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={toggleAdvisorPersona}
+              className={`px-3 py-1.5 rounded-xl border text-[11px] font-mono font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                advisorPersona === "aggressive"
+                  ? "bg-amber-500/15 border-amber-500/40 text-amber-300 hover:bg-amber-500/25"
+                  : "bg-emerald-500/15 border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/25"
+              }`}
+              title={`Click to switch to ${advisorPersona === "conservative" ? "Aggressive / Growth-Focused" : "Conservative / Risk-Averse"} Advisor`}
+            >
+              {advisorPersona === "aggressive" ? (
+                <>
+                  <Zap className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Aggressive Persona</span>
+                </>
+              ) : (
+                <>
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Conservative Persona</span>
+                </>
+              )}
+            </button>
+
+            <button
+              onClick={() => {
+                setVoiceEnabled(!voiceEnabled);
+                if (voiceEnabled) window.speechSynthesis?.cancel();
+              }}
+              className={`p-2.5 rounded-xl border transition-all cursor-pointer ${
+                voiceEnabled 
+                  ? "bg-teal-500/20 border-teal-500/50 text-teal-300 shadow-lg shadow-teal-500/20" 
+                  : "bg-slate-800 border-slate-700 text-slate-400 hover:text-white"
+              }`}
+              title={voiceEnabled ? "Mute Voice Narration" : "Enable Voice Narration"}
+            >
+              {voiceEnabled ? <Volume2 className="w-4 h-4 text-teal-400" /> : <VolumeX className="w-4 h-4" />}
+            </button>
+          </div>
         </div>
 
         {/* Quick Prompts */}

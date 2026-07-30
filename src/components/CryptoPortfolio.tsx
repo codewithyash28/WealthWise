@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "motion/react";
-import { Coins, TrendingUp, TrendingDown, RefreshCw, Plus, Trash2, Sparkles, DollarSign, Wallet, ShieldCheck, ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { Coins, TrendingUp, TrendingDown, RefreshCw, Plus, Trash2, Sparkles, DollarSign, Wallet, ShieldCheck, ArrowUpRight, ArrowDownRight, Bell, BellRing, Target, Eye, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { formatCurrency } from "../lib/utils";
 import { CURRENCIES } from "../constants";
 
@@ -14,6 +14,16 @@ export interface CryptoHolding {
   avgBuyPrice: number;
 }
 
+export interface CryptoPriceAlert {
+  id: string;
+  coinId: string;
+  symbol: string;
+  name: string;
+  targetPriceUSD: number;
+  condition: "above" | "below";
+  createdAt: string;
+}
+
 interface CryptoPriceData {
   usd: number;
   usd_24h_change: number;
@@ -24,6 +34,12 @@ const DEFAULT_HOLDINGS: CryptoHolding[] = [
   { id: "ethereum", symbol: "ETH", name: "Ethereum", amount: 2.5, avgBuyPrice: 2900 },
   { id: "solana", symbol: "SOL", name: "Solana", amount: 15, avgBuyPrice: 135 },
   { id: "cardano", symbol: "ADA", name: "Cardano", amount: 1200, avgBuyPrice: 0.42 },
+];
+
+const DEFAULT_ALERTS: CryptoPriceAlert[] = [
+  { id: "alert-1", coinId: "bitcoin", symbol: "BTC", name: "Bitcoin", targetPriceUSD: 70000, condition: "above", createdAt: new Date().toISOString() },
+  { id: "alert-2", coinId: "ethereum", symbol: "ETH", name: "Ethereum", targetPriceUSD: 3200, condition: "below", createdAt: new Date().toISOString() },
+  { id: "alert-3", coinId: "solana", symbol: "SOL", name: "Solana", targetPriceUSD: 200, condition: "above", createdAt: new Date().toISOString() },
 ];
 
 const SUPPORTED_COINS = [
@@ -54,6 +70,56 @@ export function CryptoPortfolio({ user, currency: propCurrency }: CryptoPortfoli
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<string>("");
   const [isAddOpen, setIsAddOpen] = useState(false);
+
+  // Custom Price-Point Alerts & Watched Assets State
+  const [alerts, setAlerts] = useState<CryptoPriceAlert[]>(() => {
+    const saved = localStorage.getItem("ww_crypto_price_alerts");
+    return saved ? JSON.parse(saved) : DEFAULT_ALERTS;
+  });
+
+  const [alertCoinId, setAlertCoinId] = useState("bitcoin");
+  const [alertTargetInput, setAlertTargetInput] = useState("");
+  const [alertCondition, setAlertCondition] = useState<"above" | "below">("above");
+  const [isAlertFormOpen, setIsAlertFormOpen] = useState(false);
+
+  useEffect(() => {
+    localStorage.setItem("ww_crypto_price_alerts", JSON.stringify(alerts));
+  }, [alerts]);
+
+  const handleAddAlert = (e: React.FormEvent) => {
+    e.preventDefault();
+    const targetVal = parseFloat(alertTargetInput);
+    if (isNaN(targetVal) || targetVal <= 0) return;
+
+    const coinMeta = SUPPORTED_COINS.find(c => c.id === alertCoinId);
+    if (!coinMeta) return;
+
+    const newAlert: CryptoPriceAlert = {
+      id: `alert-${Date.now()}`,
+      coinId: alertCoinId,
+      symbol: coinMeta.symbol,
+      name: coinMeta.name,
+      targetPriceUSD: targetVal,
+      condition: alertCondition,
+      createdAt: new Date().toISOString()
+    };
+
+    setAlerts(prev => [newAlert, ...prev]);
+    setAlertTargetInput("");
+    setIsAlertFormOpen(false);
+
+    window.dispatchEvent(new CustomEvent('ww-trigger-alert', {
+      detail: {
+        type: 'success',
+        title: 'Price Alert Set! 🔔',
+        message: `Custom price alert created for ${coinMeta.symbol} when price goes ${alertCondition} $${targetVal.toLocaleString()}`
+      }
+    }));
+  };
+
+  const handleRemoveAlert = (id: string) => {
+    setAlerts(prev => prev.filter(a => a.id !== id));
+  };
 
   // Form states for adding new asset
   const [selectedCoinId, setSelectedCoinId] = useState("bitcoin");
@@ -326,84 +392,249 @@ export function CryptoPortfolio({ user, currency: propCurrency }: CryptoPortfoli
         </motion.form>
       )}
 
-      {/* Holdings Table */}
-      <div className="overflow-x-auto relative z-10">
-        <table className="w-full text-left text-xs font-mono">
-          <thead>
-            <tr className="border-b border-border/60 text-text-muted text-[10px] uppercase tracking-wider">
-              <th className="py-3 px-2">Asset</th>
-              <th className="py-3 px-2">Live Price</th>
-              <th className="py-3 px-2">24h Change</th>
-              <th className="py-3 px-2">Holding Quantity</th>
-              <th className="py-3 px-2">Total Value ({currency})</th>
-              <th className="py-3 px-2">Profit / Loss</th>
-              <th className="py-3 px-2 text-right">Action</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border/30">
-            {holdings.map((h) => {
-              const livePriceUSD = getCoinPrice(h.id);
-              const change24h = getCoinChange(h.id);
-              const totalValUSD = h.amount * livePriceUSD;
-              const totalCostUSD = h.amount * h.avgBuyPrice;
-              const pnlUSD = totalValUSD - totalCostUSD;
-              const pnlPercent = totalCostUSD > 0 ? (pnlUSD / totalCostUSD) * 100 : 0;
+      {/* Main Grid: Holdings Table (Left/Main) & Watched Assets Sidebar (Right) */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 relative z-10">
+        {/* Left Column: Holdings Table */}
+        <div className="lg:col-span-2 space-y-4">
+          <div className="flex items-center justify-between">
+            <h4 className="text-sm font-bold font-mono text-text-primary uppercase tracking-wider flex items-center gap-2">
+              <Wallet className="w-4 h-4 text-teal-400" /> Tracked Crypto Holdings
+            </h4>
+          </div>
 
-              return (
-                <tr key={h.id} className="hover:bg-bg-tertiary/40 transition-colors">
-                  <td className="py-3 px-2">
-                    <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-full bg-teal-500/10 border border-teal-500/30 flex items-center justify-center font-bold text-teal-400 text-xs">
-                        {h.symbol.slice(0, 3)}
-                      </div>
-                      <div>
-                        <div className="font-bold text-text-primary">{h.name}</div>
-                        <div className="text-[10px] text-text-muted">{h.symbol}</div>
-                      </div>
-                    </div>
-                  </td>
-
-                  <td className="py-3 px-2 font-bold text-text-primary">
-                    {formatCurrency(livePriceUSD, currency, currInfo.locale)}
-                  </td>
-
-                  <td className="py-3 px-2">
-                    <span className={`inline-flex items-center gap-0.5 px-2 py-0.5 rounded-md text-[10px] font-bold ${change24h >= 0 ? "bg-emerald-500/15 text-emerald-400" : "bg-rose-500/15 text-rose-400"}`}>
-                      {change24h >= 0 ? "+" : ""}{change24h.toFixed(2)}%
-                    </span>
-                  </td>
-
-                  <td className="py-3 px-2 font-bold text-text-secondary">
-                    {h.amount} {h.symbol}
-                  </td>
-
-                  <td className="py-3 px-2 font-bold text-teal-300">
-                    {formatCurrency(totalValUSD, currency, currInfo.locale)}
-                  </td>
-
-                  <td className="py-3 px-2">
-                    <div className={`font-bold ${pnlUSD >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
-                      {pnlUSD >= 0 ? "+" : ""}{formatCurrency(pnlUSD, currency, currInfo.locale)}
-                    </div>
-                    <div className={`text-[9px] ${pnlUSD >= 0 ? "text-emerald-500" : "text-rose-500"}`}>
-                      {pnlUSD >= 0 ? "+" : ""}{pnlPercent.toFixed(1)}%
-                    </div>
-                  </td>
-
-                  <td className="py-3 px-2 text-right">
-                    <button
-                      onClick={() => handleRemoveHolding(h.id)}
-                      className="p-1.5 rounded-lg text-text-muted hover:text-rose-400 hover:bg-rose-500/10 transition-all cursor-pointer"
-                      title="Delete holding"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </td>
+          <div className="overflow-x-auto rounded-2xl border border-border/50 bg-bg-tertiary/30">
+            <table className="w-full text-left text-xs font-mono">
+              <thead>
+                <tr className="border-b border-border/60 text-text-muted text-[10px] uppercase tracking-wider bg-bg-tertiary/60">
+                  <th className="py-3 px-3">Asset</th>
+                  <th className="py-3 px-3">Live Price</th>
+                  <th className="py-3 px-3">24h Change</th>
+                  <th className="py-3 px-3">Holding</th>
+                  <th className="py-3 px-3">Total Value</th>
+                  <th className="py-3 px-3">P/L</th>
+                  <th className="py-3 px-3 text-right">Action</th>
                 </tr>
-              );
-            })}
-          </tbody>
-        </table>
+              </thead>
+              <tbody className="divide-y divide-border/30">
+                {holdings.map((h) => {
+                  const livePriceUSD = getCoinPrice(h.id);
+                  const change24h = getCoinChange(h.id);
+                  const totalValUSD = h.amount * livePriceUSD;
+                  const totalCostUSD = h.amount * h.avgBuyPrice;
+                  const pnlUSD = totalValUSD - totalCostUSD;
+                  const pnlPercent = totalCostUSD > 0 ? (pnlUSD / totalCostUSD) * 100 : 0;
+
+                  return (
+                    <tr key={h.id} className="hover:bg-bg-tertiary/40 transition-colors">
+                      <td className="py-3 px-3">
+                        <div className="flex items-center gap-2">
+                          <div className="w-7 h-7 rounded-full bg-teal-500/10 border border-teal-500/30 flex items-center justify-center font-bold text-teal-400 text-xs">
+                            {h.symbol.slice(0, 3)}
+                          </div>
+                          <div>
+                            <div className="font-bold text-text-primary">{h.name}</div>
+                            <div className="text-[10px] text-text-muted">{h.symbol}</div>
+                          </div>
+                        </div>
+                      </td>
+
+                      <td className="py-3 px-3 font-bold text-text-primary">
+                        {formatCurrency(livePriceUSD, currency, currInfo.locale)}
+                      </td>
+
+                      <td className="py-3 px-3">
+                        <span className={`inline-flex items-center gap-0.5 px-2 py-0.5 rounded-md text-[10px] font-bold ${change24h >= 0 ? "bg-emerald-500/15 text-emerald-400" : "bg-rose-500/15 text-rose-400"}`}>
+                          {change24h >= 0 ? "+" : ""}{change24h.toFixed(2)}%
+                        </span>
+                      </td>
+
+                      <td className="py-3 px-3 font-bold text-text-secondary">
+                        {h.amount} {h.symbol}
+                      </td>
+
+                      <td className="py-3 px-3 font-bold text-teal-300">
+                        {formatCurrency(totalValUSD, currency, currInfo.locale)}
+                      </td>
+
+                      <td className="py-3 px-3">
+                        <div className={`font-bold ${pnlUSD >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
+                          {pnlUSD >= 0 ? "+" : ""}{formatCurrency(pnlUSD, currency, currInfo.locale)}
+                        </div>
+                        <div className={`text-[9px] ${pnlUSD >= 0 ? "text-emerald-500" : "text-rose-500"}`}>
+                          {pnlUSD >= 0 ? "+" : ""}{pnlPercent.toFixed(1)}%
+                        </div>
+                      </td>
+
+                      <td className="py-3 px-3 text-right">
+                        <button
+                          onClick={() => handleRemoveHolding(h.id)}
+                          className="p-1.5 rounded-lg text-text-muted hover:text-rose-400 hover:bg-rose-500/10 transition-all cursor-pointer"
+                          title="Delete holding"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Right Sidebar: Watched Assets & Custom Price-Point Alerts */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h4 className="text-sm font-bold font-mono text-text-primary uppercase tracking-wider flex items-center gap-2">
+              <Eye className="w-4 h-4 text-amber-400" /> Watched Assets & Alerts
+            </h4>
+            <button
+              onClick={() => setIsAlertFormOpen(!isAlertFormOpen)}
+              className="text-xs font-mono font-bold text-amber-400 hover:text-amber-300 flex items-center gap-1 cursor-pointer bg-amber-500/10 border border-amber-500/30 px-2.5 py-1 rounded-xl transition-all"
+            >
+              <Bell className="w-3.5 h-3.5" /> + Alert
+            </button>
+          </div>
+
+          {/* Add Price Alert Inline Form */}
+          {isAlertFormOpen && (
+            <motion.form
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              onSubmit={handleAddAlert}
+              className="p-4 rounded-2xl bg-bg-tertiary border border-amber-500/40 space-y-3 font-mono text-xs"
+            >
+              <div className="font-bold text-amber-300 text-[11px] uppercase flex items-center gap-1.5">
+                <Target className="w-3.5 h-3.5" /> Set Token Price Trigger
+              </div>
+              
+              <div>
+                <label className="text-[10px] text-text-muted block mb-1">Target Asset</label>
+                <select
+                  value={alertCoinId}
+                  onChange={(e) => setAlertCoinId(e.target.value)}
+                  className="w-full bg-bg-void border border-border rounded-xl px-2.5 py-1.5 text-text-primary focus:border-amber-400 outline-none"
+                >
+                  {SUPPORTED_COINS.map((c) => (
+                    <option key={c.id} value={c.id}>{c.name} ({c.symbol})</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="text-[10px] text-text-muted block mb-1">Condition</label>
+                <select
+                  value={alertCondition}
+                  onChange={(e) => setAlertCondition(e.target.value as "above" | "below")}
+                  className="w-full bg-bg-void border border-border rounded-xl px-2.5 py-1.5 text-text-primary focus:border-amber-400 outline-none"
+                >
+                  <option value="above">Price rises ABOVE target ($)</option>
+                  <option value="below">Price drops BELOW target ($)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="text-[10px] text-text-muted block mb-1">Target Price (USD)</label>
+                <input
+                  type="number"
+                  step="any"
+                  placeholder={`Current: $${getCoinPrice(alertCoinId)}`}
+                  value={alertTargetInput}
+                  onChange={(e) => setAlertTargetInput(e.target.value)}
+                  required
+                  className="w-full bg-bg-void border border-border rounded-xl px-2.5 py-1.5 text-text-primary focus:border-amber-400 outline-none"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setIsAlertFormOpen(false)}
+                  className="px-2.5 py-1 rounded-lg border border-border text-text-muted hover:text-text-primary"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-3 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-bg-void font-bold shadow-md"
+                >
+                  Save Alert
+                </button>
+              </div>
+            </motion.form>
+          )}
+
+          {/* List of Watched Assets & Alerts */}
+          <div className="space-y-2 max-h-[420px] overflow-y-auto pr-1">
+            {alerts.length === 0 ? (
+              <div className="p-6 text-center text-text-muted italic text-xs border border-dashed border-border/50 rounded-2xl font-mono">
+                No custom price alerts configured. Click "+ Alert" to start watching token thresholds.
+              </div>
+            ) : (
+              alerts.map((item) => {
+                const livePrice = getCoinPrice(item.coinId);
+                const isTriggered = item.condition === "above" 
+                  ? livePrice >= item.targetPriceUSD 
+                  : livePrice <= item.targetPriceUSD;
+
+                return (
+                  <div
+                    key={item.id}
+                    className={`p-3.5 rounded-2xl border transition-all font-mono ${
+                      isTriggered 
+                        ? "bg-amber-500/10 border-amber-500/60 shadow-lg shadow-amber-500/5 animate-pulse" 
+                        : "bg-bg-tertiary/50 border-border/50 hover:border-border"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center font-bold text-amber-400 text-xs">
+                          {item.symbol.slice(0, 3)}
+                        </div>
+                        <div>
+                          <div className="font-bold text-xs text-text-primary">{item.name}</div>
+                          <div className="text-[10px] text-text-muted">{item.symbol}</div>
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={() => handleRemoveAlert(item.id)}
+                        className="p-1 rounded-lg text-text-muted hover:text-rose-400 transition-colors"
+                        title="Remove watched alert"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+
+                    <div className="flex items-center justify-between text-xs pt-1 border-t border-border/30">
+                      <div>
+                        <span className="text-[10px] text-text-muted uppercase block">Live Price</span>
+                        <span className="font-bold text-text-primary">${livePrice.toLocaleString()}</span>
+                      </div>
+
+                      <div className="text-right">
+                        <span className="text-[10px] text-text-muted uppercase block">Target ({item.condition})</span>
+                        <span className="font-bold text-amber-400">${item.targetPriceUSD.toLocaleString()}</span>
+                      </div>
+                    </div>
+
+                    <div className="mt-2 flex items-center justify-between text-[10px]">
+                      {isTriggered ? (
+                        <span className="text-amber-300 font-bold flex items-center gap-1 bg-amber-500/20 px-2 py-0.5 rounded-md border border-amber-500/40">
+                          <BellRing className="w-3 h-3 text-amber-400" /> ALERT TRIGGERED!
+                        </span>
+                      ) : (
+                        <span className="text-text-muted flex items-center gap-1">
+                          <Eye className="w-3 h-3 text-teal-400" /> Monitoring target...
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

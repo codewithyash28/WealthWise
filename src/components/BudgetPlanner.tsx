@@ -1,12 +1,16 @@
 import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { PieChart, Home, Utensils, Car, HeartPulse, Gamepad2, GraduationCap, CreditCard, Package, Save, RotateCcw, Copy, ChevronRight, AlertTriangle, CheckCircle2, TrendingUp, Download, Target, BarChart3, LineChart, Trash2, ShieldAlert, Terminal, FileCode, Check, ExternalLink, Activity, Sparkles } from "lucide-react";
+import { PieChart, Home, Utensils, Car, HeartPulse, Gamepad2, GraduationCap, CreditCard, Package, Save, RotateCcw, Copy, ChevronRight, AlertTriangle, CheckCircle2, TrendingUp, Download, Target, BarChart3, LineChart, Trash2, ShieldAlert, Terminal, FileCode, Check, ExternalLink, Activity, Sparkles, FileSpreadsheet, Filter, X } from "lucide-react";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title } from 'chart.js';
 import { Doughnut, Bar, Line } from 'react-chartjs-2';
 import { formatCurrency, cn } from "../lib/utils";
 import { CURRENCIES } from "../constants";
 import { UserProfile, BudgetPlan } from "../types";
 import { ConfirmationDialog } from "./ConfirmationDialog";
+import { SpendingHeatmap } from "./SpendingHeatmap";
+import { D3SpendingDonutChart } from "./D3SpendingDonutChart";
+import { D3SpendingTrendsChart } from "./D3SpendingTrendsChart";
+import { FixedExpensesSummary } from "./FixedExpensesSummary";
 import { jsPDF } from "jspdf";
 
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title);
@@ -52,6 +56,165 @@ export function BudgetPlanner({ user, onSave, initialPlan, gitProvider = "gitlab
   const [syncStatus, setSyncStatus] = useState<"idle" | "running" | "completed">("idle");
   const [terminalLogs, setTerminalLogs] = useState<string[]>([]);
   const [showIssueDetail, setShowIssueDetail] = useState(false);
+
+  // CSV Bank Statement Parsing Utility States
+  const [isCsvModalOpen, setIsCsvModalOpen] = useState(false);
+  const [rawCsvInput, setRawCsvInput] = useState("");
+  const [parsedCsvItems, setParsedCsvItems] = useState<Array<{ id: string; date: string; description: string; amount: number; category: string }>>([]);
+
+  // Category filter state driven by D3 Donut Chart clicks
+  const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string | null>(null);
+
+  const handleDownloadCsvTemplate = () => {
+    const templateCsv = `Date,Description,Amount
+2026-07-01,Highline Apartment Rent Payment,1950.00
+2026-07-02,Whole Foods Market Grocery,185.40
+2026-07-03,Shell Gas Station Refill,52.00
+2026-07-04,Netflix Monthly Subscription,19.99
+2026-07-05,CVS Health Pharmacy Prescription,45.50
+2026-07-06,Uber Ride to Financial District,28.10
+2026-07-07,Udemy Machine Learning Course,84.00
+2026-07-08,Chase Preferred Card Loan Repayment,450.00`;
+
+    const blob = new Blob([templateCsv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", "budget_bank_statement_template.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleParseCsv = (textToParse?: string) => {
+    const sourceText = textToParse !== undefined ? textToParse : rawCsvInput;
+    if (!sourceText.trim()) return;
+
+    const lines = sourceText.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+    const parsed: Array<{ id: string; date: string; description: string; amount: number; category: string }> = [];
+
+    const categoryKeywords: Record<string, string[]> = {
+      housing: ["rent", "landlord", "apartment", "mortgage", "utility", "electric", "water", "power", "lease"],
+      food: ["grocery", "market", "food", "whole foods", "trader joe", "walmart", "safeway", "restaurant", "cafe", "starbucks", "uber eats", "doordash", "mcdonald", "dining"],
+      transport: ["uber", "lyft", "gas", "shell", "chevron", "fuel", "transit", "subway", "train", "parking", "toll", "auto", "carwash"],
+      health: ["pharmacy", "cvs", "walgreens", "doctor", "health", "hospital", "clinic", "dental", "gym", "fitness", "medical"],
+      entertainment: ["netflix", "spotify", "hulu", "hbo", "cinema", "movie", "playstation", "steam", "game", "concert", "ticket", "event"],
+      education: ["tuition", "university", "college", "book", "course", "udemy", "coursera", "school", "training"],
+      loans: ["loan", "student loan", "chase card", "amex", "credit card", "debt", "interest"],
+    };
+
+    lines.forEach((line, idx) => {
+      const lowerLine = line.toLowerCase();
+      if (lowerLine.includes("description") && (lowerLine.includes("amount") || lowerLine.includes("date"))) {
+        return;
+      }
+
+      const parts = line.split(/,|\t|;/).map(p => p.trim().replace(/^"|"$/g, ''));
+      if (parts.length < 2) return;
+
+      let date = new Date().toISOString().split('T')[0];
+      let description = "";
+      let amount = 0;
+
+      parts.forEach((part) => {
+        if (/^\d{4}-\d{2}-\d{2}$|^\d{1,2}\/\d{1,2}\/\d{2,4}$/.test(part)) {
+          date = part;
+        } else if (!description && isNaN(Number(part.replace(/[\$,]/g, '')))) {
+          description = part;
+        } else {
+          const cleanedNum = parseFloat(part.replace(/[\$,]/g, ''));
+          if (!isNaN(cleanedNum) && cleanedNum !== 0) {
+            amount = Math.abs(cleanedNum);
+          }
+        }
+      });
+
+      if (!description && parts[0]) description = parts[0];
+      if (amount === 0 && parts[parts.length - 1]) {
+        const num = parseFloat(parts[parts.length - 1].replace(/[\$,]/g, ''));
+        if (!isNaN(num)) amount = Math.abs(num);
+      }
+
+      if (!description || amount === 0) return;
+
+      let detectedCategory = "other";
+      const descLower = description.toLowerCase();
+      for (const [cat, keywords] of Object.entries(categoryKeywords)) {
+        if (keywords.some(k => descLower.includes(k))) {
+          detectedCategory = cat;
+          break;
+        }
+      }
+
+      parsed.push({
+        id: `csv-${Date.now()}-${idx}`,
+        date,
+        description,
+        amount,
+        category: detectedCategory
+      });
+    });
+
+    setParsedCsvItems(parsed);
+  };
+
+  const handleLoadSampleCsv = () => {
+    const sample = `Date, Description, Amount
+2026-07-01, Whole Foods Market Grocery, 185.40
+2026-07-02, Highline Apartment Rent Payment, 1950.00
+2026-07-03, Shell Gas Station Refill, 52.00
+2026-07-04, Netflix Monthly Subscription, 19.99
+2026-07-05, CVS Health Pharmacy Prescription, 45.50
+2026-07-06, Uber Ride to Financial District, 28.10
+2026-07-07, Udemy Machine Learning Course, 84.00
+2026-07-08, Chase Preferred Card Loan Repayment, 450.00`;
+    setRawCsvInput(sample);
+    handleParseCsv(sample);
+  };
+
+  const handleApplyCsvTotals = () => {
+    if (parsedCsvItems.length === 0) return;
+
+    const categorySums: Record<string, number> = {
+      housing: 0,
+      food: 0,
+      transport: 0,
+      health: 0,
+      entertainment: 0,
+      education: 0,
+      loans: 0,
+      other: 0,
+    };
+
+    parsedCsvItems.forEach((item) => {
+      if (categorySums[item.category] !== undefined) {
+        categorySums[item.category] += item.amount;
+      } else {
+        categorySums.other += item.amount;
+      }
+    });
+
+    setExpenses(prev => {
+      const updated = { ...prev };
+      Object.keys(categorySums).forEach((cat) => {
+        if (categorySums[cat] > 0) {
+          (updated as any)[cat] = Math.round(categorySums[cat]);
+        }
+      });
+      return updated;
+    });
+
+    setTransactions(prev => [...parsedCsvItems, ...prev]);
+    setIsCsvModalOpen(false);
+
+    window.dispatchEvent(new CustomEvent('ww-trigger-alert', {
+      detail: {
+        type: 'success',
+        title: 'CSV Bank Statement Applied! 🏦',
+        message: `Successfully parsed ${parsedCsvItems.length} transactions and updated monthly budget category expenses!`
+      }
+    }));
+  };
 
   const [goals, setGoals] = useState(initialPlan?.goals || {
     housing: 2200,
@@ -235,7 +398,12 @@ export function BudgetPlanner({ user, onSave, initialPlan, gitProvider = "gitlab
     });
   };
 
-  const [transactions, setTransactions] = useState(initialPlan?.transactions || []);
+  const [transactions, setTransactions] = useState<Array<{ id: string; date: string; description: string; amount: number; category: string }>>(() => {
+    if (initialPlan?.transactions) {
+      return initialPlan.transactions.map((t: any) => ({ ...t, id: String(t.id) }));
+    }
+    return [];
+  });
 
   const [isConnecting, setIsConnecting] = useState(false);
 
@@ -245,12 +413,11 @@ export function BudgetPlanner({ user, onSave, initialPlan, gitProvider = "gitlab
       setIsConnecting(false);
       // Auto-categorize simulation
       const newTransactions = [
-        { id: Date.now(), date: new Date().toISOString().split('T')[0], description: "Apple Store", amount: 1299.00, category: "entertainment" },
-        { id: Date.now() + 1, date: new Date().toISOString().split('T')[0], description: "Starbucks", amount: 5.50, category: "food" },
-        { id: Date.now() + 2, date: new Date().toISOString().split('T')[0], description: "Shell Oil", amount: 60.00, category: "transport" },
+        { id: `trx-${Date.now()}-1`, date: new Date().toISOString().split('T')[0], description: "Apple Store", amount: 1299.00, category: "entertainment" },
+        { id: `trx-${Date.now()}-2`, date: new Date().toISOString().split('T')[0], description: "Starbucks", amount: 5.50, category: "food" },
+        { id: `trx-${Date.now()}-3`, date: new Date().toISOString().split('T')[0], description: "Shell Oil", amount: 60.00, category: "transport" },
       ];
       setTransactions(prev => [...newTransactions, ...prev]);
-      // Removed alert for iframe compatibility
     }, 2000);
   };
 
@@ -437,12 +604,12 @@ export function BudgetPlanner({ user, onSave, initialPlan, gitProvider = "gitlab
     );
   };
 
-  const updateTransactionCategory = (id: number, category: string) => {
-    setTransactions(prev => prev.map(t => t.id === id ? { ...t, category } : t));
+  const updateTransactionCategory = (id: string | number, category: string) => {
+    setTransactions(prev => prev.map(t => String(t.id) === String(id) ? { ...t, category } : t));
   };
 
-  const deleteTransaction = (id: number) => {
-    setTransactions(prev => prev.filter(t => t.id !== id));
+  const deleteTransaction = (id: string | number) => {
+    setTransactions(prev => prev.filter(t => String(t.id) !== String(id)));
   };
 
   const handleSimulateCrunch = () => {
@@ -461,7 +628,7 @@ export function BudgetPlanner({ user, onSave, initialPlan, gitProvider = "gitlab
     
     // Prepend a high priority diagnostic ledger transaction
     const medicalTx = {
-      id: Date.now(),
+      id: `crunch-${Date.now()}`,
       date: new Date().toISOString().split('T')[0],
       description: "Apex Royal Diagnostic & Health Hospitalization - UNEXPECTED OVERHEAD",
       amount: 1500,
@@ -575,6 +742,15 @@ export function BudgetPlanner({ user, onSave, initialPlan, gitProvider = "gitlab
           </button>
 
           <button 
+            onClick={() => setIsCsvModalOpen(true)}
+            className="px-5 py-2.5 bg-accent-gold/20 border border-accent-gold/50 hover:bg-accent-gold hover:text-bg-void text-accent-gold text-xs font-bold uppercase tracking-widest rounded-xl transition-all flex items-center gap-2 cursor-pointer shadow-sm"
+            title="Import Raw Bank Statement CSV to Auto-Categorize Monthly Spending"
+          >
+            <FileCode className="w-4.5 h-4.5" />
+            <span>Import Statement CSV</span>
+          </button>
+
+          <button 
             onClick={handleExportCSV}
             className="px-5 py-2.5 bg-bg-secondary border border-border hover:border-accent-gold/40 text-text-primary text-xs font-bold uppercase tracking-widest rounded-xl hover:bg-bg-primary transition-all flex items-center gap-2 cursor-pointer"
             title="Export Summary & Budget to CSV"
@@ -632,7 +808,23 @@ export function BudgetPlanner({ user, onSave, initialPlan, gitProvider = "gitlab
             </div>
           </div>
           
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={handleDownloadCsvTemplate}
+              className="px-3.5 py-2 rounded-xl text-xs font-mono font-bold bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
+              title="Download pre-formatted CSV template file"
+            >
+              <Download className="w-3.5 h-3.5" /> Download Template
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsCsvModalOpen(true)}
+              className="px-3.5 py-2 rounded-xl text-xs font-mono font-bold bg-accent-gold/15 hover:bg-accent-gold/25 border border-accent-gold/40 text-accent-gold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
+              title="Open Bank Statement Auto-Categorizer"
+            >
+              <FileSpreadsheet className="w-3.5 h-3.5" /> Import Statement CSV
+            </button>
             {!crunchActive ? (
               <button
                 type="button"
@@ -889,6 +1081,38 @@ export function BudgetPlanner({ user, onSave, initialPlan, gitProvider = "gitlab
         )}
       </div>
 
+      {/* D3 Visual Analytics & Automated Fixed Expenses Pattern Matrix */}
+      <div className="space-y-8">
+        {/* Fixed Expenses & Subscriptions Matrix */}
+        <FixedExpensesSummary
+          user={user}
+          income={income}
+          expenses={expenses}
+          transactions={transactions}
+        />
+
+        {/* D3.js Category Spending Donut & Spending Trends Charts */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          <div className="lg:col-span-5">
+            <D3SpendingDonutChart
+              expenses={expenses}
+              totalExpenses={totalExpenses}
+              user={user}
+              selectedCategory={selectedCategoryFilter}
+              onSelectCategory={(catKey) => setSelectedCategoryFilter(catKey)}
+            />
+          </div>
+          <div className="lg:col-span-7">
+            <D3SpendingTrendsChart
+              user={user}
+              totalExpenses={totalExpenses}
+              income={income}
+              transactions={transactions}
+            />
+          </div>
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
         {/* Input Form */}
         <div className="space-y-8">
@@ -1033,42 +1257,77 @@ export function BudgetPlanner({ user, onSave, initialPlan, gitProvider = "gitlab
 
           {/* Transaction History */}
           <div className="card p-8 space-y-6">
-            <h3 className="text-xl font-bold flex items-center gap-2">
-              <Package className="w-5 h-5 text-accent-gold" /> Transaction Ledger
-            </h3>
-            <div className="space-y-4">
-              {transactions.length > 0 ? transactions.map(t => (
-                <div key={t.id} className="flex items-center justify-between p-4 rounded-xl bg-bg-secondary border border-border group hover:border-border-active transition-all">
-                  <div className="space-y-1">
-                    <div className="text-sm font-bold">{t.description}</div>
-                    <div className="text-[10px] text-text-muted uppercase tracking-wider">{t.date}</div>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <div className="text-right">
-                      <div className="text-sm font-mono font-bold text-accent-red">-{formatCurrency(t.amount, user.currency, currency.locale)}</div>
-                      <div className="flex items-center gap-2">
-                        <select 
-                          value={t.category}
-                          onChange={(e) => updateTransactionCategory(t.id, e.target.value)}
-                          className="text-[10px] bg-transparent text-text-muted border-none p-0 focus:ring-0 cursor-pointer hover:text-accent-gold"
-                        >
-                          {Object.keys(expenses).map(cat => (
-                            <option key={cat} value={cat}>{cat.charAt(0).toUpperCase() + cat.slice(1)}</option>
-                          ))}
-                        </select>
-                        <button 
-                          onClick={() => deleteTransaction(t.id)}
-                          className="p-1 text-text-muted hover:text-accent-red opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </button>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-border/40">
+              <h3 className="text-xl font-bold flex items-center gap-2">
+                <Package className="w-5 h-5 text-accent-gold" /> Transaction Ledger
+              </h3>
+
+              {selectedCategoryFilter && (
+                <div className="flex items-center gap-2 bg-accent-gold/15 border border-accent-gold/40 px-3 py-1 rounded-xl text-xs font-mono text-accent-gold self-start sm:self-auto">
+                  <span>
+                    Filtered: <strong>{selectedCategoryFilter.toUpperCase()}</strong>
+                  </span>
+                  <button
+                    onClick={() => setSelectedCategoryFilter(null)}
+                    className="p-0.5 text-accent-gold hover:text-text-primary hover:bg-accent-gold/20 rounded-md cursor-pointer"
+                    title="Clear Category Filter"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-4 max-h-[420px] overflow-y-auto pr-1">
+              {(selectedCategoryFilter
+                ? transactions.filter((t) => t.category === selectedCategoryFilter)
+                : transactions
+              ).length > 0 ? (
+                (selectedCategoryFilter
+                  ? transactions.filter((t) => t.category === selectedCategoryFilter)
+                  : transactions
+                ).map((t) => (
+                  <div
+                    key={t.id}
+                    className="flex items-center justify-between p-4 rounded-xl bg-bg-secondary border border-border group hover:border-border-active transition-all"
+                  >
+                    <div className="space-y-1">
+                      <div className="text-sm font-bold">{t.description}</div>
+                      <div className="text-[10px] text-text-muted uppercase tracking-wider">{t.date}</div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="text-right">
+                        <div className="text-sm font-mono font-bold text-accent-red">
+                          -{formatCurrency(t.amount, user.currency, currency.locale)}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <select
+                            value={t.category}
+                            onChange={(e) => updateTransactionCategory(t.id, e.target.value)}
+                            className="text-[10px] bg-transparent text-text-muted border-none p-0 focus:ring-0 cursor-pointer hover:text-accent-gold"
+                          >
+                            {Object.keys(expenses).map((cat) => (
+                              <option key={cat} value={cat}>
+                                {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                              </option>
+                            ))}
+                          </select>
+                          <button
+                            onClick={() => deleteTransaction(t.id)}
+                            className="p-1 text-text-muted hover:text-accent-red opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              )) : (
+                ))
+              ) : (
                 <div className="text-center py-8 text-text-muted italic text-sm">
-                  No transactions yet. Connect your bank or add them manually.
+                  {selectedCategoryFilter
+                    ? `No transactions recorded under category "${selectedCategoryFilter}". Click 'X' above to clear filter.`
+                    : "No transactions yet. Connect your bank or add them manually."}
                 </div>
               )}
             </div>
@@ -1181,8 +1440,28 @@ export function BudgetPlanner({ user, onSave, initialPlan, gitProvider = "gitlab
             </div>
           </div>
 
+          {/* Calendar-based Daily Spending Heatmap Widget */}
+          <SpendingHeatmap user={user} monthlyIncome={income} totalMonthlyExpenses={totalExpenses} />
+
           <div className="card p-8 space-y-6">
-            <h3 className="text-xl font-bold">Strategic Insights</h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-xl font-bold">Strategic Insights</h3>
+              <button
+                type="button"
+                onClick={() => {
+                  window.dispatchEvent(new CustomEvent("ww-trigger-celebration", {
+                    detail: {
+                      title: "Savings Goal Achieved! 🎉",
+                      message: `Congratulations! You've successfully hit your target monthly savings milestone of ${formatCurrency(savings, user.currency, currency.locale)}.`,
+                      targetAmount: savings
+                    }
+                  }));
+                }}
+                className="text-xs font-mono font-bold text-emerald-400 hover:text-emerald-300 bg-emerald-500/10 border border-emerald-500/30 px-3 py-1 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-emerald-400" /> Test Goal Celebration
+              </button>
+            </div>
             <div className="space-y-4">
               {insights.length > 0 ? insights.map((insight, i) => (
                 <div key={i} className={cn(
@@ -1276,6 +1555,124 @@ export function BudgetPlanner({ user, onSave, initialPlan, gitProvider = "gitlab
           </div>
         </div>
       </div>
+
+      {/* CSV Bank Statement Auto-Categorization Import Modal */}
+      <AnimatePresence>
+        {isCsvModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-bg-void/80 backdrop-blur-md">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-bg-secondary border border-border shadow-2xl rounded-3xl p-6 sm:p-8 max-w-3xl w-full space-y-6 max-h-[90vh] overflow-y-auto"
+            >
+              <div className="flex items-center justify-between border-b border-border/60 pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-3 bg-accent-gold/10 border border-accent-gold/30 rounded-2xl text-accent-gold">
+                    <FileCode className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-text-primary">Bank Statement CSV Auto-Categorizer</h3>
+                    <p className="text-xs text-text-secondary">Paste raw transaction text to auto-detect categories and calculate monthly spend</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setIsCsvModalOpen(false)}
+                  className="p-2 rounded-xl text-text-secondary hover:text-text-primary hover:bg-bg-void transition-colors cursor-pointer"
+                >
+                  <Trash2 className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Paste Text Area & Actions */}
+              <div className="space-y-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <label className="text-xs font-mono font-bold uppercase tracking-wider text-text-muted">
+                    Paste CSV or Transaction Statement Rows
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={handleDownloadCsvTemplate}
+                      className="text-[11px] font-mono text-emerald-400 hover:underline font-bold flex items-center gap-1 cursor-pointer bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-1 rounded-lg"
+                      title="Download pre-formatted CSV template file"
+                    >
+                      <Download className="w-3 h-3" /> Download Template
+                    </button>
+                    <button
+                      onClick={handleLoadSampleCsv}
+                      className="text-[11px] font-mono text-accent-gold hover:underline font-bold flex items-center gap-1 cursor-pointer"
+                    >
+                      <Sparkles className="w-3 h-3" /> Load Sample Statement
+                    </button>
+                  </div>
+                </div>
+                <textarea
+                  value={rawCsvInput}
+                  onChange={(e) => {
+                    setRawCsvInput(e.target.value);
+                    handleParseCsv(e.target.value);
+                  }}
+                  placeholder="Date, Description, Amount&#10;2026-07-01, Whole Foods Grocery, 142.50&#10;2026-07-02, Highline Apartment Rent, 1950.00&#10;2026-07-03, Shell Gas Station, 45.00"
+                  rows={5}
+                  className="w-full bg-bg-void border border-border rounded-2xl p-4 text-xs font-mono text-text-primary focus:outline-none focus:border-accent-gold"
+                />
+              </div>
+
+              {/* Parsed Items Breakdown Preview Table */}
+              {parsedCsvItems.length > 0 && (
+                <div className="space-y-3 pt-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-mono font-bold text-accent-gold uppercase tracking-wider flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                      Detected {parsedCsvItems.length} Transactions
+                    </span>
+                    <span className="text-xs font-mono font-bold text-text-primary">
+                      Total Spend: {formatCurrency(parsedCsvItems.reduce((acc, item) => acc + item.amount, 0), user.currency, currency.locale)}
+                    </span>
+                  </div>
+
+                  <div className="max-h-56 overflow-y-auto border border-border rounded-2xl bg-bg-void p-2 space-y-1.5">
+                    {parsedCsvItems.map((item, idx) => (
+                      <div key={idx} className="flex items-center justify-between p-2.5 rounded-xl bg-bg-secondary text-xs font-mono border border-border/40">
+                        <div className="flex items-center gap-3">
+                          <span className="text-text-muted text-[10px]">{item.date}</span>
+                          <span className="font-medium text-text-primary">{item.description}</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className="px-2 py-0.5 rounded-lg bg-accent-gold/15 border border-accent-gold/30 text-accent-gold text-[10px] font-bold uppercase">
+                            {item.category}
+                          </span>
+                          <span className="font-bold text-emerald-400">
+                            +{formatCurrency(item.amount, user.currency, currency.locale)}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-border">
+                <button
+                  onClick={() => setIsCsvModalOpen(false)}
+                  className="px-5 py-2.5 rounded-xl border border-border text-xs font-mono font-bold uppercase hover:bg-bg-void transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleApplyCsvTotals}
+                  disabled={parsedCsvItems.length === 0}
+                  className="px-6 py-2.5 rounded-xl bg-accent-gold text-bg-void text-xs font-mono font-black uppercase tracking-wider hover:opacity-95 transition-opacity disabled:opacity-40 cursor-pointer flex items-center gap-2"
+                >
+                  <Check className="w-4 h-4" />
+                  Apply CSV Totals to Budget Plan
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       <ConfirmationDialog
         isOpen={isResetConfirmOpen}

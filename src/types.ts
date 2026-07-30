@@ -20,6 +20,7 @@ export interface UserProfile {
   visitDates: string[];
   highScore: number;
   isPremium?: boolean;
+  riskProfile?: string;
   netWorth: {
     assets: number;
     liabilities: number;
@@ -102,7 +103,7 @@ export interface BudgetPlan {
     other?: number;
   };
   transactions?: {
-    id: number;
+    id: string | number;
     date: string;
     description: string;
     amount: number;

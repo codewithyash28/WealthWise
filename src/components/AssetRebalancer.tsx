@@ -123,6 +123,9 @@ export function AssetRebalancer({ user, onUpdatePortfolio, onUnlockAchievement }
   const [loadingAI, setLoadingAI] = useState(false);
   const [showAutoRebalanceConfirm, setShowAutoRebalanceConfirm] = useState(false);
 
+  // Drift Threshold Alert State (default 5%)
+  const [driftThreshold, setDriftThreshold] = useState<number>(5);
+
   // Sync targets on preset change
   useEffect(() => {
     if (riskPreset !== "CUSTOM") {
@@ -186,6 +189,28 @@ export function AssetRebalancer({ user, onUpdatePortfolio, onUnlockAchievement }
     // Divide by 2 so that complete drift is 100%
     return Math.min(100, Math.round(absoluteDiffs / 2));
   }, [categoryValues, totalCurrentValue, targets, targetSum]);
+
+  // Compute Drifting Asset Classes beyond customizable threshold (default 5%)
+  const driftingAssetClasses = useMemo(() => {
+    return ASSET_CLASSES.map(ac => {
+      const actualPct = categoryPercentages[ac.key];
+      const targetPct = targets[ac.key];
+      const diff = actualPct - targetPct;
+      const absDiff = Math.abs(diff);
+      const targetVal = (totalCurrentValue * targetPct) / 100;
+      const currentVal = categoryValues[ac.key];
+      const deltaVal = currentVal - targetVal;
+      return {
+        ...ac,
+        actualPct,
+        targetPct,
+        diff,
+        absDiff,
+        deltaVal,
+        isDrifting: absDiff > driftThreshold
+      };
+    }).filter(ac => ac.isDrifting);
+  }, [categoryPercentages, targets, driftThreshold, categoryValues, totalCurrentValue]);
 
   // Actions analysis table data rows
   const analysisRows = useMemo(() => {
@@ -508,6 +533,103 @@ Provide a crisp, professional, high-performance financial commentary! Limit to e
             <div className="text-[9px] text-text-muted mt-0.5">Asset divergence index</div>
           </div>
         </div>
+      </div>
+
+      {/* Drift Threshold Alert Section */}
+      <div className="card p-6 sm:p-8 space-y-4 border-amber-500/30 bg-gradient-to-r from-bg-secondary via-zinc-950 to-bg-secondary shadow-xl relative">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-border/40">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-amber-500/15 border border-amber-500/40 text-amber-400">
+              <ShieldAlert className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-lg font-bold font-display text-text-primary">Allocation Drift Threshold Monitor</h3>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/30 font-bold uppercase">
+                  Alert Guardrails
+                </span>
+              </div>
+              <p className="text-xs text-text-secondary mt-0.5">
+                Automatically flags asset classes that stray beyond your defined deviation tolerance (Current: ±{driftThreshold}%)
+              </p>
+            </div>
+          </div>
+
+          {/* Tolerance Sensitivity Selector */}
+          <div className="flex items-center gap-2 bg-bg-secondary p-1 rounded-xl border border-border/60 self-start sm:self-auto font-mono text-xs">
+            <span className="text-[10px] text-text-muted px-2 uppercase font-bold">Tolerance:</span>
+            {[2, 5, 10].map((tol) => (
+              <button
+                key={tol}
+                onClick={() => setDriftThreshold(tol)}
+                className={cn(
+                  "px-3 py-1 rounded-lg font-bold transition-all cursor-pointer",
+                  driftThreshold === tol
+                    ? "bg-amber-500 text-bg-void shadow-md"
+                    : "text-text-muted hover:text-text-primary hover:bg-bg-void/50"
+                )}
+              >
+                ±{tol}%
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Alert Cards Container */}
+        {driftingAssetClasses.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-2">
+            {driftingAssetClasses.map((item) => (
+              <div
+                key={item.key}
+                className="p-4 rounded-2xl bg-bg-tertiary/60 border border-rose-500/40 space-y-2 font-mono text-xs relative overflow-hidden"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-text-primary text-sm flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }}></span>
+                    {item.label}
+                  </span>
+                  <span className={cn(
+                    "px-2 py-0.5 rounded-md text-[10px] font-bold uppercase",
+                    item.diff > 0 ? "bg-rose-500/15 text-rose-400 border border-rose-500/30" : "bg-sky-500/15 text-sky-400 border border-sky-500/30"
+                  )}>
+                    {item.diff > 0 ? `+${item.diff.toFixed(1)}% OVER` : `${item.diff.toFixed(1)}% UNDER`}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 text-[11px] pt-1">
+                  <div>
+                    <span className="text-[9px] text-text-muted uppercase block">Actual Share</span>
+                    <span className="font-bold text-text-primary">{item.actualPct}%</span>
+                  </div>
+                  <div>
+                    <span className="text-[9px] text-text-muted uppercase block">Target Share</span>
+                    <span className="font-bold text-amber-400">{item.targetPct}%</span>
+                  </div>
+                </div>
+
+                <div className="p-2 rounded-xl bg-bg-void/80 border border-border/40 text-[10px] text-text-secondary mt-1">
+                  <span className="font-bold text-text-primary block mb-0.5">Recommended Action:</span>
+                  {item.diff > 0 ? (
+                    <span className="text-rose-400 font-semibold">
+                      Sell {formatCurrency(Math.abs(item.deltaVal), user.currency, currency.locale)} to eliminate {item.absDiff.toFixed(1)}% drift overload
+                    </span>
+                  ) : (
+                    <span className="text-emerald-400 font-semibold">
+                      Buy {formatCurrency(Math.abs(item.deltaVal), user.currency, currency.locale)} to restore target allocation
+                    </span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-mono flex items-center gap-3">
+            <Check className="w-5 h-5 shrink-0 text-emerald-400" />
+            <span>
+              All asset classes are operating within your target <strong>±{driftThreshold}% tolerance guardrails</strong>. No critical allocation drift detected.
+            </span>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">

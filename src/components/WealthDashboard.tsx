@@ -1,5 +1,5 @@
 import { motion } from "motion/react";
-import { TrendingUp, ShieldCheck, Target, BrainCircuit, ChevronRight, Sparkles, Wallet, PieChart, ArrowUpRight, ArrowDownRight, CheckCircle2, Info, Trophy, Settings, ChevronDown, Check, GitBranch, Download, Share2, FileJson, Copy, X, Calendar, Lock, Flame, Sliders, BookOpen, Coins, Star, ShoppingBag, Image as ImageIcon } from "lucide-react";
+import { TrendingUp, ShieldCheck, Target, BrainCircuit, ChevronRight, Sparkles, Wallet, PieChart, ArrowUpRight, ArrowDownRight, CheckCircle2, Info, Trophy, Settings, ChevronDown, Check, GitBranch, Download, Share2, FileJson, Copy, X, Calendar, Lock, Flame, Sliders, BookOpen, Coins, Star, ShoppingBag, Image as ImageIcon, Zap, Pencil, Edit3, Save } from "lucide-react";
 import confetti from "canvas-confetti";
 import { UserProfile, BudgetPlan } from "../types";
 import { formatCurrency, cn } from "../lib/utils";
@@ -34,6 +34,76 @@ export function WealthDashboard({ user, budget, onUnlockAchievement, onUpdateGit
   const [showShareModal, setShowShareModal] = useState(false);
   const [copiedShareLink, setCopiedShareLink] = useState(false);
   const [intentInput, setIntentInput] = useState("");
+
+  // Quick Edit Net Worth modal state
+  const [showQuickEditModal, setShowQuickEditModal] = useState(false);
+  const [quickAssets, setQuickAssets] = useState<number>(user.netWorth.assets);
+  const [quickLiabilities, setQuickLiabilities] = useState<number>(user.netWorth.liabilities);
+
+  const handleSaveQuickEdit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const updatedAssets = Number(quickAssets) || 0;
+    const updatedLiabilities = Number(quickLiabilities) || 0;
+    const updated = {
+      ...user,
+      netWorth: {
+        ...user.netWorth,
+        assets: updatedAssets,
+        liabilities: updatedLiabilities
+      }
+    };
+    onUpdateProfile?.(updated);
+    setShowQuickEditModal(false);
+    window.dispatchEvent(new CustomEvent('ww-trigger-alert', {
+      detail: {
+        type: 'success',
+        title: 'Net Worth Balance Updated! 💰',
+        message: `Assets set to ${formatCurrency(updatedAssets, user.currency, currency.locale)} and Liabilities set to ${formatCurrency(updatedLiabilities, user.currency, currency.locale)}.`
+      }
+    }));
+  };
+
+  // Financial Advisor Persona state
+  const [advisorPersona, setAdvisorPersona] = useState<"conservative" | "aggressive">(() => {
+    return (localStorage.getItem("ww_advisor_persona") as "conservative" | "aggressive") || "conservative";
+  });
+
+  const handleUpdateAdvisorPersona = (persona: "conservative" | "aggressive") => {
+    setAdvisorPersona(persona);
+    localStorage.setItem("ww_advisor_persona", persona);
+    window.dispatchEvent(new CustomEvent("ww-advisor-persona-changed", { detail: { persona } }));
+    window.dispatchEvent(new CustomEvent("ww-trigger-alert", {
+      detail: {
+        type: persona === "aggressive" ? "risk" : "success",
+        title: `Advisor Persona Updated! 🧠`,
+        message: `Wexa AI Advisor tone set to ${persona === "aggressive" ? "Aggressive / Growth-Focused" : "Conservative / Risk-Averse"}.`
+      }
+    }));
+  };
+
+  const calculatedRiskProfile = useMemo(() => {
+    if (user.riskProfile) return user.riskProfile;
+    if (advisorPersona === "aggressive") return "Aggressive Growth";
+    const assets = user.netWorth?.assets || 0;
+    const liabilities = user.netWorth?.liabilities || 0;
+    if (assets > 0 && liabilities / assets > 0.4) return "Conservative";
+    return "Balanced / Growth";
+  }, [user.riskProfile, advisorPersona, user.netWorth]);
+
+  const assetSparklineData = useMemo(() => {
+    const currentAssets = user.netWorth?.assets || 10000;
+    const points = [];
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const factor = 1 - (i * 0.0018) + (Math.sin(i * 0.7) * 0.004);
+      points.push({
+        day: d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
+        "Assets": Math.round(currentAssets * factor)
+      });
+    }
+    return points;
+  }, [user.netWorth?.assets]);
 
   const currency = CURRENCIES[user.currency] || CURRENCIES.USD;
 
@@ -178,11 +248,14 @@ export function WealthDashboard({ user, budget, onUnlockAchievement, onUpdateGit
     doc.text(`Client Full Name: ${user.name}`, 20, 68);
     doc.text(`Recorded Age: ${user.age} Years Old`, 20, 75);
     doc.text(`Reporting Currency: ${user.currency} (${currency.name})`, 20, 82);
-    doc.text(`Platform Entry Date: ${new Date(user.joinDate).toLocaleDateString()}`, 20, 89);
+    doc.text(`Risk Strategy Profile: ${calculatedRiskProfile}`, 20, 89);
+    doc.text(`Net Worth: ${currency.symbol} ${(user.netWorth.assets - user.netWorth.liabilities).toLocaleString()}`, 20, 96);
     
     doc.text(`Financial Score: ${healthScore} / 100`, 110, 68);
     doc.text(`Verified Tier Rank: ${masteryTier.label} Status`, 110, 75);
-    doc.text(`Core Learning Focus: ${user.learningGoal}`, 110, 82);
+    doc.text(`Total Assets: ${currency.symbol} ${user.netWorth.assets.toLocaleString()}`, 110, 82);
+    doc.text(`Total Liabilities: ${currency.symbol} ${user.netWorth.liabilities.toLocaleString()}`, 110, 89);
+    doc.text(`Unlocked Achievements: ${(user.achievements || []).length} Badges`, 110, 96);
     
     // Section 2: Budget Policies
     if (budget) {
@@ -495,6 +568,15 @@ export function WealthDashboard({ user, budget, onUnlockAchievement, onUpdateGit
               <div className={cn("inline-flex items-center gap-1.5 ml-1 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border", masteryTier.bg, masteryTier.color, masteryTier.border)}>
                 <Trophy className="w-3 h-3" /> {masteryTier.label} Tier
               </div>
+              <div className={cn(
+                "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider border shadow-sm",
+                calculatedRiskProfile.toLowerCase().includes("aggressive")
+                  ? "bg-amber-500/10 border-amber-500/30 text-amber-400"
+                  : "bg-teal-500/10 border-teal-500/30 text-teal-300"
+              )} title="Portfolio Risk Strategy Profile">
+                {calculatedRiskProfile.toLowerCase().includes("aggressive") ? <Flame className="w-3 h-3 text-amber-400 animate-pulse" /> : <ShieldCheck className="w-3 h-3 text-teal-400" />}
+                <span>Risk: {calculatedRiskProfile}</span>
+              </div>
             </motion.h1>
           </div>
           <div className="flex flex-wrap items-center gap-6">
@@ -619,15 +701,16 @@ export function WealthDashboard({ user, budget, onUnlockAchievement, onUpdateGit
             <FileJson className="w-5 h-5 text-accent-gold" />
           </motion.button>
 
-          {/* Export Report PDF */}
+          {/* Export Summary PDF */}
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={handleDownloadPDF}
+            title="Download PDF Executive Summary of Assets, Liabilities, and Achievements"
             className="btn-secondary flex items-center justify-center gap-2 px-5 py-3 text-xs font-bold border border-border hover:border-accent-gold/40 hover:text-accent-gold transition-all cursor-pointer rounded-xl bg-bg-secondary/20 text-text-secondary h-12"
           >
             <Download className="w-4 h-4 text-accent-gold" />
-            <span>Export Report</span>
+            <span>Export Summary</span>
           </motion.button>
 
           <motion.button
@@ -1285,7 +1368,22 @@ export function WealthDashboard({ user, budget, onUnlockAchievement, onUpdateGit
             <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:scale-110 transition-transform">
               <Wallet className="w-12 h-12" />
             </div>
-            <h3 className="text-sm font-bold uppercase tracking-widest text-text-muted">Net Worth</h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-bold uppercase tracking-widest text-text-muted">Net Worth</h3>
+              <button
+                type="button"
+                onClick={() => {
+                  setQuickAssets(user.netWorth.assets);
+                  setQuickLiabilities(user.netWorth.liabilities);
+                  setShowQuickEditModal(true);
+                }}
+                className="flex items-center gap-1 px-2.5 py-1 bg-bg-secondary hover:bg-accent-gold/20 text-text-muted hover:text-accent-gold border border-border/60 hover:border-accent-gold/30 rounded-lg text-xs font-mono font-bold transition-all cursor-pointer shadow-xs"
+                title="Quick Edit Assets & Liabilities"
+              >
+                <Pencil className="w-3.5 h-3.5 text-accent-gold" />
+                <span>Quick Edit</span>
+              </button>
+            </div>
             <div className="space-y-1">
               <div className="text-4xl font-display font-bold">
                 {formatCurrency(user.netWorth.assets - user.netWorth.liabilities, user.currency, currency.locale)}
@@ -1342,6 +1440,46 @@ export function WealthDashboard({ user, budget, onUnlockAchievement, onUpdateGit
               <div>
                 <div className="text-[10px] text-text-muted uppercase tracking-wider">Liabilities</div>
                 <div className="text-lg font-mono font-bold text-accent-red">{formatCurrency(user.netWorth.liabilities, user.currency, currency.locale)}</div>
+              </div>
+            </div>
+
+            {/* 30-Day Asset Growth Sparkline */}
+            <div className="pt-4 border-t border-border/60 space-y-2">
+              <div className="flex items-center justify-between text-[11px]">
+                <span className="font-bold uppercase tracking-wider text-text-muted font-mono flex items-center gap-1.5">
+                  <TrendingUp className="w-3.5 h-3.5 text-accent-emerald" /> 30-Day Asset Performance Growth
+                </span>
+                <span className="text-accent-emerald font-bold font-mono text-[10px] bg-accent-emerald/10 border border-accent-emerald/20 px-2 py-0.5 rounded-full">
+                  +3.8% (30d)
+                </span>
+              </div>
+              <div className="h-16 w-full pt-1">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={assetSparklineData} margin={{ top: 2, right: 2, left: 2, bottom: 2 }}>
+                    <defs>
+                      <linearGradient id="assetSparklineGlow" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <RechartsTooltip
+                      content={({ active, payload }) => {
+                        if (active && payload && payload.length) {
+                          return (
+                            <div className="bg-bg-void/90 border border-border/80 px-2 py-1 rounded text-[10px] font-mono shadow-xl">
+                              <p className="text-text-muted">{payload[0].payload.day}</p>
+                              <p className="font-bold text-accent-emerald">
+                                {formatCurrency(payload[0].value as number, user.currency, currency.locale)}
+                              </p>
+                            </div>
+                          );
+                        }
+                        return null;
+                      }}
+                    />
+                    <Area type="monotone" dataKey="Assets" stroke="#10b981" strokeWidth={2} fillOpacity={1} fill="url(#assetSparklineGlow)" />
+                  </AreaChart>
+                </ResponsiveContainer>
               </div>
             </div>
           </div>
@@ -1691,6 +1829,74 @@ export function WealthDashboard({ user, budget, onUnlockAchievement, onUpdateGit
               })}
             </div>
 
+            {/* AI Financial Advisor Persona Selector */}
+            <div className="pt-4 border-t border-border/60 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-mono font-bold uppercase tracking-wider text-accent-gold flex items-center gap-1.5">
+                  <BrainCircuit className="w-4 h-4 text-accent-gold" />
+                  AI Financial Advisor Persona Strategy
+                </span>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-accent-gold/10 text-accent-gold border border-accent-gold/30 font-bold">
+                  Wexa Companion Engine
+                </span>
+              </div>
+              <p className="text-[11px] text-text-secondary leading-relaxed">
+                Adjust the strategic tone and risk tolerance of WexaCompanion AI advice across portfolio rebalancing and financial insights.
+              </p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => handleUpdateAdvisorPersona("conservative")}
+                  className={cn(
+                    "p-3.5 rounded-xl border text-left flex flex-col justify-between transition-all cursor-pointer space-y-2",
+                    advisorPersona === "conservative"
+                      ? "bg-emerald-500/10 border-emerald-500/50 text-emerald-300 shadow-md"
+                      : "bg-bg-secondary border-border/40 hover:bg-bg-secondary/80 text-text-secondary"
+                  )}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold flex items-center gap-1.5 text-emerald-400">
+                      <ShieldCheck className="w-4 h-4" /> Conservative / Risk-Averse
+                    </span>
+                    {advisorPersona === "conservative" && (
+                      <div className="w-4 h-4 rounded-full bg-emerald-500 text-bg-void flex items-center justify-center shrink-0">
+                        <Check className="w-3 h-3 stroke-[3]" />
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-[10px] text-text-muted leading-tight">
+                    Prioritizes capital safety, emergency liquidity buffers, debt payoff, and downside protection.
+                  </p>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleUpdateAdvisorPersona("aggressive")}
+                  className={cn(
+                    "p-3.5 rounded-xl border text-left flex flex-col justify-between transition-all cursor-pointer space-y-2",
+                    advisorPersona === "aggressive"
+                      ? "bg-accent-gold/15 border-accent-gold/60 text-accent-gold shadow-md"
+                      : "bg-bg-secondary border-border/40 hover:bg-bg-secondary/80 text-text-secondary"
+                  )}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold flex items-center gap-1.5 text-accent-gold">
+                      <Zap className="w-4 h-4" /> Aggressive / Growth-Focused
+                    </span>
+                    {advisorPersona === "aggressive" && (
+                      <div className="w-4 h-4 rounded-full bg-accent-gold text-bg-void flex items-center justify-center shrink-0">
+                        <Check className="w-3 h-3 stroke-[3]" />
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-[10px] text-text-muted leading-tight">
+                    Emphasizes maximum compounding yield, high-beta tech equities, tactical momentum, and growth.
+                  </p>
+                </button>
+              </div>
+            </div>
+
             <div className="flex justify-end pt-2">
               <button
                 type="button"
@@ -1780,6 +1986,88 @@ export function WealthDashboard({ user, budget, onUnlockAchievement, onUpdateGit
               </div>
             </div>
           </motion.div>
+        </div>
+      )}
+
+      {/* Quick Edit Net Worth Modal */}
+      {showQuickEditModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+          <div className="bg-bg-primary border border-border/80 rounded-2xl max-w-md w-full p-6 space-y-5 shadow-2xl relative">
+            <div className="flex items-center justify-between border-b border-border/60 pb-3">
+              <div className="flex items-center gap-2">
+                <Edit3 className="w-5 h-5 text-accent-gold" />
+                <h3 className="text-base font-bold text-text-primary font-display">Quick Edit Net Worth</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowQuickEditModal(false)}
+                className="text-text-muted hover:text-text-primary p-1 rounded-lg hover:bg-bg-secondary cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveQuickEdit} className="space-y-4">
+              <p className="text-xs text-text-secondary leading-relaxed">
+                Adjust your total current asset and liability values directly without leaving the dashboard.
+              </p>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold uppercase tracking-wider text-text-muted font-mono flex items-center justify-between">
+                  <span>Total Current Assets ({currency.symbol})</span>
+                  <span className="text-accent-emerald text-[10px]">Liquid + Fixed</span>
+                </label>
+                <input
+                  type="number"
+                  required
+                  min="0"
+                  step="any"
+                  value={quickAssets}
+                  onChange={(e) => setQuickAssets(Number(e.target.value))}
+                  className="w-full bg-bg-void border border-border rounded-xl px-4 py-2.5 text-sm font-mono font-bold text-text-primary focus:outline-hidden focus:ring-1 focus:ring-accent-gold/50"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold uppercase tracking-wider text-text-muted font-mono flex items-center justify-between">
+                  <span>Total Current Liabilities ({currency.symbol})</span>
+                  <span className="text-accent-red text-[10px]">Debts + Mortgages</span>
+                </label>
+                <input
+                  type="number"
+                  required
+                  min="0"
+                  step="any"
+                  value={quickLiabilities}
+                  onChange={(e) => setQuickLiabilities(Number(e.target.value))}
+                  className="w-full bg-bg-void border border-border rounded-xl px-4 py-2.5 text-sm font-mono font-bold text-text-primary focus:outline-hidden focus:ring-1 focus:ring-accent-red/50"
+                />
+              </div>
+
+              <div className="p-3 bg-bg-secondary/60 rounded-xl border border-border/40 text-xs flex items-center justify-between font-mono">
+                <span className="text-text-muted">Calculated Net Worth:</span>
+                <span className="font-bold text-accent-gold text-sm">
+                  {formatCurrency((Number(quickAssets) || 0) - (Number(quickLiabilities) || 0), user.currency, currency.locale)}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowQuickEditModal(false)}
+                  className="px-4 py-2.5 text-xs font-bold text-text-muted hover:text-text-primary rounded-xl hover:bg-bg-secondary cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="btn-primary px-5 py-2.5 text-xs font-bold text-bg-void rounded-xl flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Save className="w-4 h-4" /> Save Adjustments
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </div>

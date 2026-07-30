@@ -83,7 +83,7 @@ export function DebtPayoff({ user }: DebtPayoffProps) {
     const monthlyMinimumCommitment = loans.reduce((sum, l) => sum + l.minPayment, 0);
 
     // Amortize simulation routine
-    const simulate = (method: "AVALANCHE" | "SNOWBALL") => {
+    const simulate = (method: "AVALANCHE" | "SNOWBALL", customExtra: number = extraPayment) => {
       // Deep copy active loans
       const activeLoans = loans.map(l => ({ ...l }));
       let totalInterestPaid = 0;
@@ -103,7 +103,7 @@ export function DebtPayoff({ user }: DebtPayoffProps) {
 
       while (activeLoans.some(l => l.balance > 0) && month < MAX_MONTHS) {
         month++;
-        const totalBudget = monthlyMinimumCommitment + extraPayment;
+        const totalBudget = monthlyMinimumCommitment + customExtra;
         let pool = totalBudget;
 
         // Apply interest first and check minimum payments
@@ -160,14 +160,22 @@ export function DebtPayoff({ user }: DebtPayoffProps) {
       };
     };
 
+    const baselineRes = simulate(payoffMethod, 0); // Minimum payments only
     const avalancheRes = simulate("AVALANCHE");
     const snowballRes = simulate("SNOWBALL");
+    const activeAccelerated = payoffMethod === "AVALANCHE" ? avalancheRes : snowballRes;
+
+    const accelerationInterestSaved = Math.max(0, baselineRes.interest - activeAccelerated.interest);
+    const accelerationMonthsSaved = Math.max(0, baselineRes.months - activeAccelerated.months);
 
     return {
       totalPrincipal,
       monthlyMinimumCommitment,
+      baseline: baselineRes,
       avalanche: avalancheRes,
-      snowball: snowballRes
+      snowball: snowballRes,
+      accelerationInterestSaved,
+      accelerationMonthsSaved
     };
   }, [loans, extraPayment]);
 
@@ -398,6 +406,43 @@ export function DebtPayoff({ user }: DebtPayoffProps) {
                 <span className="text-[10px] text-text-muted block mt-0.5">Interest: {formatCurrency(simulationResults.snowball.interest, user.currency, currency.locale)}</span>
               </div>
             </div>
+
+            {/* Debt Acceleration Impact Banner */}
+            {extraPayment > 0 && (
+              <div className="p-5 border border-amber-500/40 bg-gradient-to-r from-amber-500/10 via-zinc-950 to-amber-500/5 rounded-2xl space-y-3 font-mono">
+                <div className="flex items-center justify-between pb-2 border-b border-border/40">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-amber-400 shrink-0" />
+                    <span className="font-bold text-text-primary text-sm font-display">Debt Acceleration Acceleration Savings</span>
+                  </div>
+                  <span className="px-2.5 py-0.5 rounded-full bg-amber-500 text-bg-void text-[10px] font-bold uppercase tracking-wider">
+                    +{formatCurrency(extraPayment, user.currency, currency.locale)} / Month Injected
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs pt-1">
+                  <div className="p-3 rounded-xl bg-bg-void/80 border border-border/40 space-y-1">
+                    <span className="text-[10px] text-text-muted uppercase block">Total Interest Saved</span>
+                    <span className="text-xl font-bold text-emerald-400 block">
+                      {formatCurrency(simulationResults.accelerationInterestSaved, user.currency, currency.locale)}
+                    </span>
+                    <span className="text-[10px] text-text-secondary block font-sans">
+                      Compared to making minimum payments only
+                    </span>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-bg-void/80 border border-border/40 space-y-1">
+                    <span className="text-[10px] text-text-muted uppercase block">Time Saved to Debt-Free</span>
+                    <span className="text-xl font-bold text-amber-400 block">
+                      {simulationResults.accelerationMonthsSaved} Months Sooner
+                    </span>
+                    <span className="text-[10px] text-text-secondary block font-sans">
+                      Clearance in {simulationResults[payoffMethod === 'AVALANCHE' ? 'avalanche' : 'snowball'].months} months instead of {simulationResults.baseline.months}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Highlighted Strategy Savings Delta */}
             {savingsDelta.interestSaved > 0 && (
