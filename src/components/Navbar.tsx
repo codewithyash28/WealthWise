@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Menu, X, Globe, ChevronRight, Sun, Moon, Flame, Sparkles, Cloud, Monitor, Palette, Check, Trophy } from "lucide-react";
+import { NotificationCenter } from "./NotificationCenter";
 import { Logo } from "./Logo";
 import { CURRENCIES } from "../constants";
 
@@ -8,10 +9,10 @@ interface NavbarProps {
   currentHash: string;
   currency: string;
   onCurrencyClick: () => void;
-  theme: "light" | "dark";
-  themeMode?: "system" | "light" | "dark";
+  theme: "light" | "dark" | "noir";
+  themeMode?: "system" | "light" | "dark" | "noir";
   onToggleTheme: () => void;
-  onSetThemeMode?: (mode: "system" | "light" | "dark") => void;
+  onSetThemeMode?: (mode: "system" | "light" | "dark" | "noir") => void;
   user?: { displayName: string | null; photoURL: string | null; email?: string | null } | null;
   onSignOut?: () => void;
   streak?: number;
@@ -57,6 +58,7 @@ export function Navbar({
     { name: "Companion", hash: "#wexa-companion" },
     { name: "Bank Sync", hash: "#bank-sync" },
     { name: "Dashboard", hash: "#dashboard" },
+    { name: "Monthly Report", hash: "#monthly-report" },
     { name: "Rent vs Buy", hash: "#rent-vs-buy" },
     { name: "Vault", hash: "#vault" },
     { name: "Rebalancer", hash: "#rebalancer" },
@@ -131,6 +133,9 @@ export function Navbar({
             <Sparkles className="w-3 h-3" /> System Tour
           </button>
 
+          {/* Dedicated Notification Center */}
+          <NotificationCenter />
+
           {/* Theme Settings Panel Trigger */}
           <div className="relative" ref={themePanelRef}>
             <button
@@ -140,7 +145,7 @@ export function Navbar({
             >
               <Palette className="w-3.5 h-3.5" />
               <span className="hidden sm:inline text-[10px] uppercase font-mono tracking-wider">
-                {themeMode === "system" ? "System" : themeMode === "light" ? "Light" : "Dark"}
+                {themeMode === "system" ? "System" : themeMode === "light" ? "Light" : themeMode === "noir" ? "Noir 🌙" : "Dark"}
               </span>
             </button>
 
@@ -198,6 +203,24 @@ export function Navbar({
                         <span>Dark Luxury Canvas</span>
                       </div>
                       {themeMode === "dark" && <Check className="w-3.5 h-3.5 text-accent-gold" />}
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        onSetThemeMode?.("noir");
+                        setIsThemePanelOpen(false);
+                      }}
+                      className={`w-full flex items-center justify-between p-2 rounded-xl text-xs font-mono transition-all cursor-pointer ${
+                        themeMode === "noir"
+                          ? "bg-amber-400/20 border border-amber-300 text-amber-300 font-bold shadow-lg shadow-amber-500/20"
+                          : "hover:bg-bg-tertiary text-text-secondary border border-transparent"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Sparkles className="w-4 h-4 text-amber-300 animate-pulse" />
+                        <span className="font-bold text-amber-300">Midnight Noir 🌙</span>
+                      </div>
+                      {themeMode === "noir" && <Check className="w-3.5 h-3.5 text-amber-300" />}
                     </button>
 
                     <button

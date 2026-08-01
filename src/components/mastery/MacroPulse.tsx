@@ -1,6 +1,7 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { motion } from "motion/react";
-import { TrendingUp, Activity, DollarSign, PieChart, Info, AlertTriangle, GitBranch, Check, Terminal, RefreshCw, Send, Cpu, MessageSquare } from "lucide-react";
+import * as d3 from "d3";
+import { TrendingUp, Activity, DollarSign, PieChart, Info, AlertTriangle, GitBranch, Check, Terminal, RefreshCw, Send, Cpu, MessageSquare, Globe, Compass, MapPin } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { UserProfile } from "../../types";
 
@@ -565,6 +566,9 @@ Keep the analysis concise, structured with bullet points, and elegant. Always en
         </div>
       </div>
 
+      {/* D3 Interactive Global Inflation Map */}
+      <D3GlobalInflationMap activeInflation={inflation} />
+
       {/* High-Fidelity Stripe Checkout Sandbox Simulator Modal */}
       {showSandboxModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-bg-void/85 backdrop-blur-md p-4">
@@ -702,6 +706,219 @@ Keep the analysis concise, structured with bullet points, and elegant. Always en
           </motion.div>
         </div>
       )}
+    </div>
+  );
+}
+
+export function D3GlobalInflationMap({ activeInflation }: { activeInflation: number }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const svgRef = useRef<SVGSVGElement>(null);
+  const [selectedCountry, setSelectedCountry] = useState<string | null>("United States");
+  const [hoveredCountry, setHoveredCountry] = useState<any | null>(null);
+
+  const countries = useMemo(() => [
+    { id: "US", name: "United States", flag: "🇺🇸", x: 220, y: 140, inflation: +(activeInflation + 0.3).toFixed(1), rate: 5.25, gdp: 2.1, region: "North America" },
+    { id: "CA", name: "Canada", flag: "🇨🇦", x: 200, y: 90, inflation: 2.7, rate: 4.75, gdp: 1.1, region: "North America" },
+    { id: "GB", name: "United Kingdom", flag: "🇬🇧", x: 440, y: 110, inflation: 3.4, rate: 5.25, gdp: 0.5, region: "Europe" },
+    { id: "DE", name: "Germany", flag: "🇩🇪", x: 480, y: 120, inflation: 2.2, rate: 4.50, gdp: 0.2, region: "Europe" },
+    { id: "IN", name: "India", flag: "🇮🇳", x: 670, y: 190, inflation: 5.1, rate: 6.50, gdp: 6.8, region: "Asia-Pacific" },
+    { id: "JP", name: "Japan", flag: "🇯🇵", x: 800, y: 150, inflation: 2.8, rate: 0.25, gdp: 1.2, region: "Asia-Pacific" },
+    { id: "SG", name: "Singapore", flag: "🇸🇬", x: 720, y: 240, inflation: 2.4, rate: 3.60, gdp: 3.2, region: "Asia-Pacific" },
+    { id: "AU", name: "Australia", flag: "🇦🇺", x: 810, y: 310, inflation: 3.6, rate: 4.35, gdp: 1.5, region: "Oceania" },
+    { id: "BR", name: "Brazil", flag: "🇧🇷", x: 330, y: 280, inflation: 4.5, rate: 10.5, gdp: 2.9, region: "South America" },
+    { id: "ZA", name: "South Africa", flag: "🇿🇦", x: 510, y: 320, inflation: 5.3, rate: 8.25, gdp: 0.7, region: "Africa" }
+  ], [activeInflation]);
+
+  useEffect(() => {
+    if (!svgRef.current || !containerRef.current) return;
+    const width = containerRef.current.clientWidth || 900;
+    const height = 400;
+
+    const svg = d3.select(svgRef.current);
+    svg.selectAll("*").remove();
+    svg.attr("width", width).attr("height", height).attr("viewBox", `0 0 900 400`);
+
+    // Draw grid lines
+    const gridG = svg.append("g").attr("class", "grid-lines").attr("opacity", 0.15);
+    for (let x = 0; x <= 900; x += 60) {
+      gridG.append("line").attr("x1", x).attr("y1", 0).attr("x2", x).attr("y2", 400).attr("stroke", "#94a3b8").attr("stroke-dasharray", "2,4");
+    }
+    for (let y = 0; y <= 400; y += 50) {
+      gridG.append("line").attr("x1", 0).attr("y1", y).attr("x2", 900).attr("y2", y).attr("stroke", "#94a3b8").attr("stroke-dasharray", "2,4");
+    }
+
+    // Connecting arcs from US
+    const arcsG = svg.append("g").attr("class", "influence-arcs");
+    const usNode = countries.find(c => c.id === "US");
+    if (usNode) {
+      countries.filter(c => c.id !== "US").forEach(c => {
+        const dx = c.x - usNode.x;
+        const dy = c.y - usNode.y;
+        const dr = Math.sqrt(dx * dx + dy * dy) * 1.2;
+        arcsG.append("path")
+          .attr("d", `M${usNode.x},${usNode.y}A${dr},${dr} 0 0,1 ${c.x},${c.y}`)
+          .attr("fill", "none")
+          .attr("stroke", "#f0b429")
+          .attr("stroke-width", 1)
+          .attr("stroke-opacity", 0.25)
+          .attr("stroke-dasharray", "4,4");
+      });
+    }
+
+    const getColor = (inf: number) => {
+      if (inf > 5.0) return "#ef4444";
+      if (inf > 3.0) return "#f59e0b";
+      return "#10b981";
+    };
+
+    const nodesG = svg.append("g").attr("class", "nodes");
+    countries.forEach(c => {
+      const isSelected = selectedCountry === c.name;
+      const nodeColor = getColor(c.inflation);
+
+      const g = nodesG.append("g")
+        .attr("transform", `translate(${c.x}, ${c.y})`)
+        .style("cursor", "pointer")
+        .on("mouseenter", () => setHoveredCountry(c))
+        .on("mouseleave", () => setHoveredCountry(null))
+        .on("click", () => setSelectedCountry(c.name));
+
+      if (c.inflation > 4.5) {
+        g.append("circle")
+          .attr("r", 18)
+          .attr("fill", nodeColor)
+          .attr("opacity", 0.2)
+          .append("animate")
+          .attr("attributeName", "r")
+          .attr("values", "10;24;10")
+          .attr("dur", "2.5s")
+          .attr("repeatCount", "indefinite");
+      }
+
+      g.append("circle")
+        .attr("r", isSelected ? 16 : 12)
+        .attr("fill", "#0f172a")
+        .attr("stroke", isSelected ? "#f0b429" : nodeColor)
+        .attr("stroke-width", isSelected ? 3 : 2);
+
+      g.append("circle")
+        .attr("r", 5)
+        .attr("fill", nodeColor);
+
+      g.append("text")
+        .attr("y", 26)
+        .attr("text-anchor", "middle")
+        .attr("fill", isSelected ? "#f0b429" : "#e2e8f0")
+        .attr("font-size", isSelected ? "11px" : "10px")
+        .attr("font-weight", isSelected ? "bold" : "normal")
+        .attr("font-family", "sans-serif")
+        .text(`${c.flag} ${c.name}`);
+
+      g.append("text")
+        .attr("y", -16)
+        .attr("text-anchor", "middle")
+        .attr("fill", nodeColor)
+        .attr("font-size", "9px")
+        .attr("font-weight", "bold")
+        .attr("font-family", "monospace")
+        .text(`${c.inflation}%`);
+    });
+  }, [countries, selectedCountry]);
+
+  return (
+    <div className="card p-8 space-y-6 border-accent-gold/25 bg-gradient-to-br from-bg-secondary/70 via-bg-primary to-bg-secondary/30 relative overflow-hidden mt-8">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border/60 pb-4">
+        <div className="space-y-1">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-accent-gold/15 border border-accent-gold/30 text-accent-gold text-[10px] font-mono font-bold uppercase tracking-wider">
+            <Globe className="w-3.5 h-3.5 text-accent-gold" /> D3 Interactive Global Radar
+          </div>
+          <h3 className="text-2xl font-bold font-display text-text-primary">Real-Time Global Inflation Map</h3>
+          <p className="text-xs text-text-secondary">Interactive geographic choropleth model tracking inflation rates and central bank rates worldwide.</p>
+        </div>
+
+        <div className="flex items-center gap-3 font-mono text-xs">
+          <div className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-accent-emerald" />
+            <span className="text-text-muted">&lt; 3% Stable</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
+            <span className="text-text-muted">3-5% Moderate</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-accent-red" />
+            <span className="text-text-muted">&gt; 5% High Risk</span>
+          </div>
+        </div>
+      </div>
+
+      {/* D3 Map Canvas Container */}
+      <div ref={containerRef} className="relative w-full bg-bg-void/70 rounded-2xl border border-border/80 overflow-hidden shadow-2xl p-4 min-h-[380px]">
+        <svg ref={svgRef} className="w-full h-auto min-h-[360px]" />
+
+        {hoveredCountry && (
+          <div
+            className="absolute z-20 pointer-events-none bg-bg-void/95 border border-accent-gold/50 px-3.5 py-2.5 rounded-xl shadow-2xl text-xs font-mono space-y-1 backdrop-blur-md"
+            style={{ left: Math.min(hoveredCountry.x + 20, 650), top: Math.max(hoveredCountry.y - 40, 20) }}
+          >
+            <div className="font-bold text-text-primary text-sm border-b border-border/40 pb-1 flex items-center gap-1.5">
+              <span>{hoveredCountry.flag}</span>
+              <span>{hoveredCountry.name}</span>
+            </div>
+            <div className="flex justify-between gap-4">
+              <span className="text-text-muted">Inflation:</span>
+              <span className={cn("font-bold", hoveredCountry.inflation > 5 ? "text-accent-red" : hoveredCountry.inflation > 3 ? "text-amber-400" : "text-accent-emerald")}>
+                {hoveredCountry.inflation}%
+              </span>
+            </div>
+            <div className="flex justify-between gap-4">
+              <span className="text-text-muted">Central Bank Rate:</span>
+              <span className="font-bold text-accent-blue">{hoveredCountry.rate}%</span>
+            </div>
+            <div className="flex justify-between gap-4">
+              <span className="text-text-muted">Real GDP Growth:</span>
+              <span className="font-bold text-accent-gold">+{hoveredCountry.gdp}%</span>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="space-y-3 pt-2">
+        <div className="flex justify-between items-center text-xs font-mono font-bold uppercase tracking-wider text-text-muted">
+          <span>Country Economic Telemetry</span>
+          <span>Click any country to inspect detail</span>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+          {countries.map((c) => {
+            const isSel = selectedCountry === c.name;
+            return (
+              <button
+                key={c.id}
+                type="button"
+                onClick={() => setSelectedCountry(c.name)}
+                className={cn(
+                  "p-3 rounded-xl border text-left transition-all cursor-pointer space-y-1 font-mono",
+                  isSel
+                    ? "bg-accent-gold/15 border-accent-gold text-accent-gold shadow-md scale-105"
+                    : "bg-bg-secondary/50 border-border/40 hover:bg-bg-secondary text-text-secondary"
+                )}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-sm">{c.flag}</span>
+                  <span className={cn("text-[10px] font-bold px-1.5 py-0.5 rounded", c.inflation > 5 ? "bg-accent-red/10 text-accent-red" : c.inflation > 3 ? "bg-amber-500/10 text-amber-400" : "bg-accent-emerald/10 text-accent-emerald")}>
+                    {c.inflation}%
+                  </span>
+                </div>
+                <div className="text-xs font-bold text-text-primary truncate">{c.name}</div>
+                <div className="text-[9px] text-text-muted flex justify-between">
+                  <span>Rate: {c.rate}%</span>
+                  <span>GDP: {c.gdp}%</span>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 }

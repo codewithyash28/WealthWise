@@ -1,5 +1,5 @@
 import { motion } from "motion/react";
-import { TrendingUp, ShieldCheck, Target, BrainCircuit, ChevronRight, Sparkles, Wallet, PieChart, ArrowUpRight, ArrowDownRight, CheckCircle2, Info, Trophy, Settings, ChevronDown, Check, GitBranch, Download, Share2, FileJson, Copy, X, Calendar, Lock, Flame, Sliders, BookOpen, Coins, Star, ShoppingBag, Image as ImageIcon, Zap, Pencil, Edit3, Save } from "lucide-react";
+import { TrendingUp, ShieldCheck, Target, BrainCircuit, ChevronRight, Sparkles, Wallet, PieChart, ArrowUpRight, ArrowDownRight, CheckCircle2, Info, Trophy, Settings, ChevronDown, Check, GitBranch, Download, Share2, FileJson, Copy, X, Calendar, Lock, Flame, Sliders, BookOpen, Coins, Star, ShoppingBag, Image as ImageIcon, Zap, Pencil, Edit3, Save, RefreshCw, BarChart2, Layers, PiggyBank, Bell } from "lucide-react";
 import confetti from "canvas-confetti";
 import { UserProfile, BudgetPlan } from "../types";
 import { formatCurrency, cn } from "../lib/utils";
@@ -7,7 +7,7 @@ import { Logo } from "./Logo";
 import { jsPDF } from "jspdf";
 import { CURRENCIES } from "../constants";
 import { useMemo, useState } from "react";
-import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip as RechartsTooltip, CartesianGrid } from "recharts";
+import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip as RechartsTooltip, CartesianGrid, PieChart as RechartsPieChart, Pie, Cell, Legend } from "recharts";
 import { generateWealthAudit } from "../lib/gemini";
 import { WealthPathChart } from "./WealthPathChart";
 import { MarketInsights } from "./MarketInsights";
@@ -16,6 +16,11 @@ import { AgentOperationsLogs } from "./AgentOperationsLogs";
 import { DailyMarketPulse } from "./DailyMarketPulse";
 import { SHOP_ITEMS, ShopItem } from "./QuestsHub";
 import { WealthGalaxy } from "./WealthGalaxy";
+import { EmergencyFundWidget } from "./EmergencyFundWidget";
+import { LevelingSystem } from "./LevelingSystem";
+import { DailyGoalTracker } from "./DailyGoalTracker";
+import { FinancialRoadmap } from "./FinancialRoadmap";
+import { OnboardingCarousel } from "./OnboardingCarousel";
 
 interface WealthDashboardProps {
   user: UserProfile;
@@ -81,6 +86,142 @@ export function WealthDashboard({ user, budget, onUnlockAchievement, onUpdateGit
     }));
   };
 
+  // Refresh Market Data State
+  const [isRefreshingMarketData, setIsRefreshingMarketData] = useState(false);
+  const [marketTick, setMarketTick] = useState(0);
+
+  const handleRefreshMarketData = () => {
+    setIsRefreshingMarketData(true);
+    setTimeout(() => {
+      setMarketTick(prev => prev + 1);
+      setIsRefreshingMarketData(false);
+      window.dispatchEvent(new CustomEvent('ww-trigger-alert', {
+        detail: {
+          type: 'success',
+          title: 'Market Feeds Synchronized! 📈',
+          message: 'Live market prices refreshed: S&P 500 (+0.42%), NASDAQ (+0.78%), Bitcoin ($67,420), & Gold ($2,410).'
+        }
+      }));
+    }, 800);
+  };
+
+  // Benchmark Market Index Toggle State
+  const [chartViewMode, setChartViewMode] = useState<"portfolio" | "benchmark" | "compare">("portfolio");
+
+  // Monthly Savings Goal Progress State
+  const [savingsTarget, setSavingsTarget] = useState<number>(() => {
+    const saved = localStorage.getItem("ww_monthly_savings_target");
+    return saved ? Number(saved) : 1500;
+  });
+  const [isEditingSavingsTarget, setIsEditingSavingsTarget] = useState(false);
+  const [tempSavingsTargetInput, setTempSavingsTargetInput] = useState<string>("");
+
+  const handleSaveSavingsTarget = (e: React.FormEvent) => {
+    e.preventDefault();
+    const val = Number(tempSavingsTargetInput);
+    if (!isNaN(val) && val > 0) {
+      setSavingsTarget(val);
+      localStorage.setItem("ww_monthly_savings_target", String(val));
+      setIsEditingSavingsTarget(false);
+      window.dispatchEvent(new CustomEvent("ww-trigger-alert", {
+        detail: {
+          type: "success",
+          title: "Monthly Savings Target Updated! 🎯",
+          message: `Your new target is ${formatCurrency(val, user.currency, currency.locale)} per month.`
+        }
+      }));
+    }
+  };
+
+  // Daily Financial Nudges Settings State
+  const [nudgeSettings, setNudgeSettings] = useState(() => {
+    const saved = localStorage.getItem("ww_nudge_settings");
+    if (saved) {
+      try { return JSON.parse(saved); } catch (e) {}
+    }
+    return {
+      frequency: "daily" as "realtime" | "daily" | "weekly" | "off",
+      types: {
+        marketUpdates: true,
+        savingsMilestones: true,
+        educationalTips: true,
+        portfolioAlerts: true
+      }
+    };
+  });
+
+  const handleUpdateNudgeSettings = (newSettings: typeof nudgeSettings) => {
+    setNudgeSettings(newSettings);
+    localStorage.setItem("ww_nudge_settings", JSON.stringify(newSettings));
+    window.dispatchEvent(new CustomEvent("ww-trigger-alert", {
+      detail: {
+        type: "success",
+        title: "Nudge Preferences Saved! 🔔",
+        message: `Daily Financial Nudges frequency updated to ${newSettings.frequency.toUpperCase()}.`
+      }
+    }));
+  };
+
+  const handleTestNudge = () => {
+    const samples = [
+      { type: "success", title: "Market Nudge 📈", message: "S&P 500 index rose +0.86% today. Your portfolio baseline is on target." },
+      { type: "info", title: "Savings Milestone 🎯", message: `You've achieved ${Math.round((user.netWorth.assets / 100000) * 100)}% of your next major wealth milestone.` },
+      { type: "warning", title: "Socratic Tip 💡", message: "Rebalancing your portfolio during periods of high market volatility protects against downside drawdowns." },
+      { type: "risk", title: "Risk Alarm 🛡️", message: "Equities allocation drift detected (+3.4%). Consider reviewing rebalancing targets." }
+    ];
+    const chosen = samples[Math.floor(Math.random() * samples.length)];
+    window.dispatchEvent(new CustomEvent("ww-trigger-alert", { detail: chosen }));
+  };
+
+  // Retirement Readiness Calculations (ScenarioSimulator logic)
+  const [targetRetirementGoal, setTargetRetirementGoal] = useState<number>(1000000);
+  const [targetRetirementAge, setTargetRetirementAge] = useState<number>(60);
+  const userCurrentAge = Number(user.age) || 30;
+
+  const retirementReadiness = useMemo(() => {
+    const currentWealth = Math.max(0, user.netWorth.assets - user.netWorth.liabilities);
+    const monthlySurplus = budget ? Math.max(0, budget.income - Object.values(budget.expenses).reduce((a, b) => a + b, 0)) : 1000;
+    const annualSavings = monthlySurplus * 12;
+    const annualReturnRate = 0.07; // 7% annual compounding
+
+    const horizonYears = Math.max(1, targetRetirementAge - userCurrentAge);
+
+    // Compound growth calculation: FV = PV*(1+r)^n + PMT*(((1+r)^n - 1)/r)
+    const projectedNestEgg = Math.round(
+      currentWealth * Math.pow(1 + annualReturnRate, horizonYears) +
+      annualSavings * ((Math.pow(1 + annualReturnRate, horizonYears) - 1) / annualReturnRate)
+    );
+
+    // Safe Withdrawal Rate (4% rule)
+    const annualSafeWithdrawal = Math.round(projectedNestEgg * 0.04);
+    const monthlySafeWithdrawal = Math.round(annualSafeWithdrawal / 12);
+
+    // Progress percentage to target goal
+    const progressPct = Math.min(100, Math.round((currentWealth / targetRetirementGoal) * 100));
+    const projectedProgressPct = Math.min(100, Math.round((projectedNestEgg / targetRetirementGoal) * 100));
+
+    // Time to reach target nest egg
+    let yearsNeeded = 0;
+    let tempWealth = currentWealth;
+    while (tempWealth < targetRetirementGoal && yearsNeeded < 60) {
+      tempWealth = (tempWealth + annualSavings) * (1 + annualReturnRate);
+      yearsNeeded++;
+    }
+
+    return {
+      currentWealth,
+      monthlySurplus,
+      horizonYears,
+      projectedNestEgg,
+      annualSafeWithdrawal,
+      monthlySafeWithdrawal,
+      progressPct,
+      projectedProgressPct,
+      yearsNeeded,
+      retireAgeEst: userCurrentAge + yearsNeeded
+    };
+  }, [user.netWorth, user.age, budget, targetRetirementGoal, targetRetirementAge, userCurrentAge]);
+
   const calculatedRiskProfile = useMemo(() => {
     if (user.riskProfile) return user.riskProfile;
     if (advisorPersona === "aggressive") return "Aggressive Growth";
@@ -96,14 +237,34 @@ export function WealthDashboard({ user, budget, onUnlockAchievement, onUpdateGit
     for (let i = 29; i >= 0; i--) {
       const d = new Date();
       d.setDate(d.getDate() - i);
-      const factor = 1 - (i * 0.0018) + (Math.sin(i * 0.7) * 0.004);
+      const portFactor = 1 - (i * 0.0018) + (Math.sin((i + marketTick) * 0.7) * 0.004);
+      const spFactor = 1 - (i * 0.0012) + (Math.cos((i + marketTick) * 0.5) * 0.003);
       points.push({
         day: d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
-        "Assets": Math.round(currentAssets * factor)
+        "Assets": Math.round(currentAssets * portFactor),
+        "S&P 500 Index": Math.round(currentAssets * spFactor)
       });
     }
     return points;
-  }, [user.netWorth?.assets]);
+  }, [user.netWorth?.assets, marketTick]);
+
+  const debtDistributionData = useMemo(() => {
+    const totalLiabilities = user.netWorth?.liabilities || 0;
+    if (totalLiabilities <= 0) {
+      return [
+        { name: "Mortgage", value: 18000, color: "#3b82f6" },
+        { name: "Student Loans", value: 8500, color: "#8b5cf6" },
+        { name: "Credit Cards", value: 3200, color: "#ef4444" },
+        { name: "Auto Loans", value: 5000, color: "#f59e0b" },
+      ];
+    }
+    return [
+      { name: "Mortgage", value: Math.round(totalLiabilities * 0.52), color: "#3b82f6" },
+      { name: "Student Loans", value: Math.round(totalLiabilities * 0.22), color: "#8b5cf6" },
+      { name: "Credit Cards", value: Math.round(totalLiabilities * 0.14), color: "#ef4444" },
+      { name: "Auto Loans", value: Math.round(totalLiabilities * 0.12), color: "#f59e0b" },
+    ];
+  }, [user.netWorth?.liabilities]);
 
   const currency = CURRENCIES[user.currency] || CURRENCIES.USD;
 
@@ -515,6 +676,9 @@ export function WealthDashboard({ user, budget, onUnlockAchievement, onUpdateGit
 
   return (
     <div className="container mx-auto px-6 py-12 space-y-12">
+      {/* Onboarding Carousel for New & Returning Users */}
+      <OnboardingCarousel />
+
       {/* Wexa Autonomous Financial Agent Quick Launch Banner */}
       <div className="bg-gradient-to-r from-teal-950 via-slate-900 to-teal-950 border border-teal-800/60 rounded-2xl p-6 shadow-xl relative overflow-hidden">
         <div className="absolute top-0 right-0 w-80 h-80 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
@@ -661,6 +825,20 @@ export function WealthDashboard({ user, budget, onUnlockAchievement, onUpdateGit
         </div>
         
         <div className="flex flex-wrap items-center gap-3 shrink-0 self-start sm:self-auto w-full sm:w-auto">
+          {/* Refresh Market Data Button */}
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={handleRefreshMarketData}
+            disabled={isRefreshingMarketData}
+            type="button"
+            title="Simulate Fetching Latest Real-Time Market Pricing & Tickers"
+            className="flex items-center justify-center gap-2 px-4 py-3 border border-border/80 hover:border-accent-cyan/40 text-text-secondary hover:text-accent-cyan transition-all cursor-pointer rounded-xl bg-bg-secondary/20 text-xs font-bold h-12"
+          >
+            <RefreshCw className={cn("w-4 h-4 text-accent-cyan", isRefreshingMarketData && "animate-spin")} />
+            <span className="hidden sm:inline">{isRefreshingMarketData ? "Refreshing..." : "Refresh Market Data"}</span>
+          </motion.button>
+
           {/* Share score card button */}
           <motion.button
             whileHover={{ scale: 1.05 }}
@@ -750,6 +928,18 @@ export function WealthDashboard({ user, budget, onUnlockAchievement, onUpdateGit
           </motion.div>
         ))}
       </div>
+
+      {/* Financial Roadmap Visualizer */}
+      <FinancialRoadmap user={user} />
+
+      {/* Daily Goal Tracker Widget */}
+      <DailyGoalTracker user={user} onUpdateProfile={onUpdateProfile} />
+
+      {/* Standalone Emergency Fund Buffer Widget */}
+      <EmergencyFundWidget user={user} budget={budget} />
+
+      {/* Gamified Wealth Tier Leveling System */}
+      <LevelingSystem user={user} />
 
       {/* Daily Financial Intent & Consistency Calendar Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -1443,41 +1633,98 @@ export function WealthDashboard({ user, budget, onUnlockAchievement, onUpdateGit
               </div>
             </div>
 
-            {/* 30-Day Asset Growth Sparkline */}
-            <div className="pt-4 border-t border-border/60 space-y-2">
-              <div className="flex items-center justify-between text-[11px]">
+            {/* 30-Day Asset Growth & Benchmark Comparison Sparkline */}
+            <div className="pt-4 border-t border-border/60 space-y-3">
+              <div className="flex flex-wrap items-center justify-between gap-2 text-[11px]">
                 <span className="font-bold uppercase tracking-wider text-text-muted font-mono flex items-center gap-1.5">
-                  <TrendingUp className="w-3.5 h-3.5 text-accent-emerald" /> 30-Day Asset Performance Growth
+                  <TrendingUp className="w-3.5 h-3.5 text-accent-emerald" /> 30-Day Asset vs Benchmark Index
                 </span>
-                <span className="text-accent-emerald font-bold font-mono text-[10px] bg-accent-emerald/10 border border-accent-emerald/20 px-2 py-0.5 rounded-full">
-                  +3.8% (30d)
-                </span>
+                <div className="flex items-center gap-1 bg-bg-void/80 border border-border/60 rounded-lg p-0.5 text-[9px] font-mono">
+                  <button
+                    type="button"
+                    onClick={() => setChartViewMode("portfolio")}
+                    className={cn(
+                      "px-2 py-0.5 rounded transition-all cursor-pointer font-bold",
+                      chartViewMode === "portfolio" ? "bg-accent-emerald/20 text-accent-emerald border border-accent-emerald/30" : "text-text-muted hover:text-text-primary"
+                    )}
+                  >
+                    Portfolio
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setChartViewMode("benchmark")}
+                    className={cn(
+                      "px-2 py-0.5 rounded transition-all cursor-pointer font-bold",
+                      chartViewMode === "benchmark" ? "bg-accent-cyan/20 text-accent-cyan border border-accent-cyan/30" : "text-text-muted hover:text-text-primary"
+                    )}
+                  >
+                    S&P 500
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setChartViewMode("compare")}
+                    className={cn(
+                      "px-2 py-0.5 rounded transition-all cursor-pointer font-bold",
+                      chartViewMode === "compare" ? "bg-accent-gold/20 text-accent-gold border border-accent-gold/30" : "text-text-muted hover:text-text-primary"
+                    )}
+                  >
+                    Compare Both
+                  </button>
+                </div>
               </div>
-              <div className="h-16 w-full pt-1">
+
+              <div className="h-20 w-full pt-1">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={assetSparklineData} margin={{ top: 2, right: 2, left: 2, bottom: 2 }}>
                     <defs>
                       <linearGradient id="assetSparklineGlow" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
+                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.35}/>
                         <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                      </linearGradient>
+                      <linearGradient id="benchmarkSparklineGlow" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.35}/>
+                        <stop offset="95%" stopColor="#06b6d4" stopOpacity={0}/>
                       </linearGradient>
                     </defs>
                     <RechartsTooltip
                       content={({ active, payload }) => {
                         if (active && payload && payload.length) {
+                          const dataPoint = payload[0].payload;
                           return (
-                            <div className="bg-bg-void/90 border border-border/80 px-2 py-1 rounded text-[10px] font-mono shadow-xl">
-                              <p className="text-text-muted">{payload[0].payload.day}</p>
-                              <p className="font-bold text-accent-emerald">
-                                {formatCurrency(payload[0].value as number, user.currency, currency.locale)}
-                              </p>
+                            <div className="bg-bg-void/95 border border-border/80 px-3 py-2 rounded-xl text-[10px] font-mono shadow-2xl space-y-1 backdrop-blur-md">
+                              <p className="text-text-muted font-bold text-[9px] uppercase border-b border-border/40 pb-1">{dataPoint.day}</p>
+                              {(chartViewMode === "portfolio" || chartViewMode === "compare") && (
+                                <div className="flex items-center justify-between gap-3">
+                                  <span className="text-accent-emerald flex items-center gap-1">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-accent-emerald" /> Portfolio:
+                                  </span>
+                                  <span className="font-bold text-accent-emerald">
+                                    {formatCurrency(dataPoint.Assets as number, user.currency, currency.locale)}
+                                  </span>
+                                </div>
+                              )}
+                              {(chartViewMode === "benchmark" || chartViewMode === "compare") && (
+                                <div className="flex items-center justify-between gap-3">
+                                  <span className="text-accent-cyan flex items-center gap-1">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-accent-cyan" /> S&P 500 Index:
+                                  </span>
+                                  <span className="font-bold text-accent-cyan">
+                                    {formatCurrency(dataPoint["S&P 500 Index"] as number, user.currency, currency.locale)}
+                                  </span>
+                                </div>
+                              )}
                             </div>
                           );
                         }
                         return null;
                       }}
                     />
-                    <Area type="monotone" dataKey="Assets" stroke="#10b981" strokeWidth={2} fillOpacity={1} fill="url(#assetSparklineGlow)" />
+                    {(chartViewMode === "portfolio" || chartViewMode === "compare") && (
+                      <Area type="monotone" dataKey="Assets" name="Portfolio Assets" stroke="#10b981" strokeWidth={2} fillOpacity={1} fill="url(#assetSparklineGlow)" />
+                    )}
+                    {(chartViewMode === "benchmark" || chartViewMode === "compare") && (
+                      <Area type="monotone" dataKey="S&P 500 Index" name="S&P 500 Index" stroke="#06b6d4" strokeWidth={2} fillOpacity={chartViewMode === "compare" ? 0.2 : 1} fill="url(#benchmarkSparklineGlow)" />
+                    )}
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
@@ -1520,6 +1767,333 @@ export function WealthDashboard({ user, budget, onUnlockAchievement, onUpdateGit
           </div>
         </div>
       </div>
+
+      {/* Monthly Savings Target Widget & Liabilities Debt Breakdown Donut Chart Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Monthly Savings Target Tracker Card */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="card p-8 space-y-6 relative overflow-hidden"
+        >
+          <div className="flex items-center justify-between border-b border-border/60 pb-4">
+            <div className="space-y-1">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-accent-gold/10 border border-accent-gold/30 text-accent-gold text-[10px] font-mono font-bold uppercase tracking-wider">
+                <Target className="w-3.5 h-3.5" /> Monthly Pace
+              </div>
+              <h3 className="text-xl font-bold font-display text-text-primary">Monthly Savings Target</h3>
+            </div>
+            <div className="flex items-center gap-2">
+              {!isEditingSavingsTarget ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTempSavingsTargetInput(String(savingsTarget));
+                    setIsEditingSavingsTarget(true);
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-bg-secondary hover:bg-accent-gold/20 border border-border/80 hover:border-accent-gold/40 text-text-muted hover:text-accent-gold rounded-xl text-xs font-mono font-bold transition-all cursor-pointer"
+                  title="Update Monthly Savings Target Amount"
+                >
+                  <Pencil className="w-3.5 h-3.5 text-accent-gold" />
+                  <span>Set Target</span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setIsEditingSavingsTarget(false)}
+                  className="text-xs text-text-muted hover:text-text-primary px-2 py-1 rounded-lg hover:bg-bg-secondary cursor-pointer"
+                >
+                  Cancel
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Quick Edit Target Form */}
+          {isEditingSavingsTarget && (
+            <motion.form
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              onSubmit={handleSaveSavingsTarget}
+              className="p-4 bg-bg-secondary/70 border border-accent-gold/40 rounded-xl space-y-3"
+            >
+              <div className="space-y-1">
+                <label className="text-xs font-mono font-bold text-text-muted uppercase">Set Monthly Savings Goal ({currency.symbol}):</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    required
+                    min="1"
+                    step="any"
+                    value={tempSavingsTargetInput}
+                    onChange={(e) => setTempSavingsTargetInput(e.target.value)}
+                    className="flex-1 bg-bg-void border border-border rounded-xl px-3.5 py-2 text-sm font-mono font-bold text-text-primary focus:outline-hidden focus:ring-1 focus:ring-accent-gold"
+                    placeholder="1500"
+                  />
+                  <button
+                    type="submit"
+                    className="btn-primary px-4 py-2 text-xs font-bold text-bg-void rounded-xl flex items-center gap-1 cursor-pointer shrink-0"
+                  >
+                    <Save className="w-3.5 h-3.5" /> Save Goal
+                  </button>
+                </div>
+              </div>
+            </motion.form>
+          )}
+
+          {/* Savings Calculation & Progress Bar */}
+          {(() => {
+            const monthlySaved = budget 
+              ? Math.max(0, budget.income - Object.values(budget.expenses).reduce((a, b) => a + b, 0))
+              : Math.round(user.netWorth.assets * 0.05);
+            const pct = Math.min(100, Math.round((monthlySaved / savingsTarget) * 100));
+
+            return (
+              <div className="space-y-5">
+                <div className="flex items-baseline justify-between">
+                  <div>
+                    <span className="text-xs font-mono uppercase tracking-wider text-text-muted">Monthly Surplus Saved</span>
+                    <div className="text-3xl font-display font-bold text-accent-emerald">
+                      {formatCurrency(monthlySaved, user.currency, currency.locale)}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-xs font-mono uppercase tracking-wider text-text-muted">Target Goal</span>
+                    <div className="text-2xl font-mono font-bold text-text-primary">
+                      {formatCurrency(savingsTarget, user.currency, currency.locale)}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Animated Progress Bar */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-xs font-mono font-bold">
+                    <span className="text-text-muted">Progress to Goal</span>
+                    <span className={cn(
+                      pct >= 100 ? "text-accent-emerald" : pct >= 50 ? "text-accent-gold" : "text-amber-400"
+                    )}>{pct}% Achieved</span>
+                  </div>
+
+                  <div className="h-4 w-full bg-bg-primary rounded-full overflow-hidden border border-border/60 relative p-0.5">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      whileInView={{ width: `${pct}%` }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 1, ease: "easeOut" }}
+                      className={cn(
+                        "h-full rounded-full transition-all shadow-inner",
+                        pct >= 100 ? "bg-gradient-to-r from-emerald-500 to-teal-400" :
+                        pct >= 50 ? "bg-gradient-to-r from-amber-500 to-yellow-400" : "bg-gradient-to-r from-amber-600 to-orange-500"
+                      )}
+                    />
+                  </div>
+                </div>
+
+                <div className="p-3 bg-bg-secondary/40 rounded-xl border border-border/40 text-xs text-text-secondary flex items-center justify-between font-mono">
+                  <span>Remaining to reach goal:</span>
+                  <span className="font-bold text-accent-gold">
+                    {monthlySaved >= savingsTarget ? "Goal Reached! 🎉" : formatCurrency(savingsTarget - monthlySaved, user.currency, currency.locale)}
+                  </span>
+                </div>
+              </div>
+            );
+          })()}
+        </motion.div>
+
+        {/* Debt Breakdown Donut Chart Card */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="card p-8 space-y-6 relative overflow-hidden"
+        >
+          <div className="flex items-center justify-between border-b border-border/60 pb-4">
+            <div className="space-y-1">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-accent-red/10 border border-accent-red/30 text-accent-red text-[10px] font-mono font-bold uppercase tracking-wider">
+                <PieChart className="w-3.5 h-3.5" /> Liabilities Split
+              </div>
+              <h3 className="text-xl font-bold font-display text-text-primary">Debt Distribution & Types</h3>
+            </div>
+            <span className="text-xs font-mono font-bold text-accent-red bg-accent-red/10 border border-accent-red/20 px-2.5 py-1 rounded-lg">
+              Total: {formatCurrency(user.netWorth.liabilities, user.currency, currency.locale)}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
+            {/* Donut Chart */}
+            <div className="h-44 w-full relative flex items-center justify-center">
+              <ResponsiveContainer width="100%" height="100%">
+                <RechartsPieChart>
+                  <RechartsTooltip
+                    content={({ active, payload }) => {
+                      if (active && payload && payload.length) {
+                        const data = payload[0].payload;
+                        const totalLiab = user.netWorth.liabilities || 1;
+                        const pct = Math.round((data.value / totalLiab) * 100);
+                        return (
+                          <div className="bg-bg-void/95 border border-border/80 px-3 py-2 rounded-xl text-[10px] font-mono shadow-2xl space-y-1 backdrop-blur-md">
+                            <p className="font-bold text-text-primary flex items-center gap-1.5">
+                              <span className="w-2 h-2 rounded-full" style={{ backgroundColor: data.color }} />
+                              {data.name}
+                            </p>
+                            <p className="text-accent-red font-bold text-xs">
+                              {formatCurrency(data.value, user.currency, currency.locale)} ({pct}%)
+                            </p>
+                          </div>
+                        );
+                      }
+                      return null;
+                    }}
+                  />
+                  <Pie
+                    data={debtDistributionData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={48}
+                    outerRadius={75}
+                    paddingAngle={4}
+                    dataKey="value"
+                  >
+                    {debtDistributionData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} stroke="var(--bg-card)" strokeWidth={2} />
+                    ))}
+                  </Pie>
+                </RechartsPieChart>
+              </ResponsiveContainer>
+              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                <span className="text-xs text-text-muted font-mono uppercase tracking-wider">Debts</span>
+                <span className="text-sm font-bold text-text-primary font-mono">{debtDistributionData.length} Types</span>
+              </div>
+            </div>
+
+            {/* Category Breakdown List */}
+            <div className="space-y-2.5">
+              {debtDistributionData.map((debt, idx) => {
+                const totalLiab = user.netWorth.liabilities || 1;
+                const pct = Math.round((debt.value / totalLiab) * 100);
+                return (
+                  <div key={idx} className="flex items-center justify-between p-2 rounded-xl bg-bg-secondary/40 border border-border/40 text-xs font-mono">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: debt.color }} />
+                      <span className="text-text-secondary font-medium">{debt.name}</span>
+                    </div>
+                    <div className="text-right">
+                      <span className="font-bold text-text-primary block">{formatCurrency(debt.value, user.currency, currency.locale)}</span>
+                      <span className="text-[10px] text-text-muted">{pct}%</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </motion.div>
+      </div>
+
+      {/* Retirement Readiness & Safe Withdrawal Projection Card */}
+      <motion.div
+        initial={{ opacity: 0, y: 25 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        className="card p-8 space-y-6 relative overflow-hidden bg-gradient-to-br from-bg-secondary/80 via-bg-primary to-bg-secondary/40 border-accent-gold/30 shadow-xl"
+      >
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border/60 pb-4">
+          <div className="space-y-1">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-accent-gold/15 border border-accent-gold/30 text-accent-gold text-[10px] font-mono font-bold uppercase tracking-wider">
+              <PiggyBank className="w-3.5 h-3.5 text-accent-gold" /> ScenarioSimulator Engine
+            </div>
+            <h3 className="text-2xl font-bold font-display text-text-primary flex items-center gap-2">
+              Retirement Readiness & Safe Withdrawal Projection
+            </h3>
+            <p className="text-xs text-text-secondary">
+              Actuarial forecast using the 4% Trinity safe withdrawal rule based on your active net worth and compounding rate.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3 shrink-0">
+            <a
+              href="#simulator"
+              className="px-4 py-2 bg-accent-gold text-bg-void text-xs font-bold uppercase tracking-wider rounded-xl hover:bg-accent-gold/90 transition-all flex items-center gap-1.5 shadow-md cursor-pointer font-mono"
+            >
+              <span>Full Retirement Simulator</span>
+              <ChevronRight className="w-4 h-4" />
+            </a>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="p-5 bg-bg-void/60 rounded-2xl border border-border/60 space-y-1">
+            <div className="text-[10px] text-text-muted uppercase tracking-widest font-mono font-bold">Projected Nest Egg (Age {targetRetirementAge})</div>
+            <div className="text-2xl font-bold font-display text-accent-gold">
+              {formatCurrency(retirementReadiness.projectedNestEgg, user.currency, currency.locale)}
+            </div>
+            <p className="text-[10px] text-text-muted">7% expected annual returns across {retirementReadiness.horizonYears} yrs horizon</p>
+          </div>
+
+          <div className="p-5 bg-bg-void/60 rounded-2xl border border-border/60 space-y-1">
+            <div className="text-[10px] text-text-muted uppercase tracking-widest font-mono font-bold">Monthly Safe Withdrawal</div>
+            <div className="text-2xl font-bold font-display text-accent-emerald">
+              {formatCurrency(retirementReadiness.monthlySafeWithdrawal, user.currency, currency.locale)}<span className="text-xs font-normal text-text-muted font-sans">/mo</span>
+            </div>
+            <p className="text-[10px] text-text-muted">4% annual Trinity rule ({formatCurrency(retirementReadiness.annualSafeWithdrawal, user.currency, currency.locale)}/yr)</p>
+          </div>
+
+          <div className="p-5 bg-bg-void/60 rounded-2xl border border-border/60 space-y-1">
+            <div className="text-[10px] text-text-muted uppercase tracking-widest font-mono font-bold">Years to Target Nest Egg</div>
+            <div className="text-2xl font-bold font-display text-accent-blue">
+              {retirementReadiness.yearsNeeded} <span className="text-sm font-normal text-text-muted font-sans">Years</span>
+            </div>
+            <p className="text-[10px] text-text-muted">Estimated freedom age: Age {retirementReadiness.retireAgeEst}</p>
+          </div>
+
+          <div className="p-5 bg-bg-void/60 rounded-2xl border border-border/60 space-y-2">
+            <div className="flex justify-between items-center text-[10px] text-text-muted uppercase tracking-widest font-mono font-bold">
+              <span>Goal Readiness</span>
+              <span className="text-accent-gold">{retirementReadiness.progressPct}% Now ({retirementReadiness.projectedProgressPct}% Projected)</span>
+            </div>
+            <div className="h-2.5 w-full bg-bg-primary rounded-full overflow-hidden border border-border/40 p-0.5">
+              <div
+                className="h-full bg-gradient-to-r from-accent-gold via-amber-400 to-emerald-400 rounded-full transition-all duration-700"
+                style={{ width: `${Math.min(100, retirementReadiness.projectedProgressPct)}%` }}
+              />
+            </div>
+            <p className="text-[10px] text-text-muted">Target Goal: {formatCurrency(targetRetirementGoal, user.currency, currency.locale)}</p>
+          </div>
+        </div>
+
+        {/* Dynamic Controls Bar */}
+        <div className="pt-2 flex flex-wrap items-center justify-between gap-4 border-t border-border/40 text-xs font-mono">
+          <div className="flex items-center gap-4 flex-wrap">
+            <div className="flex items-center gap-2">
+              <span className="text-text-muted">Target Retirement Age:</span>
+              <input
+                type="number"
+                min="40"
+                max="85"
+                value={targetRetirementAge}
+                onChange={(e) => setTargetRetirementAge(Math.max(40, Number(e.target.value)))}
+                className="w-16 bg-bg-void border border-border rounded-lg px-2 py-1 text-center font-bold text-accent-gold outline-none"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-text-muted">Target Nest Egg:</span>
+              <select
+                value={targetRetirementGoal}
+                onChange={(e) => setTargetRetirementGoal(Number(e.target.value))}
+                className="bg-bg-void border border-border rounded-lg px-2 py-1 font-bold text-accent-gold outline-none cursor-pointer"
+              >
+                <option value={500000}>$500,000</option>
+                <option value={1000000}>$1,000,000</option>
+                <option value={2000000}>$2,000,000</option>
+                <option value={5000000}>$5,000,000</option>
+              </select>
+            </div>
+          </div>
+          <div className="text-text-secondary text-[11px] font-sans">
+            💡 Monthly Savings Surplus: <strong className="text-accent-emerald">{formatCurrency(retirementReadiness.monthlySurplus, user.currency, currency.locale)}</strong> reinvested automatically.
+          </div>
+        </div>
+      </motion.div>
 
       {/* Financial Savings Goals Tracker */}
       <motion.div
@@ -1894,6 +2468,94 @@ export function WealthDashboard({ user, budget, onUnlockAchievement, onUpdateGit
                     Emphasizes maximum compounding yield, high-beta tech equities, tactical momentum, and growth.
                   </p>
                 </button>
+              </div>
+            </div>
+
+            {/* Daily Financial Nudges Settings Control Panel */}
+            <div className="pt-4 border-t border-border/60 space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-mono font-bold uppercase tracking-wider text-accent-gold flex items-center gap-1.5">
+                  <Bell className="w-4 h-4 text-accent-gold" />
+                  Daily Financial Nudges & Notifications
+                </span>
+                <button
+                  type="button"
+                  onClick={handleTestNudge}
+                  className="px-2.5 py-1 bg-accent-gold/10 hover:bg-accent-gold/20 border border-accent-gold/30 rounded-lg text-accent-gold text-[10px] font-mono font-bold uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1"
+                >
+                  <Sparkles className="w-3 h-3" /> Test Nudge Alert
+                </button>
+              </div>
+              <p className="text-[11px] text-text-secondary leading-relaxed">
+                Configure frequency and categories for automated market updates, milestone alerts, and Socratic financial guidance.
+              </p>
+
+              <div className="space-y-3">
+                <label className="text-[10px] font-bold uppercase tracking-widest text-text-muted font-mono block">Nudge Delivery Frequency</label>
+                <div className="grid grid-cols-4 gap-2">
+                  {(["realtime", "daily", "weekly", "off"] as const).map((freq) => (
+                    <button
+                      key={freq}
+                      type="button"
+                      onClick={() => handleUpdateNudgeSettings({ ...nudgeSettings, frequency: freq })}
+                      className={cn(
+                        "py-2 px-2 rounded-xl border text-[10px] font-mono font-bold uppercase transition-all cursor-pointer text-center",
+                        nudgeSettings.frequency === freq
+                          ? "bg-accent-gold/15 border-accent-gold text-accent-gold shadow-sm"
+                          : "bg-bg-secondary border-border/40 hover:bg-bg-secondary/80 text-text-muted"
+                      )}
+                    >
+                      {freq === "realtime" ? "⚡ Realtime" : freq === "daily" ? "📅 Daily" : freq === "weekly" ? "🗓️ Weekly" : "🚫 Off"}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-2 pt-1">
+                <label className="text-[10px] font-bold uppercase tracking-widest text-text-muted font-mono block">Enabled Nudge Categories</label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {[
+                    { key: "marketUpdates", label: "Market Updates", icon: "📈", desc: "Volatility & index changes" },
+                    { key: "savingsMilestones", label: "Savings Milestones", icon: "🎯", desc: "Goal progress & targets" },
+                    { key: "educationalTips", label: "Socratic Guidance", icon: "💡", desc: "Wealth building insights" },
+                    { key: "portfolioAlerts", label: "Portfolio Risk Alarms", icon: "🛡️", desc: "Allocation drift warnings" },
+                  ].map((item) => {
+                    const active = nudgeSettings.types[item.key as keyof typeof nudgeSettings.types];
+                    return (
+                      <button
+                        key={item.key}
+                        type="button"
+                        onClick={() => {
+                          const updated = {
+                            ...nudgeSettings,
+                            types: {
+                              ...nudgeSettings.types,
+                              [item.key]: !active
+                            }
+                          };
+                          handleUpdateNudgeSettings(updated);
+                        }}
+                        className={cn(
+                          "p-2.5 rounded-xl border text-left flex items-center justify-between transition-all cursor-pointer",
+                          active
+                            ? "bg-bg-secondary border-accent-gold/40 text-text-primary"
+                            : "bg-bg-secondary/40 border-border/20 text-text-muted opacity-60"
+                        )}
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm">{item.icon}</span>
+                          <div>
+                            <div className="text-xs font-bold">{item.label}</div>
+                            <div className="text-[9px] text-text-muted">{item.desc}</div>
+                          </div>
+                        </div>
+                        <div className={cn("w-4 h-4 rounded-full border flex items-center justify-center shrink-0", active ? "bg-accent-gold border-accent-gold text-bg-void" : "border-border")}>
+                          {active && <Check className="w-3 h-3 stroke-[3]" />}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             </div>
 

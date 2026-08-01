@@ -50,6 +50,27 @@
   --grid-opacity: 0.06;
 }
 
+:root.noir {
+  --bg-void: #000000;
+  --bg-primary: #040406;
+  --bg-secondary: #0A0A0E;
+  --bg-card: rgba(10, 10, 14, 0.95);
+  --bg-card-hover: rgba(20, 20, 28, 0.98);
+  --accent-gold: #FFD700;
+  --accent-gold-bright: #FFE55C;
+  --accent-emerald: #00FF9D;
+  --accent-blue: #38BDF8;
+  --accent-cyan: #22D3EE;
+  --accent-teal: #2DD4BF;
+  --text-primary: #FFFFFF;
+  --text-secondary: #A1A1AA;
+  --text-muted: #52525B;
+  --border: rgba(255, 215, 0, 0.25);
+  --border-active: rgba(255, 215, 0, 0.7);
+  --aurora-opacity: 0.15;
+  --grid-opacity: 0.05;
+}
+
 @theme {
   --font-sans: var(--font-sans);
   --font-display: var(--font-display);

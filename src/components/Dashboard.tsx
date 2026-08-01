@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "motion/react";
-import { TrendingUp, Brain, Bot, PieChart, ArrowUpRight, ArrowDownRight, Flame, Calendar, Plus, Minus } from "lucide-react";
+import { TrendingUp, Brain, Bot, PieChart, ArrowUpRight, ArrowDownRight, Flame, Calendar, Plus, Minus, Globe, RefreshCw, DollarSign } from "lucide-react";
+import { PieChart as RechartsPieChart, Pie, Cell, Tooltip as RechartsTooltip, ResponsiveContainer, Legend } from "recharts";
 import { formatCurrency, cn } from "../lib/utils";
 import { CURRENCIES } from "../constants";
 import { UserProfile, BudgetPlan } from "../types";
@@ -8,6 +9,11 @@ import { UserProfile, BudgetPlan } from "../types";
 import { MarketInsights } from "./MarketInsights";
 import { Logo } from "./Logo";
 import { WealthPathChart } from "./WealthPathChart";
+import { OnboardingCarousel } from "./OnboardingCarousel";
+import { EmergencyFundWidget } from "./EmergencyFundWidget";
+import { LevelingSystem } from "./LevelingSystem";
+import { DailyGoalTracker } from "./DailyGoalTracker";
+import { FinancialRoadmap } from "./FinancialRoadmap";
 
 interface DashboardProps {
   user: UserProfile;
@@ -25,6 +31,55 @@ export function Dashboard({ user, budget, onUpdateNetWorth }: DashboardProps) {
 
   const [isInfiniteMode, setIsInfiniteMode] = useState(false);
 
+  // Currency Converter Utility State
+  const [selectedTargetCurrency, setSelectedTargetCurrency] = useState<string>("INR");
+
+  // Simulated exchange rates relative to USD base
+  const exchangeRatesVsUSD: Record<string, number> = {
+    USD: 1.0,
+    EUR: 0.92,
+    GBP: 0.79,
+    INR: 83.5,
+    JPY: 155.2,
+    CAD: 1.36,
+    AUD: 1.52,
+    AED: 3.67,
+    BRL: 5.45,
+    ZAR: 18.2
+  };
+
+  const convertAmount = (amountInUserCurrency: number, targetCurrCode: string) => {
+    const userRateToUSD = exchangeRatesVsUSD[user.currency] || 1.0;
+    const targetRateToUSD = exchangeRatesVsUSD[targetCurrCode] || 1.0;
+    const amountInUSD = amountInUserCurrency / userRateToUSD;
+    return amountInUSD * targetRateToUSD;
+  };
+
+  // Recharts Expense Doughnut Chart Data
+  const defaultExpenseCategories = [
+    { name: "Housing & Rent", value: 1400, color: "#F0B429" },
+    { name: "Food & Groceries", value: 600, color: "#10B981" },
+    { name: "Transportation", value: 350, color: "#06B6D4" },
+    { name: "Health & Wellness", value: 250, color: "#3B82F6" },
+    { name: "Entertainment & Leisure", value: 300, color: "#8B5CF6" },
+    { name: "Debt Payments", value: 400, color: "#EC4899" },
+    { name: "Other Expenses", value: 200, color: "#94A3B8" },
+  ];
+
+  const expenseChartData = budget && budget.expenses && Object.keys(budget.expenses).length > 0
+    ? Object.entries(budget.expenses).map(([cat, val], idx) => {
+        const colors = ["#F0B429", "#10B981", "#06B6D4", "#3B82F6", "#8B5CF6", "#EC4899", "#F97316", "#94A3B8"];
+        const formattedName = cat.charAt(0).toUpperCase() + cat.slice(1).replace(/([A-Z])/g, ' $1');
+        return {
+          name: formattedName,
+          value: Number(val) || 0,
+          color: colors[idx % colors.length]
+        };
+      }).filter(item => item.value > 0)
+    : defaultExpenseCategories;
+
+  const totalExpenseAmount = expenseChartData.reduce((acc, curr) => acc + curr.value, 0);
+
   const calculateHealthScore = () => {
     let score = 0;
     if (budget) score += 20;
@@ -35,7 +90,6 @@ export function Dashboard({ user, budget, onUpdateNetWorth }: DashboardProps) {
     score += Math.min(20, (user.highScore / 250) * 20);
     if (user.netWorth.assets > 0) score += 15;
     score += Math.min(15, (user.visitDates.length / 3) * 15);
-    // Simulator usage could be tracked, but let's assume +10 if they have a budget
     if (budget) score += 10;
     return Math.round(score);
   };
@@ -53,7 +107,7 @@ export function Dashboard({ user, budget, onUpdateNetWorth }: DashboardProps) {
   const healthGrade = getHealthGrade(healthScore);
 
   const savingsRate = budget ? Math.round(((budget.income - Object.values(budget.expenses).reduce((a, b) => a + b, 0)) / budget.income) * 100) : 0;
-  const monthlyExpenses = budget ? Object.values(budget.expenses).reduce((a, b) => a + b, 0) : 0;
+  const monthlyExpenses = budget ? Object.values(budget.expenses).reduce((a, b) => a + b, 0) : totalExpenseAmount;
   const monthlySavings = budget ? budget.income - monthlyExpenses : 0;
   
   const yearsToFI = (budget && monthlySavings > 0) 
@@ -61,7 +115,7 @@ export function Dashboard({ user, budget, onUpdateNetWorth }: DashboardProps) {
     : null;
 
   const dtiRatio = (budget && budget.income > 0)
-    ? Math.round((liabilities / (budget.income * 12)) * 100) // Using total debt to annual income as a simplified DTI for dashboard
+    ? Math.round((liabilities / (budget.income * 12)) * 100)
     : 0;
 
   return (
@@ -90,6 +144,21 @@ export function Dashboard({ user, budget, onUpdateNetWorth }: DashboardProps) {
           </div>
         </div>
       </div>
+
+      {/* Onboarding Carousel */}
+      <OnboardingCarousel />
+
+      {/* Financial Roadmap Visualizer */}
+      <FinancialRoadmap user={user} />
+
+      {/* Daily Goal Tracker Widget */}
+      <DailyGoalTracker user={user} />
+
+      {/* Standalone Emergency Fund Buffer Widget */}
+      <EmergencyFundWidget user={user} budget={budget} />
+
+      {/* Gamified Wealth Tier Leveling System */}
+      <LevelingSystem user={user} />
 
       {/* Market Insights Feature */}
       <MarketInsights />
@@ -269,6 +338,156 @@ export function Dashboard({ user, budget, onUpdateNetWorth }: DashboardProps) {
             ))}
           </div>
         </motion.div>
+      </div>
+
+      {/* SECTION: Expenses Breakdown Doughnut & Multi-Currency Converter */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Monthly Expenses Recharts Doughnut Chart */}
+        <div className="card p-8 space-y-6">
+          <div className="flex items-center justify-between border-b border-border/60 pb-4">
+            <div>
+              <h3 className="text-lg font-bold font-display flex items-center gap-2">
+                <PieChart className="w-5 h-5 text-accent-gold" /> Monthly Expense Breakdown
+              </h3>
+              <p className="text-xs text-text-muted mt-0.5">Category allocation based on budget tracking</p>
+            </div>
+            <div className="text-right">
+              <span className="text-xs font-mono text-text-muted uppercase block">Total Expenses</span>
+              <span className="text-lg font-mono font-bold text-accent-red">
+                {formatCurrency(totalExpenseAmount, user.currency, currency.locale)}
+              </span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+            {/* Doughnut Chart Canvas */}
+            <div className="h-[220px] relative flex items-center justify-center">
+              <ResponsiveContainer width="100%" height="100%">
+                <RechartsPieChart>
+                  <Pie
+                    data={expenseChartData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={55}
+                    outerRadius={85}
+                    paddingAngle={3}
+                    dataKey="value"
+                  >
+                    {expenseChartData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} stroke="rgba(0,0,0,0.3)" />
+                    ))}
+                  </Pie>
+                  <RechartsTooltip
+                    contentStyle={{
+                      backgroundColor: '#050812',
+                      borderColor: 'rgba(240,180,41,0.3)',
+                      borderRadius: '12px',
+                      fontSize: '12px',
+                      fontFamily: 'monospace'
+                    }}
+                    formatter={(val: number) => [formatCurrency(val, user.currency, currency.locale), "Expense"]}
+                  />
+                </RechartsPieChart>
+              </ResponsiveContainer>
+              {/* Doughnut Center Label */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                <span className="text-[10px] font-mono text-text-muted uppercase">Monthly</span>
+                <span className="text-xs font-mono font-bold text-text-primary">
+                  {formatCurrency(totalExpenseAmount, user.currency, currency.locale).split('.')[0]}
+                </span>
+              </div>
+            </div>
+
+            {/* Expense Categories Legend */}
+            <div className="space-y-2 max-h-[220px] overflow-y-auto pr-2 custom-scrollbar">
+              {expenseChartData.map((cat) => {
+                const percentage = totalExpenseAmount > 0 ? Math.round((cat.value / totalExpenseAmount) * 100) : 0;
+                return (
+                  <div key={cat.name} className="flex items-center justify-between p-2 rounded-xl bg-bg-secondary/60 text-xs">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: cat.color }} />
+                      <span className="font-medium text-text-secondary truncate max-w-[110px]">{cat.name}</span>
+                    </div>
+                    <div className="text-right font-mono">
+                      <span className="font-bold text-text-primary block">{formatCurrency(cat.value, user.currency, currency.locale)}</span>
+                      <span className="text-[9px] text-text-muted block">{percentage}%</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Currency Converter Utility */}
+        <div className="card p-8 space-y-6">
+          <div className="flex items-center justify-between border-b border-border/60 pb-4">
+            <div>
+              <h3 className="text-lg font-bold font-display flex items-center gap-2">
+                <Globe className="w-5 h-5 text-accent-cyan" /> Multi-Currency Net Worth Converter
+              </h3>
+              <p className="text-xs text-text-muted mt-0.5">Instantly translate figures across global exchange rates</p>
+            </div>
+            <span className="text-[10px] font-mono px-2.5 py-1 rounded-full bg-accent-cyan/10 border border-accent-cyan/30 text-accent-cyan font-bold">
+              Live Rates
+            </span>
+          </div>
+
+          <div className="space-y-4">
+            {/* Quick Currency Selection Buttons */}
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-mono font-bold text-text-muted uppercase">Select Target Currency</label>
+              <div className="flex flex-wrap gap-2">
+                {Object.keys(exchangeRatesVsUSD).map((code) => (
+                  <button
+                    key={code}
+                    onClick={() => setSelectedTargetCurrency(code)}
+                    className={cn(
+                      "px-3 py-1.5 rounded-xl text-xs font-mono font-bold transition-all border cursor-pointer",
+                      selectedTargetCurrency === code 
+                        ? "bg-accent-cyan text-bg-void border-accent-cyan shadow-sm" 
+                        : "bg-bg-secondary border-border hover:border-border-active text-text-secondary"
+                    )}
+                  >
+                    {code === "INR" ? "🇮🇳 INR (₹)" : code === "USD" ? "🇺🇸 USD ($)" : code === "EUR" ? "🇪🇺 EUR (€)" : code === "GBP" ? "🇬🇧 GBP (£)" : code === "JPY" ? "🇯🇵 JPY (¥)" : code === "AED" ? "🇦🇪 AED" : code}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Live Converted Breakdown Matrix */}
+            <div className="grid grid-cols-3 gap-3 pt-2">
+              <div className="p-4 rounded-2xl bg-bg-secondary/70 border border-border space-y-1">
+                <span className="text-[10px] font-mono text-text-muted uppercase block">Total Net Worth</span>
+                <span className="text-base font-mono font-bold text-accent-gold block truncate">
+                  {formatCurrency(convertAmount(netWorth, selectedTargetCurrency), selectedTargetCurrency, CURRENCIES[selectedTargetCurrency]?.locale || 'en-US')}
+                </span>
+                <span className="text-[9px] text-text-muted block">Base: {user.currency}</span>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-bg-secondary/70 border border-border space-y-1">
+                <span className="text-[10px] font-mono text-text-muted uppercase block">Assets</span>
+                <span className="text-base font-mono font-bold text-accent-emerald block truncate">
+                  {formatCurrency(convertAmount(assets, selectedTargetCurrency), selectedTargetCurrency, CURRENCIES[selectedTargetCurrency]?.locale || 'en-US')}
+                </span>
+                <span className="text-[9px] text-text-muted block">Converted</span>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-bg-secondary/70 border border-border space-y-1">
+                <span className="text-[10px] font-mono text-text-muted uppercase block">Liabilities</span>
+                <span className="text-base font-mono font-bold text-accent-red block truncate">
+                  {formatCurrency(convertAmount(liabilities, selectedTargetCurrency), selectedTargetCurrency, CURRENCIES[selectedTargetCurrency]?.locale || 'en-US')}
+                </span>
+                <span className="text-[9px] text-text-muted block">Converted</span>
+              </div>
+            </div>
+
+            <div className="p-3 rounded-xl bg-accent-cyan/5 border border-accent-cyan/20 text-[11px] text-text-secondary flex items-center justify-between">
+              <span>Rate: 1 {user.currency} = {(convertAmount(100, selectedTargetCurrency) / 100).toFixed(4)} {selectedTargetCurrency}</span>
+              <RefreshCw className="w-3.5 h-3.5 text-accent-cyan animate-spin-slow" />
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Strategic Wealth Projections Chart */}

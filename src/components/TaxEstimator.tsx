@@ -1,12 +1,329 @@
 import { useState, useMemo } from "react";
-import { motion } from "motion/react";
-import { Calculator, Percent, DollarSign, Wallet, HelpCircle, FileText, CheckCircle2 } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
+import { Calculator, Percent, DollarSign, Wallet, HelpCircle, FileText, CheckCircle2, Sparkles, ShieldCheck, ArrowRight, TrendingUp, Lightbulb, Zap } from "lucide-react";
 import { formatCurrency, cn } from "../lib/utils";
 import { CURRENCIES } from "../constants";
 import { UserProfile } from "../types";
 
 interface TaxEstimatorProps {
   user: UserProfile;
+}
+
+// AI Tax Optimization Advisor Component
+function TaxOptimizationAdvisor({ 
+  user, 
+  grossIncome, 
+  currentPreTax, 
+  onApplyDeduction 
+}: { 
+  user: UserProfile; 
+  grossIncome: number; 
+  currentPreTax: number; 
+  onApplyDeduction: (amount: number) => void;
+}) {
+  const currency = CURRENCIES[user.currency] || CURRENCIES.USD;
+  const [isScanning, setIsScanning] = useState(false);
+  const [activeTab, setActiveTab] = useState<"all" | "high_impact" | "deductions">("all");
+
+  // Read transactions or expense data from localStorage if available
+  const expenseSummary = useMemo(() => {
+    let healthExp = 0;
+    let educationExp = 0;
+    let charityExp = 0;
+    try {
+      const savedBudget = localStorage.getItem("ww_budget_plan");
+      if (savedBudget) {
+        const parsed = JSON.parse(savedBudget);
+        if (parsed.expenses) {
+          healthExp = (Number(parsed.expenses.health) || 0) * 12;
+          educationExp = (Number(parsed.expenses.education) || 0) * 12;
+          charityExp = (Number(parsed.expenses.charity) || 0) * 12;
+        }
+      }
+    } catch (e) {}
+    return { healthExp, educationExp, charityExp };
+  }, []);
+
+  // Compute region-specific tax-advantaged account recommendations
+  const recommendations = useMemo(() => {
+    const list: {
+      id: string;
+      title: string;
+      category: string;
+      accountType: string;
+      maxLimit: number;
+      suggestedAdd: number;
+      estimatedTaxSaved: number;
+      impact: "CRITICAL" | "HIGH" | "MEDIUM";
+      description: string;
+      actionText: string;
+    }[] = [];
+
+    if (user.currency === "USD") {
+      // 1. 401(k) / Traditional IRA
+      const max401k = 23000;
+      const remaining401k = Math.max(0, max401k - currentPreTax);
+      const opt401k = Math.min(remaining401k, Math.round(grossIncome * 0.15));
+      if (opt401k > 0) {
+        list.push({
+          id: "usd_401k",
+          title: "Maximize Traditional 401(k) / 403(b) Contribution",
+          category: "Pre-Tax Retirement",
+          accountType: "401(k) / Traditional IRA",
+          maxLimit: max401k,
+          suggestedAdd: opt401k,
+          estimatedTaxSaved: Math.round(opt401k * 0.24),
+          impact: "CRITICAL",
+          description: `You are currently contributing ${formatCurrency(currentPreTax, "USD")}. Increasing contributions toward the $23,000 cap shields your top marginal bracket.`,
+          actionText: `Apply +${formatCurrency(opt401k, "USD")} Pre-Tax`
+        });
+      }
+
+      // 2. Health Savings Account (HSA)
+      const hsaMax = 4150;
+      const hsaTaxSaved = Math.round(hsaMax * 0.22);
+      list.push({
+        id: "usd_hsa",
+        title: "Triple-Tax Advantaged HSA Deposit",
+        category: "Healthcare Vault",
+        accountType: "HSA (Health Savings Account)",
+        maxLimit: hsaMax,
+        suggestedAdd: hsaMax,
+        estimatedTaxSaved: hsaTaxSaved,
+        impact: "HIGH",
+        description: "HSA contributions reduce federal income tax, state income tax, and FICA tax (7.65%). Money grows tax-free and withdraws tax-free for medical expenses.",
+        actionText: `Apply +${formatCurrency(hsaMax, "USD")} HSA Limit`
+      });
+
+      // 3. Student Loan Interest Deduction
+      list.push({
+        id: "usd_student_loan",
+        title: "Student Loan Interest Tax Deduction (Form 1040)",
+        category: "Above-the-Line Deduction",
+        accountType: "1098-E Interest Exemption",
+        maxLimit: 2500,
+        suggestedAdd: 2500,
+        estimatedTaxSaved: Math.round(2500 * 0.22),
+        impact: "MEDIUM",
+        description: "Deduct up to $2,500 of interest paid on qualified student loans directly from gross income without needing to itemize deductions.",
+        actionText: "Include $2,500 Deduction"
+      });
+
+    } else if (user.currency === "INR") {
+      // 1. Section 80C (PPF / ELSS / EPF)
+      const max80C = 150000;
+      const opt80C = Math.max(0, max80C - currentPreTax);
+      if (opt80C > 0) {
+        list.push({
+          id: "inr_80c",
+          title: "Section 80C Tax Savings (ELSS / PPF / EPF)",
+          category: "Section 80C",
+          accountType: "Equity Linked Savings Scheme (ELSS) & PPF",
+          maxLimit: max80C,
+          suggestedAdd: opt80C,
+          estimatedTaxSaved: Math.round(opt80C * 0.30),
+          impact: "CRITICAL",
+          description: `Maximize your ₹1,50,000 Section 80C limit. ELSS mutual funds offer a short 3-year lock-in with equity compounding growth.`,
+          actionText: `Apply +${formatCurrency(opt80C, "INR")} 80C Limit`
+        });
+      }
+
+      // 2. Section 80CCD(1B) NPS Additional Deduction
+      const npsLimit = 50000;
+      list.push({
+        id: "inr_nps",
+        title: "Section 80CCD(1B) National Pension Scheme (NPS)",
+        category: "NPS Pension",
+        accountType: "NPS Tier-I Account",
+        maxLimit: npsLimit,
+        suggestedAdd: npsLimit,
+        estimatedTaxSaved: Math.round(npsLimit * 0.30),
+        impact: "HIGH",
+        description: "Get an exclusive ₹50,000 deduction OVER AND ABOVE the ₹1.5 Lakh 80C ceiling by depositing in NPS Tier-I.",
+        actionText: `Apply +${formatCurrency(npsLimit, "INR")} NPS Extra`
+      });
+
+      // 3. Section 80D Health Insurance
+      const health80D = 25000;
+      list.push({
+        id: "inr_80d",
+        title: "Section 80D Health Insurance Premium Exemption",
+        category: "Medical Insurance",
+        accountType: "Health Policy (Self & Family)",
+        maxLimit: health80D,
+        suggestedAdd: health80D,
+        estimatedTaxSaved: Math.round(health80D * 0.20),
+        impact: "MEDIUM",
+        description: "Deduct up to ₹25,000 for medical insurance premiums for self/family, plus an extra ₹50,000 if covering senior citizen parents.",
+        actionText: "Include ₹25,000 80D Deduction"
+      });
+
+    } else {
+      // EUR / GBP / Global Generic
+      const pensionLimit = Math.round(grossIncome * 0.20);
+      list.push({
+        id: "global_pension",
+        title: "Occupational & Private Pension Relief (SIPP / ISA)",
+        category: "Tax-Shielded Pension",
+        accountType: "Private Pension & Tax-Free ISA",
+        maxLimit: pensionLimit,
+        suggestedAdd: Math.round(pensionLimit * 0.5),
+        estimatedTaxSaved: Math.round(pensionLimit * 0.5 * 0.25),
+        impact: "CRITICAL",
+        description: "Contributions receive automatic tax relief at your highest marginal tax rate, compounding tax-free over time.",
+        actionText: `Apply +${formatCurrency(Math.round(pensionLimit * 0.5), user.currency, currency.locale)} Relief`
+      });
+    }
+
+    return list;
+  }, [user.currency, grossIncome, currentPreTax, currency.locale]);
+
+  const totalPotentialTaxSaved = recommendations.reduce((acc, r) => acc + r.estimatedTaxSaved, 0);
+
+  const handleRunScan = () => {
+    setIsScanning(true);
+    setTimeout(() => {
+      setIsScanning(false);
+      window.dispatchEvent(new CustomEvent("ww-trigger-alert", {
+        detail: {
+          type: "success",
+          title: "🎯 AI Tax Scan Completed!",
+          message: `Identified ${recommendations.length} eligible tax-advantaged accounts with up to ${formatCurrency(totalPotentialTaxSaved, user.currency, currency.locale)} in potential annual tax relief!`
+        }
+      }));
+    }, 800);
+  };
+
+  return (
+    <div className="card p-6 border-accent-gold/40 bg-gradient-to-br from-bg-secondary via-bg-primary to-bg-secondary/80 space-y-6 shadow-2xl relative overflow-hidden">
+      {/* Glow background */}
+      <div className="absolute top-0 right-0 w-64 h-64 bg-accent-gold/10 rounded-full blur-3xl pointer-events-none" />
+
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/60 pb-4">
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 rounded-2xl bg-accent-gold/20 text-accent-gold border border-accent-gold/40 shadow-lg">
+            <Sparkles className="w-6 h-6" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h3 className="text-xl font-bold font-display text-text-primary">
+                AI Tax Optimization Advisor
+              </h3>
+              <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-mono text-[10px] font-bold uppercase border border-emerald-500/30 flex items-center gap-1">
+                <ShieldCheck className="w-3 h-3 text-emerald-400" /> Active Jurisdiction: {user.currency}
+              </span>
+            </div>
+            <p className="text-xs text-text-secondary mt-0.5">
+              Analyzes salary, net worth, and expenditure history to suggest tax-advantaged account allocations and eligible deductions.
+            </p>
+          </div>
+        </div>
+
+        <button
+          onClick={handleRunScan}
+          disabled={isScanning}
+          className="px-4 py-2 rounded-xl bg-accent-gold hover:bg-amber-400 text-slate-950 font-mono text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2 shadow-lg shadow-amber-500/20 cursor-pointer disabled:opacity-50 self-start sm:self-auto"
+        >
+          {isScanning ? (
+            <>
+              <Zap className="w-4 h-4 animate-bounce" />
+              <span>Scanning Tax Code...</span>
+            </>
+          ) : (
+            <>
+              <Sparkles className="w-4 h-4" />
+              <span>Re-Scan Tax Opportunities</span>
+            </>
+          )}
+        </button>
+      </div>
+
+      {/* Total Potential Tax Saved Summary Banner */}
+      <div className="p-4 rounded-2xl bg-bg-void/90 border border-border/80 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 font-mono font-bold text-lg">
+            {formatCurrency(totalPotentialTaxSaved, user.currency, currency.locale)}
+          </div>
+          <div>
+            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-text-muted block">
+              Identified Annual Tax Relief Potential
+            </span>
+            <span className="text-xs text-text-primary font-medium">
+              By deploying these {recommendations.length} tax-advantaged vehicles, you lower your taxable base and boost net take-home salary.
+            </span>
+          </div>
+        </div>
+
+        <div className="text-xs font-mono text-text-muted border-t md:border-t-0 md:border-l border-border/60 pt-2 md:pt-0 md:pl-4">
+          Marginal Tax Shielding: <strong className="text-accent-gold">Up to 30% Relief</strong>
+        </div>
+      </div>
+
+      {/* Recommendations Grid */}
+      <div className="space-y-3">
+        <span className="text-xs font-mono font-bold uppercase tracking-wider text-text-muted block">
+          Tailored Tax-Advantaged Opportunities ({user.currency} Tax Code)
+        </span>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {recommendations.map((rec) => (
+            <motion.div
+              key={rec.id}
+              whileHover={{ scale: 1.02 }}
+              className="p-5 rounded-2xl bg-bg-void border border-border/80 hover:border-accent-gold/50 flex flex-col justify-between space-y-4 shadow-xl transition-all"
+            >
+              <div className="space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <span className={cn(
+                    "px-2 py-0.5 rounded text-[9px] font-mono font-bold uppercase border",
+                    rec.impact === "CRITICAL" ? "bg-amber-500/20 text-amber-300 border-amber-500/40" : "bg-emerald-500/20 text-emerald-300 border-emerald-500/40"
+                  )}>
+                    {rec.impact} IMPACT
+                  </span>
+                  <span className="text-[10px] font-mono text-text-muted">{rec.category}</span>
+                </div>
+
+                <h4 className="text-sm font-bold font-display text-text-primary">
+                  {rec.title}
+                </h4>
+
+                <p className="text-xs text-text-secondary leading-relaxed">
+                  {rec.description}
+                </p>
+              </div>
+
+              <div className="pt-3 border-t border-border/50 space-y-3">
+                <div className="flex justify-between items-center text-xs font-mono">
+                  <span className="text-text-muted">Est. Tax Savings:</span>
+                  <span className="text-emerald-400 font-bold">
+                    +{formatCurrency(rec.estimatedTaxSaved, user.currency, currency.locale)}
+                  </span>
+                </div>
+
+                <button
+                  onClick={() => {
+                    onApplyDeduction(currentPreTax + rec.suggestedAdd);
+                    window.dispatchEvent(new CustomEvent("ww-trigger-alert", {
+                      detail: {
+                        type: "info",
+                        title: "⚡ Deduction Applied",
+                        message: `Added +${formatCurrency(rec.suggestedAdd, user.currency, currency.locale)} to Pre-Tax Deductions in Tax Estimator!`
+                      }
+                    }));
+                  }}
+                  className="w-full py-2 px-3 rounded-xl bg-accent-gold/15 hover:bg-accent-gold hover:text-slate-950 text-accent-gold font-mono text-xs font-bold transition-all border border-accent-gold/40 flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <span>{rec.actionText}</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export function TaxEstimator({ user }: TaxEstimatorProps) {
@@ -228,6 +545,14 @@ export function TaxEstimator({ user }: TaxEstimatorProps) {
           <Calculator className="w-8 h-8" />
         </div>
       </div>
+
+      {/* AI Tax Optimization Advisor Section */}
+      <TaxOptimizationAdvisor 
+        user={user} 
+        grossIncome={grossIncome} 
+        currentPreTax={preTaxDeduction} 
+        onApplyDeduction={(newAmt) => setPreTaxDeduction(newAmt)} 
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Input Parameters: Left Side (Col-5) */}

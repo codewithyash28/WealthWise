@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Plus, Trash2, ArrowRight, ShieldAlert, Sparkles, TrendingUp, DollarSign, Wallet, Scale, Info, CheckCircle2 } from "lucide-react";
+import { Plus, Trash2, ArrowRight, ShieldAlert, Sparkles, TrendingUp, DollarSign, Wallet, Scale, Info, CheckCircle2, Calculator, Zap, Gauge, Flame } from "lucide-react";
 import { formatCurrency, cn } from "../lib/utils";
 import { CURRENCIES } from "../constants";
 import { UserProfile } from "../types";
@@ -15,6 +15,245 @@ interface Loan {
 
 interface DebtPayoffProps {
   user: UserProfile;
+}
+
+// Quick Loan Payoff Mini-Calculator Component with Impact Score
+function QuickLoanPayoffCalculator({ user, currency, onApplyExtra }: { user: UserProfile; currency: any; onApplyExtra: (amt: number) => void }) {
+  const [calcBalance, setCalcBalance] = useState(15000);
+  const [calcRate, setCalcRate] = useState(14.5);
+  const [calcMin, setCalcMin] = useState(300);
+  const [extraPayment, setExtraPayment] = useState(150);
+
+  const calcResults = useMemo(() => {
+    if (calcBalance <= 0 || calcMin <= 0) {
+      return { origMonths: 0, origInterest: 0, accelMonths: 0, accelInterest: 0, interestSaved: 0, monthsSaved: 0, impactScore: 0, impactLabel: "N/A" };
+    }
+
+    const r = (calcRate / 100) / 12;
+
+    // Simulate Baseline (min payment only)
+    let bBal = calcBalance;
+    let bMonths = 0;
+    let bInterest = 0;
+    while (bBal > 0 && bMonths < 480) {
+      bMonths++;
+      const interest = bBal * r;
+      bBal += interest;
+      bInterest += interest;
+      const pay = Math.min(bBal, calcMin);
+      bBal -= pay;
+    }
+
+    // Simulate Accelerated (min + extra)
+    let aBal = calcBalance;
+    let aMonths = 0;
+    let aInterest = 0;
+    const accelPay = calcMin + extraPayment;
+    while (aBal > 0 && aMonths < 480) {
+      aMonths++;
+      const interest = aBal * r;
+      aBal += interest;
+      aInterest += interest;
+      const pay = Math.min(aBal, accelPay);
+      aBal -= pay;
+    }
+
+    const interestSaved = Math.max(0, bInterest - aInterest);
+    const monthsSaved = Math.max(0, bMonths - aMonths);
+
+    // Calculate Impact Score (0 to 100)
+    const interestRatio = bInterest > 0 ? interestSaved / bInterest : 0;
+    const timeRatio = bMonths > 0 ? monthsSaved / bMonths : 0;
+    const rawScore = (interestRatio * 60) + (timeRatio * 40);
+    const impactScore = Math.min(100, Math.max(12, Math.round(rawScore)));
+
+    let impactLabel = "Moderate Impact";
+    let impactColor = "text-accent-gold border-accent-gold/40 bg-accent-gold/10";
+    if (impactScore >= 80) {
+      impactLabel = "TRANSFORMATIVE 🚀";
+      impactColor = "text-emerald-400 border-emerald-500/40 bg-emerald-500/10";
+    } else if (impactScore >= 50) {
+      impactLabel = "HIGH IMPACT ⚡";
+      impactColor = "text-amber-400 border-amber-500/40 bg-amber-500/10";
+    } else {
+      impactLabel = "STABLE BOOST 🌱";
+      impactColor = "text-blue-400 border-blue-500/40 bg-blue-500/10";
+    }
+
+    return {
+      origMonths: bMonths,
+      origInterest: bInterest,
+      accelMonths: aMonths,
+      accelInterest: aInterest,
+      interestSaved,
+      monthsSaved,
+      impactScore,
+      impactLabel,
+      impactColor
+    };
+  }, [calcBalance, calcRate, calcMin, extraPayment]);
+
+  return (
+    <div className="card p-6 border-accent-gold/30 bg-gradient-to-br from-bg-secondary/80 via-bg-primary to-bg-secondary/40 space-y-6 shadow-2xl relative overflow-hidden">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border/60">
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 rounded-2xl bg-accent-gold/15 border border-accent-gold/30 text-accent-gold">
+            <Calculator className="w-6 h-6" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h3 className="text-xl font-bold font-display text-text-primary">Quick Loan Payoff Simulator</h3>
+              <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-mono text-[10px] font-bold uppercase border border-amber-500/30">
+                Instant Impact Calculator
+              </span>
+            </div>
+            <p className="text-xs text-text-secondary mt-0.5">Simulate extra monthly contributions and measure immediate time & interest savings.</p>
+          </div>
+        </div>
+
+        {/* Impact Score Badge */}
+        <div className={cn("px-4 py-2 rounded-2xl border flex items-center gap-2 self-start sm:self-auto font-mono", calcResults.impactColor)}>
+          <Gauge className="w-5 h-5 shrink-0 animate-pulse" />
+          <div>
+            <div className="text-[9px] uppercase tracking-wider font-bold">Impact Score</div>
+            <div className="text-lg font-black leading-none">{calcResults.impactScore} / 100</div>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Controls */}
+        <div className="space-y-4 md:col-span-1 border-r-0 md:border-r border-border/40 pr-0 md:pr-6">
+          <div className="space-y-1">
+            <label className="text-[10px] font-mono text-text-muted uppercase tracking-wider font-bold block">
+              Loan Balance ({currency.symbol})
+            </label>
+            <input
+              type="number"
+              value={calcBalance}
+              onChange={(e) => setCalcBalance(Math.max(100, Number(e.target.value)))}
+              className="input-field w-full text-xs font-mono font-bold"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-1">
+              <label className="text-[10px] font-mono text-text-muted uppercase tracking-wider font-bold block">
+                APR %
+              </label>
+              <input
+                type="number"
+                step="0.1"
+                value={calcRate}
+                onChange={(e) => setCalcRate(Math.max(0.1, Number(e.target.value)))}
+                className="input-field w-full text-xs font-mono font-bold"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] font-mono text-text-muted uppercase tracking-wider font-bold block">
+                Base Pay ({currency.symbol})
+              </label>
+              <input
+                type="number"
+                value={calcMin}
+                onChange={(e) => setCalcMin(Math.max(10, Number(e.target.value)))}
+                className="input-field w-full text-xs font-mono font-bold"
+              />
+            </div>
+          </div>
+
+          {/* Extra Monthly Payment Slider */}
+          <div className="space-y-2 pt-2 border-t border-border/40">
+            <div className="flex justify-between items-center text-xs font-mono">
+              <span className="text-accent-gold font-bold flex items-center gap-1">
+                <Flame className="w-3.5 h-3.5 text-amber-400" /> Extra Monthly Boost:
+              </span>
+              <span className="text-emerald-400 font-bold text-sm">+{formatCurrency(extraPayment, user.currency, currency.locale)}</span>
+            </div>
+            <input
+              type="range"
+              min={0}
+              max={1000}
+              step={25}
+              value={extraPayment}
+              onChange={(e) => setExtraPayment(Number(e.target.value))}
+              className="w-full accent-amber-400 cursor-pointer"
+            />
+            <div className="flex justify-between text-[9px] text-text-muted font-mono">
+              <span>{formatCurrency(0, user.currency, currency.locale)}</span>
+              <span>{formatCurrency(1000, user.currency, currency.locale)} / mo</span>
+            </div>
+          </div>
+
+          <button
+            onClick={() => {
+              onApplyExtra(extraPayment);
+              window.dispatchEvent(new CustomEvent('ww-trigger-alert', {
+                detail: {
+                  type: 'success',
+                  title: 'Extra Payment Applied! 🚀',
+                  message: `Injected +${formatCurrency(extraPayment, user.currency, currency.locale)} monthly extra payment into your global Debt Accelerator strategy.`
+                }
+              }));
+            }}
+            className="w-full py-2.5 bg-accent-gold text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl shadow-lg hover:bg-amber-400 transition-all cursor-pointer flex items-center justify-center gap-1.5"
+          >
+            <Zap className="w-4 h-4" /> Apply To Global Strategy
+          </button>
+        </div>
+
+        {/* Results & Visual Progress */}
+        <div className="md:col-span-2 space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="p-4 bg-bg-void/80 border border-border/60 rounded-2xl space-y-1">
+              <span className="text-[10px] font-mono text-text-muted uppercase tracking-wider block">Total Interest Saved</span>
+              <div className="text-2xl font-mono font-extrabold text-emerald-400">
+                {formatCurrency(calcResults.interestSaved, user.currency, currency.locale)}
+              </div>
+              <span className="text-[10px] text-text-secondary block">
+                Interest drops from {formatCurrency(calcResults.origInterest, user.currency, currency.locale)} down to {formatCurrency(calcResults.accelInterest, user.currency, currency.locale)}
+              </span>
+            </div>
+
+            <div className="p-4 bg-bg-void/80 border border-border/60 rounded-2xl space-y-1">
+              <span className="text-[10px] font-mono text-text-muted uppercase tracking-wider block">Time Saved to Freedom</span>
+              <div className="text-2xl font-mono font-extrabold text-amber-400">
+                {calcResults.monthsSaved} Months Sooner
+              </div>
+              <span className="text-[10px] text-text-secondary block">
+                Debt cleared in {calcResults.accelMonths} months instead of {calcResults.origMonths}
+              </span>
+            </div>
+          </div>
+
+          {/* Impact Gauge Visual Bar */}
+          <div className="p-4 bg-bg-secondary/60 border border-border/60 rounded-2xl space-y-3 font-mono text-xs">
+            <div className="flex justify-between items-center">
+              <span className="text-text-secondary font-bold flex items-center gap-1.5">
+                <Sparkles className="w-4 h-4 text-accent-gold" /> Payoff Efficiency Gauge:
+              </span>
+              <span className="font-bold text-accent-gold">{calcResults.impactLabel}</span>
+            </div>
+
+            <div className="h-4 bg-bg-void rounded-full overflow-hidden border border-border p-0.5 relative">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${calcResults.impactScore}%` }}
+                transition={{ duration: 0.8, ease: "easeOut" }}
+                className="h-full bg-gradient-to-r from-amber-500 via-emerald-400 to-teal-300 rounded-full shadow-lg"
+              />
+            </div>
+
+            <div className="flex justify-between text-[10px] text-text-muted">
+              <span>Baseline (Min Payments)</span>
+              <span>50% Faster</span>
+              <span>Optimal Debt Clearance</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export function DebtPayoff({ user }: DebtPayoffProps) {
@@ -205,6 +444,13 @@ export function DebtPayoff({ user }: DebtPayoffProps) {
           <Scale className="w-8 h-8" />
         </div>
       </div>
+
+      {/* Quick Loan Payoff Mini-Calculator */}
+      <QuickLoanPayoffCalculator 
+        user={user} 
+        currency={currency} 
+        onApplyExtra={(amt) => setExtraPayment(amt)} 
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Left column: input and list (Col-5) */}

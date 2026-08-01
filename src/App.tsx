@@ -131,6 +131,7 @@ const TrendMarket = lazy(() => import("./components/mastery/TrendMarket").then(m
 const LiveOrLease = lazy(() => import("./components/mastery/LiveOrLease").then(m => ({ default: m.LiveOrLease })));
 const MockYield = lazy(() => import("./components/mastery/MockYield").then(m => ({ default: m.MockYield })));
 const PortfolioOverview = lazy(() => import("./components/PortfolioOverview").then(m => ({ default: m.PortfolioOverview })));
+const MonthlyFinancialReport = lazy(() => import("./components/MonthlyFinancialReport").then(m => ({ default: m.MonthlyFinancialReport })));
 const TaxEstimator = lazy(() => import("./components/TaxEstimator").then(m => ({ default: m.TaxEstimator })));
 const DebtPayoff = lazy(() => import("./components/DebtPayoff").then(m => ({ default: m.DebtPayoff })));
 
@@ -227,9 +228,9 @@ function AppContent() {
     return () => clearInterval(interval);
   }, []);
 
-  const [themeMode, setThemeMode] = useState<"system" | "light" | "dark">(() => {
+  const [themeMode, setThemeMode] = useState<"system" | "light" | "dark" | "noir">((): "system" | "light" | "dark" | "noir" => {
     const saved = localStorage.getItem("ww_theme_mode");
-    if (saved) return saved as "system" | "light" | "dark";
+    if (saved) return saved as "system" | "light" | "dark" | "noir";
     return "dark";
   });
 
@@ -242,14 +243,15 @@ function AppContent() {
     return () => mediaQuery.removeEventListener("change", handleChange);
   }, []);
 
-  const theme: "light" | "dark" = themeMode === "system" ? (systemDark ? "dark" : "light") : themeMode;
+  const theme: "light" | "dark" | "noir" = themeMode === "system" ? (systemDark ? "dark" : "light") : themeMode;
 
   useEffect(() => {
     const root = window.document.documentElement;
+    root.classList.remove("light", "noir");
     if (theme === "light") {
       root.classList.add("light");
-    } else {
-      root.classList.remove("light");
+    } else if (theme === "noir") {
+      root.classList.add("noir");
     }
     localStorage.setItem("ww_theme_mode", themeMode);
     localStorage.setItem("ww_theme", theme);
@@ -557,21 +559,23 @@ function AppContent() {
     setShowNameInput(true);
   };
 
-  const handleOnboardingComplete = (name: string, age: string, learningGoal: string, onboardingGitProvider: "gitlab" | "github" | "bitbucket" = "github") => {
+  const handleOnboardingComplete = (name: string, age: string, learningGoal: string, onboardingGitProvider: "gitlab" | "github" | "bitbucket" = "github", selectedCurrency?: string) => {
     const uid = user?.uid || Math.random().toString(36).substring(2, 15);
     const newUser: LocalUser = {
       uid,
       displayName: name,
       email: user?.email || null,
-      photoURL: null
+      photoURL: user?.photoURL || null
     };
+
+    const finalCurrency = selectedCurrency || tempCurrency || profile?.currency || "USD";
 
     const newProfile: UserProfile = {
       uid,
       name,
-      age,
-      learningGoal,
-      currency: tempCurrency || "USD",
+      age: age || "Not specified",
+      learningGoal: learningGoal || "Wealth Building",
+      currency: finalCurrency,
       joinDate: new Date().toISOString(),
       lastVisit: new Date().toISOString(),
       visitDates: [new Date().toISOString().split('T')[0]],
@@ -1246,6 +1250,14 @@ function AppContent() {
                   <BudgetPlanner user={profile} onSave={handleSaveBudget} initialPlan={budget} gitProvider={gitProvider} onUnlockAchievement={unlockAchievement} />
                 </ModuleErrorBoundary>
               );
+            case "#monthly-report":
+              return (
+                <ModuleErrorBoundary moduleName="Monthly Financial Variance Report">
+                  <div className="container mx-auto px-6 py-12">
+                    <MonthlyFinancialReport user={profile} budget={budget} onUpdateGoals={handleUpdateGoals} />
+                  </div>
+                </ModuleErrorBoundary>
+              );
             case "#simulator": 
               return (
                 <ModuleErrorBoundary moduleName="Compound Interest & Lump-Sum Simulator">
@@ -1422,6 +1434,8 @@ function AppContent() {
       
       <NameInput 
         isOpen={showNameInput} 
+        initialName={user?.displayName || (user?.email ? user.email.split('@')[0] : "")}
+        initialCurrency={tempCurrency || profile?.currency || "USD"}
         onComplete={handleOnboardingComplete} 
       />
 

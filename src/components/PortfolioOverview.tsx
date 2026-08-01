@@ -270,6 +270,164 @@ export function D3NetWorthChart({ user, currency }: { user: UserProfile; currenc
   );
 }
 
+// D3.js Portfolio Allocation Treemap / Heatmap Component
+export function D3PortfolioHeatmap({ user, currency, totalValue }: { user: UserProfile; currency: any; totalValue: number }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const svgRef = useRef<SVGSVGElement>(null);
+  const [hoveredSector, setHoveredSector] = useState<any>(null);
+
+  const sectorData = useMemo(() => {
+    const val = totalValue > 0 ? totalValue : 100000;
+    return {
+      name: "Portfolio",
+      children: [
+        { name: "Tech Growth & AI", weight: 35, yield24h: 3.4, yield1Y: 22.4, color: "#10D9A0", usd: val * 0.35, holdings: ["Alpha-Grade Tech ETF", "Semiconductor Index", "Cloud Infrastructure"] },
+        { name: "Financials & Banking", weight: 20, yield24h: 1.2, yield1Y: 9.8, color: "#3B82F6", usd: val * 0.20, holdings: ["Global Banking Leaders", "Fintech Innovations", "Insurance Trust"] },
+        { name: "Sovereign Fixed Income", weight: 15, yield24h: 0.4, yield1Y: 4.8, color: "#F0B429", usd: val * 0.15, holdings: ["10Y Treasury Notes", "Corporate Green Bonds", "Short-Term Yield Vault"] },
+        { name: "Crypto & Decentralized", weight: 12, yield24h: -4.2, yield1Y: 45.0, color: "#EF4444", usd: val * 0.12, holdings: ["Ethereum Smart Contracts", "Bitcoin Sovereign Vault", "DeFi Liquidity Pool"] },
+        { name: "Real Estate REITs", weight: 10, yield24h: -1.5, yield1Y: 6.2, color: "#F97316", usd: val * 0.10, holdings: ["Commercial Office REIT", "Residential Living Fund", "Industrial Logistics"] },
+        { name: "Clean Energy & Infra", weight: 8, yield24h: 2.8, yield1Y: 15.5, color: "#06B6D4", usd: val * 0.08, holdings: ["Solar Power Grid", "Wind Infrastructure", "Battery Materials"] }
+      ]
+    };
+  }, [totalValue]);
+
+  useEffect(() => {
+    if (!svgRef.current || !containerRef.current) return;
+
+    const width = containerRef.current.clientWidth || 700;
+    const height = 320;
+
+    const svg = d3.select(svgRef.current);
+    svg.selectAll("*").remove();
+    svg.attr("width", width).attr("height", height);
+
+    const root = d3.hierarchy(sectorData)
+      .sum((d: any) => d.weight || 0)
+      .sort((a, b) => (b.value || 0) - (a.value || 0));
+
+    d3.treemap()
+      .size([width, height])
+      .paddingInner(6)
+      .paddingOuter(4)
+      .round(true)(root);
+
+    const nodes = svg.selectAll("g")
+      .data(root.leaves())
+      .enter()
+      .append("g")
+      .attr("transform", (d: any) => `translate(${d.x0},${d.y0})`);
+
+    // Sector Rectangles
+    nodes.append("rect")
+      .attr("width", (d: any) => Math.max(0, d.x1 - d.x0))
+      .attr("height", (d: any) => Math.max(0, d.y1 - d.y0))
+      .attr("rx", 10)
+      .attr("ry", 10)
+      .attr("fill", (d: any) => {
+        // Color intensity based on 24h yield
+        const y24 = d.data.yield24h;
+        return y24 >= 3 ? "rgba(16, 217, 160, 0.25)" :
+               y24 >= 0 ? "rgba(59, 130, 246, 0.25)" :
+               y24 >= -2 ? "rgba(249, 115, 22, 0.25)" : "rgba(239, 68, 68, 0.25)";
+      })
+      .attr("stroke", (d: any) => d.data.color)
+      .attr("stroke-width", 2)
+      .style("cursor", "pointer")
+      .style("transition", "all 0.2s ease")
+      .on("mouseenter", function(event, d: any) {
+        d3.select(this)
+          .attr("stroke-width", 3.5)
+          .attr("filter", "brightness(1.3)");
+        setHoveredSector(d.data);
+      })
+      .on("mouseleave", function() {
+        d3.select(this)
+          .attr("stroke-width", 2)
+          .attr("filter", "none");
+        setHoveredSector(null);
+      });
+
+    // Sector Labels inside boxes
+    nodes.append("text")
+      .attr("x", 12)
+      .attr("y", 22)
+      .text((d: any) => d.data.name)
+      .attr("font-size", (d: any) => (d.x1 - d.x0 > 100 ? "11px" : "9px"))
+      .attr("font-weight", "bold")
+      .attr("fill", "#F8FAFC")
+      .attr("pointer-events", "none");
+
+    nodes.append("text")
+      .attr("x", 12)
+      .attr("y", 38)
+      .text((d: any) => `${d.data.weight}% | ${d.data.yield24h >= 0 ? "+" : ""}${d.data.yield24h}%`)
+      .attr("font-size", "10px")
+      .attr("font-family", "monospace")
+      .attr("font-weight", "bold")
+      .attr("fill", (d: any) => (d.data.yield24h >= 0 ? "#10D9A0" : "#EF4444"))
+      .attr("pointer-events", "none");
+
+  }, [sectorData]);
+
+  return (
+    <div className="card p-6 sm:p-8 space-y-6 border-accent-gold/20 shadow-xl relative" ref={containerRef}>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-border/40">
+        <div>
+          <div className="flex items-center gap-2">
+            <PieChart className="w-5 h-5 text-accent-gold" />
+            <h3 className="text-xl font-bold font-display text-text-primary">Portfolio Sector Allocation Heatmap</h3>
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 font-bold uppercase">
+              D3.js Treemap Engine
+            </span>
+          </div>
+          <p className="text-xs text-text-secondary mt-1">
+            Visualizing asset class weightings relative to sector 24h yields and 1Y performance. Hover over sectors for yield breakdowns.
+          </p>
+        </div>
+      </div>
+
+      {/* Hover Information Banner */}
+      <div className="p-4 rounded-2xl bg-bg-secondary/60 border border-border/60 font-mono text-xs min-h-[72px] flex items-center">
+        {hoveredSector ? (
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 w-full">
+            <div>
+              <span className="text-text-muted text-[9px] uppercase block">Sector Name</span>
+              <span className="font-bold text-text-primary text-sm">{hoveredSector.name}</span>
+            </div>
+            <div>
+              <span className="text-text-muted text-[9px] uppercase block">Weighting & Valuation</span>
+              <span className="font-bold text-accent-gold text-sm">
+                {hoveredSector.weight}% ({formatCurrency(hoveredSector.usd, user.currency, currency.locale)})
+              </span>
+            </div>
+            <div>
+              <span className="text-text-muted text-[9px] uppercase block">Yield Performance</span>
+              <span className={cn("font-bold text-sm", hoveredSector.yield24h >= 0 ? "text-emerald-400" : "text-rose-400")}>
+                24h: {hoveredSector.yield24h >= 0 ? "+" : ""}{hoveredSector.yield24h}% | 1Y: +{hoveredSector.yield1Y}%
+              </span>
+            </div>
+            <div>
+              <span className="text-text-muted text-[9px] uppercase block">Top Holdings</span>
+              <span className="text-[10px] text-text-secondary font-sans truncate block">
+                {hoveredSector.holdings.join(", ")}
+              </span>
+            </div>
+          </div>
+        ) : (
+          <div className="text-text-muted italic text-xs w-full text-center">
+            💡 Hover over any sector box in the D3 Heatmap below to inspect detailed yield breakdowns, asset weightings, and holding compositions...
+          </div>
+        )}
+      </div>
+
+      {/* D3 Treemap SVG Canvas */}
+      <div className="w-full overflow-hidden">
+        <svg ref={svgRef} className="w-full overflow-visible"></svg>
+      </div>
+    </div>
+  );
+}
+
 export function PortfolioOverview({ user }: PortfolioOverviewProps) {
   const currency = CURRENCIES[user.currency] || CURRENCIES.USD;
 
@@ -428,6 +586,9 @@ export function PortfolioOverview({ user }: PortfolioOverviewProps) {
 
       {/* D3.js Historical Net Worth Progression Chart */}
       <D3NetWorthChart user={user} currency={currency} />
+
+      {/* D3.js Sector Allocation Heatmap */}
+      <D3PortfolioHeatmap user={user} currency={currency} totalValue={portfolio.totalValue} />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Allocation Chart using Recharts PieChart */}
@@ -594,6 +755,9 @@ export function PortfolioOverview({ user }: PortfolioOverviewProps) {
       {/* Real-time Crypto Tracking Suite */}
       <CryptoPortfolio user={user} />
 
+      {/* 'What-If' Stress Test Tool */}
+      <WhatIfStressTest user={user} currency={currency} />
+
       {/* Performance Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {portfolio.holdings.length > 0 ? (
@@ -636,6 +800,213 @@ export function PortfolioOverview({ user }: PortfolioOverviewProps) {
             </button>
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+export function WhatIfStressTest({ user, currency }: { user: UserProfile; currency: any }) {
+  const [selectedScenario, setSelectedScenario] = useState<"crash" | "rate_hike" | "inflation" | "tech_boom" | "custom">("crash");
+  const [equityShock, setEquityShock] = useState<number>(-20);
+  const [rateHike, setRateHike] = useState<number>(5);
+
+  const applyPreset = (preset: "crash" | "rate_hike" | "inflation" | "tech_boom") => {
+    setSelectedScenario(preset);
+    if (preset === "crash") {
+      setEquityShock(-20);
+      setRateHike(1.5);
+    } else if (preset === "rate_hike") {
+      setEquityShock(-8);
+      setRateHike(5);
+    } else if (preset === "inflation") {
+      setEquityShock(-12);
+      setRateHike(3.5);
+    } else if (preset === "tech_boom") {
+      setEquityShock(25);
+      setRateHike(0);
+    }
+  };
+
+  const stressResults = useMemo(() => {
+    const assets = user.netWorth?.assets || 100000;
+    const liabilities = user.netWorth?.liabilities || 20000;
+    const currentNetWorth = assets - liabilities;
+
+    const stocks = assets * 0.50;
+    const realEstate = assets * 0.25;
+    const crypto = assets * 0.10;
+    const cash = assets * 0.15;
+
+    const stockChangePct = equityShock;
+    const reChangePct = Math.round(-rateHike * 1.5 + (selectedScenario === "inflation" ? 5 : 0));
+    const cryptoChangePct = Math.round(equityShock * 1.5);
+    const cashChangePct = selectedScenario === "inflation" ? -8 : 0;
+    const liabilityServicingIncrease = Math.round(liabilities * (rateHike * 0.02));
+
+    const stressedStocks = Math.round(stocks * (1 + stockChangePct / 100));
+    const stressedRE = Math.round(realEstate * (1 + reChangePct / 100));
+    const stressedCrypto = Math.round(crypto * (1 + cryptoChangePct / 100));
+    const stressedCash = Math.round(cash * (1 + cashChangePct / 100));
+    const stressedLiabilities = liabilities + liabilityServicingIncrease;
+
+    const stressedTotalAssets = stressedStocks + stressedRE + stressedCrypto + stressedCash;
+    const stressedNetWorth = stressedTotalAssets - stressedLiabilities;
+    const deltaVal = stressedNetWorth - currentNetWorth;
+    const deltaPct = ((deltaVal / (currentNetWorth || 1)) * 100).toFixed(1);
+
+    let resilienceGrade = "B (Moderate Resilience)";
+    let resilienceColor = "text-accent-gold";
+    if (Number(deltaPct) > 0) {
+      resilienceGrade = "A+ (Growth Surge)";
+      resilienceColor = "text-accent-emerald";
+    } else if (Number(deltaPct) < -15) {
+      resilienceGrade = "C- (High Downside Risk)";
+      resilienceColor = "text-accent-red";
+    }
+
+    return {
+      currentNetWorth,
+      stressedNetWorth,
+      deltaVal,
+      deltaPct,
+      resilienceGrade,
+      resilienceColor,
+      breakdown: {
+        stocks: { orig: stocks, stressed: stressedStocks, pct: stockChangePct },
+        realEstate: { orig: realEstate, stressed: stressedRE, pct: reChangePct },
+        crypto: { orig: crypto, stressed: stressedCrypto, pct: cryptoChangePct },
+        cash: { orig: cash, stressed: stressedCash, pct: cashChangePct }
+      }
+    };
+  }, [user.netWorth, equityShock, rateHike, selectedScenario]);
+
+  return (
+    <div className="card p-8 space-y-6 border-accent-gold/25 bg-gradient-to-br from-bg-secondary/60 via-bg-primary to-bg-secondary/30 relative overflow-hidden my-8">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border/60 pb-4">
+        <div className="space-y-1">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-accent-red/10 border border-accent-red/30 text-accent-red text-[10px] font-mono font-bold uppercase tracking-wider">
+            <ShieldAlert className="w-3.5 h-3.5" /> What-If Stress Simulator
+          </div>
+          <h3 className="text-2xl font-bold font-display text-text-primary">Portfolio Market Stress Test</h3>
+          <p className="text-xs text-text-secondary">Simulate net worth shifts under extreme market crashes, rate hikes, and macro volatility shocks.</p>
+        </div>
+
+        <div className="flex items-center gap-2 font-mono text-xs">
+          <span className="text-text-muted">Resilience Grade:</span>
+          <span className={cn("font-bold text-xs px-3 py-1 rounded-lg bg-bg-void border border-border", stressResults.resilienceColor)}>
+            {stressResults.resilienceGrade}
+          </span>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {[
+          { id: "crash", label: "20% Market Crash", icon: "🔴", desc: "Equities -20%, High beta drop" },
+          { id: "rate_hike", label: "5% Rate Spike", icon: "📈", desc: "Real estate & bond re-pricing" },
+          { id: "inflation", label: "10% Inflation Shock", icon: "⚡", desc: "Cash erosion & commodity surge" },
+          { id: "tech_boom", label: "Tech Boom (+25%)", icon: "🚀", desc: "Equities expansion" }
+        ].map((item) => (
+          <button
+            key={item.id}
+            type="button"
+            onClick={() => applyPreset(item.id as any)}
+            className={cn(
+              "p-3 rounded-xl border text-left space-y-1 transition-all cursor-pointer",
+              selectedScenario === item.id
+                ? "bg-accent-gold/15 border-accent-gold text-accent-gold shadow-md"
+                : "bg-bg-secondary border-border/40 hover:bg-bg-secondary/80 text-text-secondary"
+            )}
+          >
+            <div className="flex items-center gap-2">
+              <span className="text-base">{item.icon}</span>
+              <span className="text-xs font-bold">{item.label}</span>
+            </div>
+            <p className="text-[10px] text-text-muted">{item.desc}</p>
+          </button>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-bg-void/40 rounded-2xl border border-border/60">
+        <div className="space-y-2">
+          <div className="flex justify-between items-center text-xs font-mono">
+            <label className="text-text-muted font-bold uppercase">Equity Market Shock</label>
+            <span className={cn("font-bold text-sm", equityShock < 0 ? "text-accent-red" : "text-accent-emerald")}>
+              {equityShock > 0 ? `+${equityShock}%` : `${equityShock}%`}
+            </span>
+          </div>
+          <input
+            type="range"
+            min="-50"
+            max="30"
+            step="1"
+            value={equityShock}
+            onChange={(e) => {
+              setSelectedScenario("custom");
+              setEquityShock(Number(e.target.value));
+            }}
+            className="w-full accent-accent-gold cursor-pointer"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <div className="flex justify-between items-center text-xs font-mono">
+            <label className="text-text-muted font-bold uppercase">Fed Interest Rate Hike</label>
+            <span className="font-bold text-sm text-accent-blue">+{rateHike}%</span>
+          </div>
+          <input
+            type="range"
+            min="0"
+            max="10"
+            step="0.25"
+            value={rateHike}
+            onChange={(e) => {
+              setSelectedScenario("custom");
+              setRateHike(Number(e.target.value));
+            }}
+            className="w-full accent-accent-blue cursor-pointer"
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="p-5 bg-bg-void/60 rounded-2xl border border-border/60 space-y-1">
+          <div className="text-[10px] text-text-muted uppercase tracking-widest font-mono font-bold">Current Net Position</div>
+          <div className="text-2xl font-mono font-bold text-text-primary">
+            {formatCurrency(stressResults.currentNetWorth, user.currency, currency.locale)}
+          </div>
+          <p className="text-[10px] text-text-muted">Unstressed baseline valuation</p>
+        </div>
+
+        <div className="p-5 bg-bg-void/60 rounded-2xl border border-border/60 space-y-1">
+          <div className="text-[10px] text-text-muted uppercase tracking-widest font-mono font-bold">Stressed Net Worth</div>
+          <div className={cn("text-2xl font-mono font-bold", stressResults.deltaVal < 0 ? "text-accent-red" : "text-accent-emerald")}>
+            {formatCurrency(stressResults.stressedNetWorth, user.currency, currency.locale)}
+          </div>
+          <p className="text-[10px] text-text-muted">Forecast under active shock parameters</p>
+        </div>
+
+        <div className="p-5 bg-bg-void/60 rounded-2xl border border-border/60 space-y-1">
+          <div className="text-[10px] text-text-muted uppercase tracking-widest font-mono font-bold">Net Impact (Delta)</div>
+          <div className={cn("text-2xl font-mono font-bold", stressResults.deltaVal < 0 ? "text-accent-red" : "text-accent-emerald")}>
+            {stressResults.deltaVal > 0 ? `+` : ""}{formatCurrency(stressResults.deltaVal, user.currency, currency.locale)} ({stressResults.deltaPct}%)
+          </div>
+          <p className="text-[10px] text-text-muted">Total capital change under scenario</p>
+        </div>
+      </div>
+
+      <div className="space-y-2 pt-2 border-t border-border/40">
+        <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-text-muted">Stressed Asset Class Breakdown</h4>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono">
+          {Object.entries(stressResults.breakdown).map(([key, val]) => (
+            <div key={key} className="p-3 bg-bg-secondary/40 rounded-xl border border-border/40 space-y-1">
+              <div className="text-[10px] text-text-muted uppercase font-bold">{key}</div>
+              <div className="font-bold text-text-primary">{formatCurrency(val.stressed, user.currency, currency.locale)}</div>
+              <div className={cn("text-[10px]", val.pct < 0 ? "text-accent-red" : val.pct > 0 ? "text-accent-emerald" : "text-text-muted")}>
+                {val.pct > 0 ? `+${val.pct}%` : `${val.pct}%`} shock
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
