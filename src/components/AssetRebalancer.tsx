@@ -22,6 +22,7 @@ import {
 import { formatCurrency, cn } from "../lib/utils";
 import { CURRENCIES } from "../constants";
 import { UserProfile, Portfolio } from "../types";
+import { UpgradeModal } from "./UpgradeModal";
 
 interface AssetRebalancerProps {
   user: UserProfile;
@@ -62,6 +63,7 @@ interface CustHolding {
 
 export function AssetRebalancer({ user, onUpdatePortfolio, onUnlockAchievement }: AssetRebalancerProps) {
   const currency = CURRENCIES[user.currency] || CURRENCIES.USD;
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   
   // 1. Target Allocations State
   const [riskPreset, setRiskPreset] = useState<RiskPreset>("MODERATE");
@@ -333,6 +335,10 @@ export function AssetRebalancer({ user, onUpdatePortfolio, onUnlockAchievement }
   };
 
   const handleCopyScript = () => {
+    if (!user.isPremium) {
+      setShowUpgradeModal(true);
+      return;
+    }
     if (tradeActions.length === 0) return;
     const bullets = tradeActions.map(t => {
       return `[${t.isSell ? "SELL 🚨" : "BUY  🟢"}] ${formatCurrency(t.amount, user.currency)} of ${t.category} (${t.percentage.toFixed(1)}% drift deviation)`;
@@ -911,31 +917,58 @@ Provide a crisp, professional, high-performance financial commentary! Limit to e
                 <button
                   type="button"
                   disabled={targetSum !== 100}
-                  onClick={handleDownloadRecipe}
-                  className="btn-secondary flex items-center gap-2 py-2.5 px-4 text-[10px] uppercase font-black tracking-widest cursor-pointer hover:border-accent-gold transition-all"
+                  onClick={() => {
+                    if (!user.isPremium) {
+                      setShowUpgradeModal(true);
+                      return;
+                    }
+                    handleDownloadRecipe();
+                  }}
+                  className="btn-secondary flex items-center gap-2 py-2.5 px-4 text-[10px] uppercase font-black tracking-widest cursor-pointer hover:border-accent-gold transition-all relative"
                 >
                   <Download className="w-3.5 h-3.5" />
                   <span>Download blueprint JSON</span>
+                  {!user.isPremium && (
+                    <span className="absolute -top-1 -right-1 bg-accent-gold text-[7px] text-bg-void px-1 rounded-full font-black border border-bg-void shadow">
+                      PRO
+                    </span>
+                  )}
                 </button>
                 
                 <button
                   type="button"
                   disabled={targetSum !== 100}
                   onClick={handleCopyScript}
-                  className="btn-secondary flex items-center gap-2 py-2.5 px-4 text-[10px] uppercase font-black tracking-widest cursor-pointer hover:border-accent-gold transition-all"
+                  className="btn-secondary flex items-center gap-2 py-2.5 px-4 text-[10px] uppercase font-black tracking-widest cursor-pointer hover:border-accent-gold transition-all relative"
                 >
                   {copiedScript ? <Check className="w-3.5 h-3.5 text-accent-emerald" /> : <Copy className="w-3.5 h-3.5" />}
                   <span>{copiedScript ? "Recipe Copied!" : "Copy Trades script"}</span>
+                  {!user.isPremium && (
+                    <span className="absolute -top-1 -right-1 bg-accent-gold text-[7px] text-bg-void px-1 rounded-full font-black border border-bg-void shadow">
+                      PRO
+                    </span>
+                  )}
                 </button>
 
                 <button
                   type="button"
                   disabled={targetSum !== 100}
-                  onClick={() => setShowAutoRebalanceConfirm(true)}
-                  className="btn-primary flex items-center gap-2 py-2.5 px-4 text-[10px] uppercase font-black tracking-widest cursor-pointer"
+                  onClick={() => {
+                    if (!user.isPremium) {
+                      setShowUpgradeModal(true);
+                      return;
+                    }
+                    setShowAutoRebalanceConfirm(true);
+                  }}
+                  className="btn-primary flex items-center gap-2 py-2.5 px-4 text-[10px] uppercase font-black tracking-widest cursor-pointer relative"
                 >
                   <RotateCcw className="w-3.5 h-3.5 text-bg-void" />
                   <span>Simulate instant auto-rebalance</span>
+                  {!user.isPremium && (
+                    <span className="absolute -top-1 -right-1 bg-accent-gold text-[7px] text-bg-void px-1 rounded-full font-black border border-bg-void shadow">
+                      PRO
+                    </span>
+                  )}
                 </button>
               </>
             )}
@@ -1051,6 +1084,11 @@ Provide a crisp, professional, high-performance financial commentary! Limit to e
         onConfirm={executeDeleteAsset}
         itemName={assetToDelete?.name || ""}
         itemType="asset"
+      />
+
+      <UpgradeModal
+        isOpen={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
       />
     </div>
   );

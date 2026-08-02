@@ -8,6 +8,7 @@ import { formatCurrency, cn } from "../lib/utils";
 import { CURRENCIES } from "../constants";
 import { UserProfile, Portfolio } from "../types";
 import { CryptoPortfolio } from "./CryptoPortfolio";
+import { UpgradeModal } from "./UpgradeModal";
 
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, PointElement, LineElement, Title);
 
@@ -17,8 +18,13 @@ interface PortfolioOverviewProps {
 
 export function PortfolioOverview({ user }: PortfolioOverviewProps) {
   const currency = CURRENCIES[user.currency] || CURRENCIES.USD;
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   const handleExportCSV = () => {
+    if (!user.isPremium) {
+      setShowUpgradeModal(true);
+      return;
+    }
     const netWorth = user.netWorth.assets - user.netWorth.liabilities;
     
     let csvContent = "data:text/csv;charset=utf-8,";
@@ -155,11 +161,16 @@ export function PortfolioOverview({ user }: PortfolioOverviewProps) {
           <div className="flex flex-wrap items-center gap-3">
             <button
               onClick={handleExportCSV}
-              className="flex items-center justify-center gap-1.5 px-4 py-2 bg-accent-emerald/10 border border-accent-emerald/25 text-accent-emerald text-xs font-bold uppercase tracking-wider rounded-xl hover:bg-accent-emerald/20 transition-all font-mono cursor-pointer select-none"
+              className="flex items-center justify-center gap-1.5 px-4 py-2 bg-accent-emerald/10 border border-accent-emerald/25 text-accent-emerald text-xs font-bold uppercase tracking-wider rounded-xl hover:bg-accent-emerald/20 transition-all font-mono cursor-pointer select-none relative"
               title="Download portfolio allocation and net worth details as CSV"
             >
               <Download className="w-3.5 h-3.5" />
               <span>Export Data</span>
+              {!user.isPremium && (
+                <span className="absolute -top-1 -right-1 bg-accent-gold text-[7px] text-bg-void px-1 rounded-full font-black border border-bg-void shadow">
+                  PRO
+                </span>
+              )}
             </button>
             <a 
               href="#rebalancer" 
@@ -379,6 +390,11 @@ export function PortfolioOverview({ user }: PortfolioOverviewProps) {
           </div>
         )}
       </div>
+
+      <UpgradeModal
+        isOpen={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+      />
     </div>
   );
 }

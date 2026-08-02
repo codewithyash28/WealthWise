@@ -17,6 +17,7 @@ import {
   Loader2,
   Zap
 } from "lucide-react";
+import { UpgradeModal } from "./UpgradeModal";
 
 interface WexaCompanionProps {
   user?: any;
@@ -25,6 +26,7 @@ interface WexaCompanionProps {
 }
 
 export const WexaCompanion: React.FC<WexaCompanionProps> = ({ user, budget, onReceiptLogged }) => {
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [messages, setMessages] = useState<Array<{ sender: "user" | "wexa"; text: string; time: string }>>([
     {
       sender: "wexa",
@@ -269,12 +271,23 @@ export const WexaCompanion: React.FC<WexaCompanionProps> = ({ user, budget, onRe
           />
 
           <button
-            onClick={() => fileInputRef.current?.click()}
+            onClick={() => {
+              if (!user?.isPremium) {
+                setShowUpgradeModal(true);
+                return;
+              }
+              fileInputRef.current?.click();
+            }}
             disabled={isProcessingReceipt}
-            className="w-full py-3.5 bg-teal-950 hover:bg-teal-900 border border-teal-700/50 text-teal-200 font-semibold text-xs rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg"
+            className="w-full py-3.5 bg-teal-950 hover:bg-teal-900 border border-teal-700/50 text-teal-200 font-semibold text-xs rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg relative"
           >
             <Upload className="w-4 h-4 text-teal-400" />
             Upload Receipt Image
+            {!user?.isPremium && (
+              <span className="absolute -top-1 -right-1 bg-accent-gold text-[7px] text-bg-void px-1 rounded-full font-black border border-bg-void shadow animate-pulse">
+                PRO
+              </span>
+            )}
           </button>
 
           <div className="text-[10px] text-slate-500 text-center font-mono uppercase tracking-wider pt-1">
@@ -283,22 +296,55 @@ export const WexaCompanion: React.FC<WexaCompanionProps> = ({ user, budget, onRe
 
           <div className="grid grid-cols-3 gap-2">
             <button
-              onClick={() => triggerSampleReceipt("groceries")}
-              className="p-2 bg-slate-800/80 hover:bg-slate-700 border border-slate-700 rounded-lg text-[10px] text-slate-300 font-medium cursor-pointer"
+              onClick={() => {
+                if (!user?.isPremium) {
+                  setShowUpgradeModal(true);
+                  return;
+                }
+                triggerSampleReceipt("groceries");
+              }}
+              className="p-2 bg-slate-800/80 hover:bg-slate-700 border border-slate-700 rounded-lg text-[10px] text-slate-300 font-medium cursor-pointer relative"
             >
               Whole Foods $54
+              {!user?.isPremium && (
+                <span className="absolute top-0 right-0 bg-accent-gold text-[6px] text-bg-void px-0.5 rounded font-black border border-bg-void">
+                  PRO
+                </span>
+              )}
             </button>
             <button
-              onClick={() => triggerSampleReceipt("coffee")}
-              className="p-2 bg-slate-800/80 hover:bg-slate-700 border border-slate-700 rounded-lg text-[10px] text-slate-300 font-medium cursor-pointer"
+              onClick={() => {
+                if (!user?.isPremium) {
+                  setShowUpgradeModal(true);
+                  return;
+                }
+                triggerSampleReceipt("coffee");
+              }}
+              className="p-2 bg-slate-800/80 hover:bg-slate-700 border border-slate-700 rounded-lg text-[10px] text-slate-300 font-medium cursor-pointer relative"
             >
               Starbucks $6.85
+              {!user?.isPremium && (
+                <span className="absolute top-0 right-0 bg-accent-gold text-[6px] text-bg-void px-0.5 rounded font-black border border-bg-void">
+                  PRO
+                </span>
+              )}
             </button>
             <button
-              onClick={() => triggerSampleReceipt("ride")}
-              className="p-2 bg-slate-800/80 hover:bg-slate-700 border border-slate-700 rounded-lg text-[10px] text-slate-300 font-medium cursor-pointer"
+              onClick={() => {
+                if (!user?.isPremium) {
+                  setShowUpgradeModal(true);
+                  return;
+                }
+                triggerSampleReceipt("ride");
+              }}
+              className="p-2 bg-slate-800/80 hover:bg-slate-700 border border-slate-700 rounded-lg text-[10px] text-slate-300 font-medium cursor-pointer relative"
             >
               Uber Ride $24
+              {!user?.isPremium && (
+                <span className="absolute top-0 right-0 bg-accent-gold text-[6px] text-bg-void px-0.5 rounded font-black border border-bg-void">
+                  PRO
+                </span>
+              )}
             </button>
           </div>
         </div>
@@ -336,6 +382,11 @@ export const WexaCompanion: React.FC<WexaCompanionProps> = ({ user, budget, onRe
           </div>
         )}
       </div>
+
+      <UpgradeModal
+        isOpen={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+      />
     </div>
   );
 };

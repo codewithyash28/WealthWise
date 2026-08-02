@@ -59,11 +59,20 @@ function MockClerkProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signIn = async (email: string, displayName: string) => {
+    // Read from saved profile or set default
+    const savedProfile = localStorage.getItem("ww_profile");
+    let isPremium = false;
+    if (savedProfile) {
+      try {
+        isPremium = !!JSON.parse(savedProfile).isPremium;
+      } catch (e) {}
+    }
     const mockUser: ClerkUserProfile = {
       uid: "clerk_mock_" + Math.random().toString(36).substring(2, 11),
       displayName: displayName || "Socratic Elite Member",
       email: email,
-      photoURL: `https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80` // Premium avatar
+      photoURL: `https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80`, // Premium avatar
+      isPremium: isPremium
     };
     setUser(mockUser);
     setIsSignedIn(true);
@@ -104,7 +113,8 @@ function MockClerkProvider({ children }: { children: ReactNode }) {
       uid: user.uid,
       displayName: user.displayName,
       email: user.email,
-      photoURL: user.photoURL
+      photoURL: user.photoURL,
+      isPremium: user.isPremium
     };
     localStorage.setItem("ww_user", JSON.stringify(appUserObj));
     
@@ -121,6 +131,7 @@ function MockClerkProvider({ children }: { children: ReactNode }) {
         lastVisit: new Date().toISOString(),
         visitDates: [new Date().toISOString().split('T')[0]],
         highScore: 0,
+        isPremium: user.isPremium,
         netWorth: { assets: 180000, liabilities: 40000 },
         gitProvider: "github"
       };
@@ -131,7 +142,8 @@ function MockClerkProvider({ children }: { children: ReactNode }) {
       const updatedProfile = {
         ...parsed,
         uid: user.uid,
-        name: user.displayName || parsed.name
+        name: user.displayName || parsed.name,
+        isPremium: user.isPremium
       };
       localStorage.setItem("ww_profile", JSON.stringify(updatedProfile));
       updateProfileFunc(updatedProfile);
@@ -163,11 +175,13 @@ function RealClerkContextAdapter({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (isSignedIn && realUser) {
+      const isPremium = !!(realUser.publicMetadata as any)?.isPremium || !!(realUser.publicMetadata as any)?.isPro || !!(realUser.unsafeMetadata as any)?.isPremium || !!(realUser.unsafeMetadata as any)?.isPro;
       setMappedUser({
         uid: realUser.id,
         displayName: realUser.fullName || realUser.username || "Clerk Member",
         email: realUser.primaryEmailAddress?.emailAddress || null,
-        photoURL: realUser.imageUrl || null
+        photoURL: realUser.imageUrl || null,
+        isPremium: isPremium
       });
     } else {
       setMappedUser(null);
@@ -192,7 +206,8 @@ function RealClerkContextAdapter({ children }: { children: ReactNode }) {
       uid: mappedUser.uid,
       displayName: mappedUser.displayName,
       email: mappedUser.email,
-      photoURL: mappedUser.photoURL
+      photoURL: mappedUser.photoURL,
+      isPremium: mappedUser.isPremium
     };
     localStorage.setItem("ww_user", JSON.stringify(appUserObj));
 
@@ -208,6 +223,7 @@ function RealClerkContextAdapter({ children }: { children: ReactNode }) {
         lastVisit: new Date().toISOString(),
         visitDates: [new Date().toISOString().split('T')[0]],
         highScore: 0,
+        isPremium: mappedUser.isPremium,
         netWorth: { assets: 150000, liabilities: 50000 },
         gitProvider: "github"
       };
@@ -218,7 +234,8 @@ function RealClerkContextAdapter({ children }: { children: ReactNode }) {
       const updatedProfile = {
         ...parsed,
         uid: mappedUser.uid,
-        name: mappedUser.displayName || parsed.name
+        name: mappedUser.displayName || parsed.name,
+        isPremium: mappedUser.isPremium
       };
       localStorage.setItem("ww_profile", JSON.stringify(updatedProfile));
       updateProfileFunc(updatedProfile);

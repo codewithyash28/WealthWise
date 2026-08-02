@@ -475,7 +475,8 @@ function AppContent() {
           uid: clerkAuth.user.uid,
           displayName: clerkAuth.user.displayName,
           email: clerkAuth.user.email,
-          photoURL: clerkAuth.user.photoURL
+          photoURL: clerkAuth.user.photoURL,
+          isPremium: clerkAuth.user.isPremium
         };
         setUser(clerkUserObj);
         clerkAuth.syncWithAppProfile(setProfile, setBudget);

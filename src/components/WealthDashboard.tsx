@@ -16,6 +16,8 @@ import { AgentOperationsLogs } from "./AgentOperationsLogs";
 import { DailyMarketPulse } from "./DailyMarketPulse";
 import { SHOP_ITEMS, ShopItem } from "./QuestsHub";
 import { WealthGalaxy } from "./WealthGalaxy";
+import { UpgradeModal } from "./UpgradeModal";
+import { CommunityReviews } from "./CommunityReviews";
 
 interface WealthDashboardProps {
   user: UserProfile;
@@ -34,6 +36,7 @@ export function WealthDashboard({ user, budget, onUnlockAchievement, onUpdateGit
   const [showShareModal, setShowShareModal] = useState(false);
   const [copiedShareLink, setCopiedShareLink] = useState(false);
   const [intentInput, setIntentInput] = useState("");
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   const currency = CURRENCIES[user.currency] || CURRENCIES.USD;
 
@@ -146,6 +149,10 @@ export function WealthDashboard({ user, budget, onUnlockAchievement, onUpdateGit
   };
 
   const handleDownloadPDF = () => {
+    if (!user.isPremium) {
+      setShowUpgradeModal(true);
+      return;
+    }
     const doc = new jsPDF();
     
     // Core document theme & header band
@@ -278,6 +285,10 @@ export function WealthDashboard({ user, budget, onUnlockAchievement, onUpdateGit
   };
 
   const handleExportChartPNG = () => {
+    if (!user.isPremium) {
+      setShowUpgradeModal(true);
+      return;
+    }
     const canvas = document.createElement("canvas");
     canvas.width = 1200;
     canvas.height = 630;
@@ -366,6 +377,10 @@ export function WealthDashboard({ user, budget, onUnlockAchievement, onUpdateGit
   };
 
   const handleDownloadJSON = () => {
+    if (!user.isPremium) {
+      setShowUpgradeModal(true);
+      return;
+    }
     const rawBias = localStorage.getItem("ww_market_bias") || "neutral";
     const dataToExport = {
       exportedAt: new Date().toISOString(),
@@ -1622,6 +1637,33 @@ export function WealthDashboard({ user, budget, onUnlockAchievement, onUpdateGit
         ))}
       </div>
 
+      {/* Subtle non-intrusive Upgrade to Pro Banner for Free users */}
+      {!user.isPremium && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="p-5 rounded-2xl bg-gradient-to-r from-bg-secondary via-accent-gold/5 to-bg-secondary border border-accent-gold/20 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left mt-6"
+        >
+          <div className="space-y-1">
+            <h4 className="text-sm font-bold text-white flex items-center justify-center sm:justify-start gap-2">
+              <Sparkles className="w-4 h-4 text-accent-gold" /> Unlock Wexa AI Pro Capability Core
+            </h4>
+            <p className="text-xs text-text-secondary">
+              Get unlimited Gemini AI scans, custom macro stress testing, and VC-Ready PDF/JSON exports for just $5/month.
+            </p>
+          </div>
+          <button
+            onClick={() => setShowUpgradeModal(true)}
+            className="px-4 py-2 bg-accent-gold hover:bg-accent-gold/90 text-bg-void text-xs font-bold uppercase tracking-widest rounded-xl transition-all cursor-pointer whitespace-nowrap shadow-md"
+          >
+            Upgrade to Pro
+          </button>
+        </motion.div>
+      )}
+
+      {/* Authentic Persistable Community Reviews */}
+      <CommunityReviews />
+
       {/* GitOps Settings Modal */}
       {showSettingsModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-bg-void/90 backdrop-blur-md">
@@ -1782,6 +1824,12 @@ export function WealthDashboard({ user, budget, onUnlockAchievement, onUpdateGit
           </motion.div>
         </div>
       )}
+
+      {/* Upgrade Modal for Gated Features */}
+      <UpgradeModal
+        isOpen={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+      />
     </div>
   );
 }
