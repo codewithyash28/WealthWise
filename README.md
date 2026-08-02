@@ -9,7 +9,6 @@
 [![Database](https://img.shields.io/badge/MongoDB-MCP_Persistence-47A248?style=for-the-badge&logo=mongodb&logoColor=white)](https://www.mongodb.com/)
 [![Gross Margin](https://img.shields.io/badge/Gross_Margin-98.6%25-00C853?style=for-the-badge)](https://github.com/)
 
-[Live Demo](https://wexa.ai) • [Pitch Deck](https://wexa.ai/deck) • [Report Bug](https://github.com/wexa-ai/wexa/issues)
 
 ---
 
