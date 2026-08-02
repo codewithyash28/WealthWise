@@ -29,6 +29,7 @@ import { MidnightAuditor } from "./MidnightAuditor";
 import { GrowthTelemetryWidget } from "./GrowthTelemetryWidget";
 import { CommandPalette } from "./CommandPalette";
 import { FinancialGoalsWidget } from "./FinancialGoalsWidget";
+import { EnginePerformanceMonitor } from "./EnginePerformanceMonitor";
 import { useEffect } from "react";
 
 interface WealthDashboardProps {
@@ -701,6 +702,9 @@ export function WealthDashboard({ user, budget, onUnlockAchievement, onUpdateGit
     <div className="container mx-auto px-6 py-12 space-y-12">
       {/* Daily AI Financial Affirmation Banner */}
       <FinancialAffirmation />
+
+      {/* Autonomous Engine Telemetry & Performance Monitor */}
+      <EnginePerformanceMonitor />
 
       {/* Onboarding Carousel for New & Returning Users */}
       <OnboardingCarousel />

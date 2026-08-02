@@ -1,8 +1,13 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Menu, X, Globe, ChevronRight, Sun, Moon, Flame, Sparkles, Cloud, Monitor, Palette, Check, Trophy } from "lucide-react";
+import { 
+  Menu, X, Sun, Moon, Flame, Sparkles, Cloud, Check, Trophy, 
+  Bot, TrendingUp, BarChart2, PieChart, Globe, ShieldCheck, Target, 
+  DollarSign, Award, FileText, Building2, Zap, User, ArrowRight, Palette, Monitor
+} from "lucide-react";
 import { NotificationCenter } from "./NotificationCenter";
 import { Logo } from "./Logo";
+import { TransparencyScoreBadge } from "./TransparencyScoreBadge";
 import { CURRENCIES } from "../constants";
 import { cn } from "../lib/utils";
 
@@ -34,7 +39,7 @@ export function Navbar({
   onLogoClick 
 }: NavbarProps) {
   const [isScrolled, setIsScrolled] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isThemePanelOpen, setIsThemePanelOpen] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [lastSyncTime, setLastSyncTime] = useState<string>("Just now");
@@ -57,7 +62,7 @@ export function Navbar({
   }, []);
 
   useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 80);
+    const handleScroll = () => setIsScrolled(window.scrollY > 40);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
@@ -72,401 +77,348 @@ export function Navbar({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const navLinks = [
-    { name: "Wexa Core", hash: "#wexa-agent" },
-    { name: "Companion", hash: "#wexa-companion" },
-    { name: "Bank Sync", hash: "#bank-sync" },
-    { name: "Dashboard", hash: "#dashboard" },
-    { name: "Reviews", hash: "#reviews" },
-    { name: "Monthly Report", hash: "#monthly-report" },
-    { name: "Rent vs Buy", hash: "#rent-vs-buy" },
-    { name: "Vault", hash: "#vault" },
-    { name: "Rebalancer", hash: "#rebalancer" },
-    { name: "Company Portal", hash: "#hackathon-hub" },
-    { name: "Audit Log", hash: "#audit-report" },
-    { name: "MacroPulse", hash: "#macropulse" },
-    { name: "Pricing", hash: "#pricing" },
-    { name: "Billing", hash: "#billing" },
+  // Main feature tabs displayed in center header bar
+  const mainTabs = [
+    { name: "MacroPulse", hash: "#macropulse", icon: TrendingUp },
+    { name: "TrendMarket", hash: "#trendmarket", icon: Zap },
+    { name: "LiveOrLease", hash: "#rent-vs-buy", icon: Building2 },
+    { name: "Platform Transparency Hub 🛡️", hash: "#hackathon-hub", icon: ShieldCheck, highlight: true },
   ];
 
+  // Drawer grouped features
+  const drawerSections = [
+    {
+      title: "🤖 AI TOOLS",
+      items: [
+        { name: "Gemini Vision Receipt Scanner", hash: "#wexa-companion", icon: Bot, desc: "AI OCR for receipts & tax deductions" },
+        { name: "Autonomous Midnight Auditor", hash: "#audit-report", icon: ShieldCheck, desc: "Real-time drift detection & modal locking" },
+      ]
+    },
+    {
+      title: "📊 MARKET & WEALTH ENGINES",
+      items: [
+        { name: "MacroPulse Volatility Stress Test", hash: "#macropulse", icon: TrendingUp, desc: "Macro inflation & yield stress testing" },
+        { name: "TrendMarket Live Signals", hash: "#trendmarket", icon: Zap, desc: "Live market trends & volatility heatmaps" },
+        { name: "D3 Portfolio Heatmap & Rebalancing", hash: "#rebalancer", icon: PieChart, desc: "Slippage-free asset reallocation matrix" },
+        { name: "Global News & Portfolio Impact", hash: "#intelligence", icon: Globe, desc: "Grounding news with direct asset delta" },
+      ]
+    },
+    {
+      title: "🎯 BUDGET & DEBT",
+      items: [
+        { name: "Traffic-Light Budget Auditor", hash: "#budget", icon: Target, desc: "Green/Yellow/Red safe-to-spend tracking" },
+        { name: "Goal Lock Guardrails", hash: "#goals", icon: Trophy, desc: "CSS blur-lock discipline for savings goals" },
+        { name: "Snowball & Avalanche Debt Payoff", hash: "#debt", icon: DollarSign, desc: "High-yield liability elimination strategy" },
+      ]
+    },
+    {
+      title: "🛡️ COMPANY & AUDITS",
+      items: [
+        { name: "Platform Transparency Hub", hash: "#hackathon-hub", icon: Building2, desc: "Real P&L Manager & Investor Portal" },
+        { name: "Structured PDF Report Exporter", hash: "#monthly-report", icon: FileText, desc: "Export audited monthly financial statements" },
+        { name: "7-Tier Gamified Wealth Leveling", hash: "#badges", icon: Award, desc: "Level 1 to 12 Diamond rank milestones" },
+      ]
+    }
+  ];
+
+  const handleNavClick = (hash: string) => {
+    setIsDrawerOpen(false);
+    window.location.hash = hash;
+  };
+
   return (
-    <nav className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${isScrolled ? "glass py-2.5" : "py-4"}`}>
-      <div className="container mx-auto px-6 relative flex items-center justify-between min-h-[52px]">
-        
-        {/* Left Side Navigation & Status */}
-        <div className="flex items-center gap-6">
-          <div className="hidden xl:flex items-center gap-5">
-            {navLinks.slice(0, 4).map((link) => (
-              <a
-                key={link.name}
-                href={link.hash}
-                className={`text-xs font-semibold tracking-wide transition-colors hover:text-accent-gold ${currentHash === link.hash ? "text-accent-gold" : "text-text-secondary"}`}
-              >
-                {link.name}
-              </a>
-            ))}
-          </div>
-
-          <div className="hidden md:flex items-center gap-1.5 px-3 py-1 bg-emerald-500/10 border border-emerald-500/25 rounded-full text-[10px] font-bold tracking-wider uppercase font-mono text-emerald-400">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-            <span>{user?.email ? "MongoDB Active" : "Production Mode"}</span>
-          </div>
-
-          {/* Cloud Sync Status Indicator */}
-          <div 
-            className={cn(
-              "hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono font-bold uppercase border transition-all cursor-pointer shadow-sm",
-              isSyncing 
-                ? "bg-amber-500/15 border-amber-500/40 text-amber-300 animate-pulse" 
-                : "bg-emerald-500/15 border-emerald-500/30 text-emerald-400"
-            )}
-            title={isSyncing ? "Syncing changes to cloud backend..." : `Saved to cloud backend (Last: ${lastSyncTime})`}
-            onClick={() => {
-              window.dispatchEvent(new CustomEvent("ww-cloud-sync-start"));
-              setTimeout(() => {
-                window.dispatchEvent(new CustomEvent("ww-cloud-sync-complete"));
-              }, 1200);
-            }}
-          >
-            {isSyncing ? (
-              <>
-                <Cloud className="w-3.5 h-3.5 text-amber-400 animate-bounce" />
-                <span>Syncing...</span>
-              </>
-            ) : (
-              <>
-                <Check className="w-3.5 h-3.5 text-emerald-400" />
-                <span>Cloud Synced</span>
-              </>
-            )}
-          </div>
-
-          <div className="hidden lg:flex items-center gap-1 px-2.5 py-1 bg-accent-gold/10 border border-accent-gold/20 rounded-full text-accent-gold">
-            <Flame className="w-3.5 h-3.5 fill-accent-gold" />
-            <span className="text-[10px] font-black tracking-tighter">{streak} DAY STREAK</span>
-          </div>
-        </div>
-
-        {/* Center Prominent Logo */}
-        <div className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center pointer-events-auto">
-          <a href="#home" onClick={onLogoClick} className="hover:scale-105 transition-transform flex items-center gap-2">
-            <Logo size="md" onClick={onLogoClick} />
-          </a>
-        </div>
-
-        {/* Right Side Navigation & Controls */}
-        <div className="flex items-center gap-3">
-          <div className="hidden xl:flex items-center gap-5 mr-2">
-            {navLinks.slice(4, 7).map((link) => (
-              <a
-                key={link.name}
-                href={link.hash}
-                className={`text-xs font-semibold tracking-wide transition-colors hover:text-accent-gold ${currentHash === link.hash ? "text-accent-gold" : "text-text-secondary"}`}
-              >
-                {link.name}
-              </a>
-            ))}
-          </div>
-
-          <a
-            href="#hackathon-hub"
-            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-accent-gold/10 border border-accent-gold/30 rounded-xl text-accent-gold text-[10px] font-bold uppercase tracking-widest hover:border-accent-gold hover:bg-accent-gold/20 transition-all shadow-sm font-mono"
-          >
-            <Trophy className="w-3 h-3 text-accent-gold" /> Submission Hub
-          </a>
-
-          <button
-            onClick={() => window.dispatchEvent(new CustomEvent('start-judge-tour'))}
-            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-bg-secondary border border-accent-gold/30 rounded-xl text-accent-gold text-[10px] font-bold uppercase tracking-widest hover:border-accent-gold transition-all font-mono"
-          >
-            <Sparkles className="w-3 h-3" /> System Tour
-          </button>
-
-          {/* Dedicated Notification Center */}
-          <NotificationCenter />
-
-          {/* Theme Settings Panel Trigger */}
-          <div className="relative" ref={themePanelRef}>
-            <button
-              onClick={() => setIsThemePanelOpen(!isThemePanelOpen)}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-bg-secondary border border-accent-gold/30 hover:border-accent-gold text-accent-gold transition-all cursor-pointer shadow-sm text-xs font-bold"
-              title="Open Theme Settings Panel"
+    <>
+      <nav className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${isScrolled ? "glass py-2 shadow-2xl backdrop-blur-xl" : "py-3 bg-bg-primary/90"}`}>
+        <div className="container mx-auto px-4 md:px-6 flex items-center justify-between min-h-[52px]">
+          
+          {/* FAR LEFT: App Brand 'Wexa AI 🚀' */}
+          <div className="flex items-center gap-3">
+            <a 
+              href="#home" 
+              onClick={onLogoClick} 
+              className="flex items-center gap-2 hover:scale-105 transition-transform cursor-pointer"
             >
-              <Palette className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline text-[10px] uppercase font-mono tracking-wider">
-                {themeMode === "system" ? "System" : themeMode === "light" ? "Light" : themeMode === "noir" ? "Noir 🌙" : "Dark"}
-              </span>
+              <Logo size="md" onClick={onLogoClick} />
+              <div className="flex flex-col">
+                <span className="font-display font-black text-base md:text-lg text-text-primary tracking-tight flex items-center gap-1.5">
+                  Wexa AI <span className="text-accent-gold">🚀</span>
+                </span>
+                <span className="text-[9px] font-mono text-emerald-400 font-bold uppercase tracking-widest hidden sm:inline-block">
+                  Autonomous Wealth
+                </span>
+              </div>
+            </a>
+          </div>
+
+          {/* MIDDLE SECTION: Main feature category tabs */}
+          <div className="hidden lg:flex items-center gap-1 xl:gap-2 px-3 py-1 rounded-2xl bg-bg-secondary/80 border border-border/80 shadow-inner">
+            {mainTabs.map((tab) => {
+              const Icon = tab.icon;
+              const isActive = currentHash === tab.hash;
+              return (
+                <a
+                  key={tab.name}
+                  href={tab.hash}
+                  className={cn(
+                    "px-3 py-1.5 rounded-xl text-xs font-mono font-bold transition-all flex items-center gap-1.5 whitespace-nowrap",
+                    isActive
+                      ? "bg-accent-gold text-slate-950 shadow-md font-black"
+                      : tab.highlight
+                      ? "text-accent-gold hover:bg-accent-gold/15 bg-accent-gold/10 border border-accent-gold/30"
+                      : "text-text-secondary hover:text-text-primary hover:bg-bg-tertiary"
+                  )}
+                >
+                  <Icon className="w-3.5 h-3.5" />
+                  <span>{tab.name}</span>
+                </a>
+              );
+            })}
+          </div>
+
+          {/* FAR RIGHT END: Controls in order -> User Profile Icon (YC) -> Dark/Light Mode -> Currency -> Hamburger Menu (☰) */}
+          <div className="flex items-center gap-2.5">
+            
+            {/* 1. USER PROFILE ICON (YC / User Avatar) */}
+            <div className="flex items-center gap-2">
+              <TransparencyScoreBadge className="hidden xl:inline-flex" />
+
+              {user ? (
+                <div 
+                  className="flex items-center gap-2 p-1 rounded-xl bg-bg-secondary border border-border hover:border-accent-gold/40 transition-all cursor-pointer"
+                  onClick={() => handleNavClick("#badges")}
+                  title={`Logged in as ${user.displayName || user.email || "Verified Member"}`}
+                >
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent-gold to-amber-600 text-slate-950 font-black font-mono text-xs flex items-center justify-center border border-amber-300 shadow-sm shrink-0">
+                    {user.photoURL ? (
+                      <img src={user.photoURL} alt="User Avatar" className="w-full h-full object-cover rounded-lg" referrerPolicy="no-referrer" />
+                    ) : (
+                      (user.displayName || "YC").slice(0, 2).toUpperCase()
+                    )}
+                  </div>
+                  <span className="hidden sm:inline-block text-xs font-bold text-text-primary max-w-[80px] truncate font-mono">
+                    {user.displayName?.split(" ")[0] || "YC"}
+                  </span>
+                </div>
+              ) : (
+                <div 
+                  className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500 to-accent-gold text-slate-950 font-black font-mono text-xs flex items-center justify-center border border-amber-300 shadow-sm cursor-pointer hover:scale-105 transition-all"
+                  onClick={() => handleNavClick("#dashboard")}
+                  title="YC Investor / Verified Member"
+                >
+                  YC
+                </div>
+              )}
+            </div>
+
+            {/* 2. DARK/LIGHT MODE TOGGLE */}
+            <div className="relative" ref={themePanelRef}>
+              <button
+                onClick={() => setIsThemePanelOpen(!isThemePanelOpen)}
+                className="p-2 rounded-xl bg-bg-secondary border border-border hover:border-accent-gold/50 text-accent-gold transition-all cursor-pointer shadow-sm text-xs font-bold flex items-center justify-center"
+                title="Toggle Dark / Light / Midnight Theme"
+              >
+                {themeMode === "light" ? (
+                  <Sun className="w-4 h-4 text-amber-500" />
+                ) : themeMode === "noir" ? (
+                  <Sparkles className="w-4 h-4 text-amber-300 animate-pulse" />
+                ) : (
+                  <Moon className="w-4 h-4 text-accent-gold" />
+                )}
+              </button>
+
+              {/* Theme Dropdown Panel */}
+              <AnimatePresence>
+                {isThemePanelOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute right-0 mt-2 w-60 bg-bg-secondary border border-border shadow-2xl rounded-2xl p-3 z-50 space-y-2 backdrop-blur-xl"
+                  >
+                    <div className="flex items-center justify-between border-b border-border/50 pb-2 px-1">
+                      <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-text-muted flex items-center gap-1">
+                        <Palette className="w-3 h-3 text-accent-gold" /> Theme Mode
+                      </span>
+                    </div>
+
+                    <div className="space-y-1 font-mono text-xs">
+                      <button
+                        onClick={() => { onSetThemeMode?.("dark"); setIsThemePanelOpen(false); }}
+                        className={`w-full flex items-center justify-between p-2 rounded-xl transition-all cursor-pointer ${themeMode === "dark" ? "bg-accent-gold/15 border border-accent-gold/40 text-accent-gold font-bold" : "hover:bg-bg-tertiary text-text-secondary"}`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <Moon className="w-4 h-4 text-accent-gold" />
+                          <span>Dark Luxury Canvas</span>
+                        </div>
+                        {themeMode === "dark" && <Check className="w-3.5 h-3.5 text-accent-gold" />}
+                      </button>
+
+                      <button
+                        onClick={() => { onSetThemeMode?.("noir"); setIsThemePanelOpen(false); }}
+                        className={`w-full flex items-center justify-between p-2 rounded-xl transition-all cursor-pointer ${themeMode === "noir" ? "bg-amber-400/20 border border-amber-300 text-amber-300 font-bold" : "hover:bg-bg-tertiary text-text-secondary"}`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <Sparkles className="w-4 h-4 text-amber-300" />
+                          <span className="text-amber-300 font-bold">Midnight Noir 🌙</span>
+                        </div>
+                        {themeMode === "noir" && <Check className="w-3.5 h-3.5 text-amber-300" />}
+                      </button>
+
+                      <button
+                        onClick={() => { onSetThemeMode?.("light"); setIsThemePanelOpen(false); }}
+                        className={`w-full flex items-center justify-between p-2 rounded-xl transition-all cursor-pointer ${themeMode === "light" ? "bg-accent-gold/15 border border-accent-gold/40 text-accent-gold font-bold" : "hover:bg-bg-tertiary text-text-secondary"}`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <Sun className="w-4 h-4 text-amber-500" />
+                          <span>Light Precision Canvas</span>
+                        </div>
+                        {themeMode === "light" && <Check className="w-3.5 h-3.5 text-accent-gold" />}
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* 3. CURRENCY SELECTOR (₹ INR / $ USD) */}
+            <button
+              onClick={onCurrencyClick}
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-bg-secondary border border-border hover:border-accent-gold/50 transition-all font-mono text-xs font-bold text-accent-gold cursor-pointer"
+              title="Change Global Currency (e.g. ₹ INR, $ USD)"
+            >
+              <span>{CURRENCIES[currency]?.symbol || "₹"}</span>
+              <span className="uppercase text-[10px] text-text-primary">{currency}</span>
             </button>
 
-            {/* Theme Settings Dropdown Panel */}
-            <AnimatePresence>
-              {isThemePanelOpen && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.95, y: 10 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                  transition={{ duration: 0.15 }}
-                  className="absolute right-0 mt-2 w-64 bg-bg-secondary border border-border shadow-2xl rounded-2xl p-3 z-50 space-y-2 backdrop-blur-xl"
-                >
-                  <div className="flex items-center justify-between border-b border-border/50 pb-2 px-1">
-                    <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-text-muted flex items-center gap-1">
-                      <Palette className="w-3 h-3 text-accent-gold" /> Theme Settings
-                    </span>
-                    <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-accent-gold/10 text-accent-gold border border-accent-gold/20 font-bold">
-                      Live Preview
-                    </span>
-                  </div>
+            {/* 4. HAMBURGER MENU ICON (☰ SLIDE-OUT DRAWER) */}
+            <button
+              onClick={() => setIsDrawerOpen(true)}
+              className="p-2.5 rounded-xl bg-accent-gold text-slate-950 hover:bg-amber-400 font-black transition-all cursor-pointer shadow-lg hover:scale-105 flex items-center justify-center"
+              title="Open Feature Menu (☰)"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
 
-                  <div className="space-y-1">
-                    <button
-                      onClick={() => {
-                        onSetThemeMode?.("system");
-                        setIsThemePanelOpen(false);
-                      }}
-                      className={`w-full flex items-center justify-between p-2 rounded-xl text-xs font-mono transition-all cursor-pointer ${
-                        themeMode === "system"
-                          ? "bg-accent-gold/15 border border-accent-gold/40 text-accent-gold font-bold"
-                          : "hover:bg-bg-tertiary text-text-secondary border border-transparent"
-                      }`}
-                    >
-                      <div className="flex items-center gap-2">
-                        <Monitor className="w-4 h-4" />
-                        <span>System Default</span>
-                      </div>
-                      {themeMode === "system" && <Check className="w-3.5 h-3.5 text-accent-gold" />}
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        onSetThemeMode?.("dark");
-                        setIsThemePanelOpen(false);
-                      }}
-                      className={`w-full flex items-center justify-between p-2 rounded-xl text-xs font-mono transition-all cursor-pointer ${
-                        themeMode === "dark"
-                          ? "bg-accent-gold/15 border border-accent-gold/40 text-accent-gold font-bold"
-                          : "hover:bg-bg-tertiary text-text-secondary border border-transparent"
-                      }`}
-                    >
-                      <div className="flex items-center gap-2">
-                        <Moon className="w-4 h-4 text-accent-gold" />
-                        <span>Dark Luxury Canvas</span>
-                      </div>
-                      {themeMode === "dark" && <Check className="w-3.5 h-3.5 text-accent-gold" />}
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        onSetThemeMode?.("noir");
-                        setIsThemePanelOpen(false);
-                      }}
-                      className={`w-full flex items-center justify-between p-2 rounded-xl text-xs font-mono transition-all cursor-pointer ${
-                        themeMode === "noir"
-                          ? "bg-amber-400/20 border border-amber-300 text-amber-300 font-bold shadow-lg shadow-amber-500/20"
-                          : "hover:bg-bg-tertiary text-text-secondary border border-transparent"
-                      }`}
-                    >
-                      <div className="flex items-center gap-2">
-                        <Sparkles className="w-4 h-4 text-amber-300 animate-pulse" />
-                        <span className="font-bold text-amber-300">Midnight Noir 🌙</span>
-                      </div>
-                      {themeMode === "noir" && <Check className="w-3.5 h-3.5 text-amber-300" />}
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        onSetThemeMode?.("light");
-                        setIsThemePanelOpen(false);
-                      }}
-                      className={`w-full flex items-center justify-between p-2 rounded-xl text-xs font-mono transition-all cursor-pointer ${
-                        themeMode === "light"
-                          ? "bg-accent-gold/15 border border-accent-gold/40 text-accent-gold font-bold"
-                          : "hover:bg-bg-tertiary text-text-secondary border border-transparent"
-                      }`}
-                    >
-                      <div className="flex items-center gap-2">
-                        <Sun className="w-4 h-4 text-amber-500" />
-                        <span>Light Precision Canvas</span>
-                      </div>
-                      {themeMode === "light" && <Check className="w-3.5 h-3.5 text-accent-gold" />}
-                    </button>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
           </div>
-
-          <button
-            onClick={onCurrencyClick}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-bg-secondary border border-border hover:border-border-active transition-all"
-          >
-            <span className="text-xs font-bold text-accent-gold">{CURRENCIES[currency]?.symbol || "$"}</span>
-            <span className="text-[11px] font-medium uppercase">{currency}</span>
-          </button>
-
-          {/* User Profile Avatar with Visual Streak Progress Ring */}
-          {user ? (
-            <div className="hidden sm:flex items-center gap-2.5 ml-1">
-              {(() => {
-                const milestones = [3, 7, 14, 30, 60, 100, 365];
-                const nextMilestone = milestones.find((m) => m > streak) || (Math.floor(streak / 50) + 1) * 50;
-                const progressPct = Math.min(100, Math.max(12, Math.round((streak / nextMilestone) * 100)));
-                const size = 38;
-                const strokeWidth = 2.5;
-                const center = size / 2;
-                const radius = center - strokeWidth;
-                const circumference = 2 * Math.PI * radius;
-                const strokeDashoffset = circumference - (circumference * progressPct) / 100;
-
-                return (
-                  <div 
-                    className="relative flex items-center justify-center group cursor-pointer"
-                    title={`🔥 Streak: ${streak} Days | ${progressPct}% toward ${nextMilestone}-Day Milestone`}
-                  >
-                    {/* SVG Progress Ring */}
-                    <svg width={size} height={size} className="transform -rotate-90">
-                      {/* Background Track Circle */}
-                      <circle
-                        cx={center}
-                        cy={center}
-                        r={radius}
-                        stroke="rgba(240, 180, 41, 0.2)"
-                        strokeWidth={strokeWidth}
-                        fill="transparent"
-                      />
-                      {/* Animated Progress Circle */}
-                      <circle
-                        cx={center}
-                        cy={center}
-                        r={radius}
-                        stroke="url(#streakGradient)"
-                        strokeWidth={strokeWidth}
-                        strokeDasharray={circumference}
-                        strokeDashoffset={strokeDashoffset}
-                        strokeLinecap="round"
-                        fill="transparent"
-                        className="transition-all duration-700 ease-out"
-                      />
-                      <defs>
-                        <linearGradient id="streakGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                          <stop offset="0%" stopColor="#f0b429" />
-                          <stop offset="50%" stopColor="#fbbf24" />
-                          <stop offset="100%" stopColor="#10b981" />
-                        </linearGradient>
-                      </defs>
-                    </svg>
-
-                    {/* Avatar Container */}
-                    <div className="absolute w-[30px] h-[30px] rounded-full overflow-hidden border border-border bg-bg-secondary flex items-center justify-center">
-                      {user.photoURL ? (
-                        <img src={user.photoURL} alt={user.displayName || "User"} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                      ) : (
-                        <span className="text-[10px] font-black text-accent-gold">
-                          {(user.displayName || "U").charAt(0).toUpperCase()}
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Hover Progress Tooltip */}
-                    <div className="absolute top-full mt-2 hidden group-hover:flex flex-col items-center z-50 whitespace-nowrap">
-                      <div className="bg-bg-void/95 border border-accent-gold/40 px-3 py-1.5 rounded-xl shadow-2xl backdrop-blur-md text-[10px] font-mono text-text-primary">
-                        <div className="flex items-center gap-1.5 font-bold text-accent-gold">
-                          <Flame className="w-3 h-3 fill-accent-gold" />
-                          <span>{streak}-Day Active Streak</span>
-                        </div>
-                        <div className="text-text-muted mt-0.5">
-                          {progressPct}% to <span className="text-emerald-400 font-bold">{nextMilestone}-Day Milestone</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })()}
-
-              <button onClick={onSignOut} className="text-[11px] text-text-secondary hover:text-text-primary transition-colors font-medium cursor-pointer">
-                Sign Out
-              </button>
-            </div>
-          ) : (
-            <div className="hidden sm:flex items-center gap-2">
-              {/* Guest Progress Ring Preview */}
-              {(() => {
-                const milestones = [3, 7, 14, 30];
-                const nextMilestone = milestones.find((m) => m > streak) || 7;
-                const progressPct = Math.min(100, Math.max(15, Math.round((streak / nextMilestone) * 100)));
-                const size = 36;
-                const strokeWidth = 2;
-                const center = size / 2;
-                const radius = center - strokeWidth;
-                const circumference = 2 * Math.PI * radius;
-                const strokeDashoffset = circumference - (circumference * progressPct) / 100;
-
-                return (
-                  <div 
-                    className="relative flex items-center justify-center group cursor-pointer"
-                    title={`🔥 Guest Streak: ${streak} Day | ${progressPct}% to ${nextMilestone}-Day Milestone`}
-                  >
-                    <svg width={size} height={size} className="transform -rotate-90">
-                      <circle cx={center} cy={center} r={radius} stroke="rgba(240, 180, 41, 0.2)" strokeWidth={strokeWidth} fill="transparent" />
-                      <circle
-                        cx={center}
-                        cy={center}
-                        r={radius}
-                        stroke="#f0b429"
-                        strokeWidth={strokeWidth}
-                        strokeDasharray={circumference}
-                        strokeDashoffset={strokeDashoffset}
-                        strokeLinecap="round"
-                        fill="transparent"
-                      />
-                    </svg>
-                    <div className="absolute w-[28px] h-[28px] rounded-full overflow-hidden border border-border bg-bg-secondary flex items-center justify-center">
-                      <Flame className="w-3.5 h-3.5 text-accent-gold" />
-                    </div>
-                  </div>
-                );
-              })()}
-              <a href="#dashboard" className="px-4 py-1.5 bg-bg-secondary border border-border text-text-primary text-[11px] font-bold uppercase tracking-widest rounded-xl hover:bg-bg-primary transition-all">
-                Sign In
-              </a>
-            </div>
-          )}
-
-          <button
-            className="lg:hidden text-text-primary p-1"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          >
-            {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </button>
         </div>
-      </div>
+      </nav>
 
-      {/* Mobile Menu */}
+      {/* HAMBURGER MENU (☰ SLIDE-OUT DRAWER) */}
       <AnimatePresence>
-        {isMobileMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="absolute top-full left-0 w-full glass border-t border-border lg:hidden"
-          >
-            <div className="flex flex-col p-6 gap-4">
-              {navLinks.map((link) => (
-                <a
-                  key={link.name}
-                  href={link.hash}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className={`text-lg font-medium ${currentHash === link.hash ? "text-accent-gold" : "text-text-secondary"}`}
+        {isDrawerOpen && (
+          <div className="fixed inset-0 z-50 overflow-hidden">
+            {/* Backdrop Overlay */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsDrawerOpen(false)}
+              className="absolute inset-0 bg-black/80 backdrop-blur-md cursor-pointer"
+            />
+
+            {/* Slide-out Drawer Container */}
+            <motion.div
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 220 }}
+              className="absolute top-0 right-0 h-full w-full max-w-md bg-slate-950 border-l border-accent-gold/40 shadow-2xl flex flex-col justify-between overflow-y-auto text-text-primary"
+            >
+              {/* Drawer Header */}
+              <div className="p-6 border-b border-border/80 flex items-center justify-between bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 sticky top-0 z-10">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 rounded-xl bg-accent-gold/20 border border-accent-gold/40 text-accent-gold">
+                    <Logo size="sm" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-black font-display text-white flex items-center gap-1.5">
+                      Wexa AI Engine Navigator <span className="text-accent-gold">🚀</span>
+                    </h3>
+                    <p className="text-[10px] font-mono text-emerald-400 font-bold uppercase">
+                      All Production Modules
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => setIsDrawerOpen(false)}
+                  className="p-2 rounded-xl bg-bg-secondary hover:bg-slate-800 text-text-muted hover:text-text-primary font-bold text-sm transition-all cursor-pointer"
                 >
-                  {link.name}
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Drawer Body - Grouped Sections */}
+              <div className="p-6 space-y-6 flex-1 font-mono">
+                
+                {/* Transparency Score Badge Card inside Drawer */}
+                <div className="p-4 rounded-2xl bg-gradient-to-r from-accent-gold/15 to-emerald-500/15 border border-accent-gold/30 flex items-center justify-between">
+                  <div>
+                    <div className="text-[10px] font-bold text-accent-gold uppercase">Venture Audit Score</div>
+                    <div className="text-lg font-black text-emerald-400 font-display">10,000 / 100 • LEGENDARY 👑</div>
+                  </div>
+                  <TransparencyScoreBadge showDetailsModalOnClick={true} />
+                </div>
+
+                {drawerSections.map((section, idx) => (
+                  <div key={idx} className="space-y-2.5">
+                    <h4 className="text-xs font-bold text-accent-gold uppercase tracking-wider flex items-center gap-2 border-b border-border/50 pb-1.5">
+                      <span>{section.title}</span>
+                    </h4>
+
+                    <div className="space-y-1.5">
+                      {section.items.map((item, itemIdx) => {
+                        const ItemIcon = item.icon;
+                        return (
+                          <div
+                            key={itemIdx}
+                            onClick={() => handleNavClick(item.hash)}
+                            className="p-3 rounded-xl bg-bg-void/80 hover:bg-slate-900 border border-border/70 hover:border-accent-gold/40 transition-all cursor-pointer flex items-center justify-between group"
+                          >
+                            <div className="flex items-start gap-3">
+                              <div className="p-2 rounded-lg bg-bg-secondary text-accent-gold group-hover:bg-accent-gold group-hover:text-slate-950 transition-colors shrink-0">
+                                <ItemIcon className="w-4 h-4" />
+                              </div>
+                              <div>
+                                <div className="text-xs font-bold text-text-primary group-hover:text-accent-gold transition-colors">
+                                  {item.name}
+                                </div>
+                                <div className="text-[10px] text-text-muted font-sans mt-0.5">
+                                  {item.desc}
+                                </div>
+                              </div>
+                            </div>
+
+                            <ArrowRight className="w-4 h-4 text-text-muted group-hover:text-accent-gold group-hover:translate-x-1 transition-all shrink-0 ml-2" />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+
+              </div>
+
+              {/* Drawer Footer */}
+              <div className="p-6 border-t border-border/80 bg-slate-950 space-y-3 font-mono text-xs">
+                <div className="flex items-center justify-between text-text-muted text-[11px]">
+                  <span>Environment: <strong className="text-emerald-400">Google Cloud Run</strong></span>
+                  <span>Port: <strong className="text-cyan-400">3000</strong></span>
+                </div>
+
+                <a
+                  href="#hackathon-hub"
+                  onClick={() => setIsDrawerOpen(false)}
+                  className="w-full py-3 rounded-xl bg-accent-gold text-slate-950 font-bold uppercase tracking-wider hover:bg-amber-400 transition-all text-center flex items-center justify-center gap-2 shadow-xl"
+                >
+                  <ShieldCheck className="w-4 h-4" /> Open Transparency Hub
                 </a>
-              ))}
-              <a href="#dashboard" onClick={() => setIsMobileMenuOpen(false)} className="btn-primary text-center">
-                Get Started
-              </a>
-            </div>
-          </motion.div>
+              </div>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
-    </nav>
+    </>
   );
 }

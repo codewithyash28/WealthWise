@@ -36,85 +36,15 @@ export interface ReviewItem {
   isVerified: boolean;
 }
 
-const DEFAULT_REVIEWS: ReviewItem[] = [
-  {
-    id: "rev-1",
-    author: "Elena Rostova",
-    role: "Senior Software Architect • San Francisco, CA",
-    wealthTier: "DIAMOND",
-    rating: 5,
-    category: "TAX_SHIELD",
-    impactMetric: "Saved $4,850 in Tax Deductions",
-    title: "The Tax Optimization Advisor automatically flagged eligible deductions I overlooked!",
-    content: "WealthWise Elite's AI Tax Shield scanned my annual transaction history and immediately identified $4,850 in qualified tax-advantaged account contributions and business expense deductions. The step-by-step guidance made filing seamless.",
-    helpfulCount: 42,
-    timestamp: "2 hours ago",
-    isVerified: true
-  },
-  {
-    id: "rev-2",
-    author: "Marcus Vance",
-    role: "VP of Operations • Austin, TX",
-    wealthTier: "PLATINUM",
-    rating: 5,
-    category: "REBALANCING",
-    impactMetric: "Eliminated Portfolio Drift & Reduced Volatility 18%",
-    title: "Rebalancing Matrix reduced slippage and re-allocated 4 asset classes effortlessly.",
-    content: "My portfolio had heavily drifted into tech equity over-exposure. With 1-click rebalancing and MongoDB transaction logging, WealthWise calculated exact dollar re-allocations into high-yield bonds and gold simulators without manual spreadsheets.",
-    helpfulCount: 38,
-    timestamp: "5 hours ago",
-    isVerified: true
-  },
-  {
-    id: "rev-3",
-    author: "Aarav Sharma",
-    role: "FinTech Founder • New York, NY",
-    wealthTier: "DIAMOND",
-    rating: 5,
-    category: "WEALTH_TIER",
-    impactMetric: "Achieved Level 12 Diamond Rank",
-    title: "The Financial Roadmap & Voice Navigation feel like a Jarvis terminal for wealth.",
-    content: "The Midnight Noir theme combined with Wexa AI voice commands makes checking market pulses and daily wealth streaks addicting. I exported my verified Diamond Tier certificate directly to LinkedIn and got amazing feedback!",
-    helpfulCount: 56,
-    timestamp: "Yesterday",
-    isVerified: true
-  },
-  {
-    id: "rev-4",
-    author: "Sophia Lin",
-    role: "Product Designer • Seattle, WA",
-    wealthTier: "GOLD",
-    rating: 5,
-    category: "EMERGENCY_BUFFER",
-    impactMetric: "Built 6-Month $24,000 Liquid Buffer",
-    title: "Goal Lock Mode prevented impulse spending and kept my budget strict.",
-    content: "Activating the 'Goal Lock' toggle in the Budget Planner with the CSS blur protection kept my spending caps locked. I hit my 6-month emergency reserve milestone 3 months ahead of schedule!",
-    helpfulCount: 29,
-    timestamp: "2 days ago",
-    isVerified: true
-  },
-  {
-    id: "rev-5",
-    author: "David K. Miller",
-    role: "Corporate Attorney • Chicago, IL",
-    wealthTier: "PLATINUM",
-    rating: 5,
-    category: "DEBT_PAYOFF",
-    impactMetric: "Cleared $32,000 High-Interest Liabilities",
-    title: "Rent vs. Buy simulator & Debt Snowball plan changed my financial trajectory.",
-    content: "Before WealthWise, I was debating buying real estate without factoring opportunity cost. The Rent vs Buy Simulator showed me staying liquid while clearing high-yield debt would net $120k more over 5 years. Truly actionable financial intelligence.",
-    helpfulCount: 31,
-    timestamp: "3 days ago",
-    isVerified: true
-  }
-];
+const DEFAULT_REVIEWS: ReviewItem[] = [];
 
 export function CommunityReviews() {
   const [reviews, setReviews] = useState<ReviewItem[]>(() => {
     const saved = localStorage.getItem("ww_community_reviews");
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
       } catch (e) {
         console.error("Failed parsing saved reviews", e);
       }
@@ -333,9 +263,30 @@ export function CommunityReviews() {
         </div>
 
         {/* Reviews Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <AnimatePresence mode="popLayout">
-            {filteredReviews.map((item) => (
+        {filteredReviews.length === 0 ? (
+          <div className="col-span-full p-12 text-center bg-bg-void/80 border border-border/80 rounded-3xl space-y-4 max-w-xl mx-auto my-6 shadow-xl">
+            <div className="w-16 h-16 rounded-full bg-accent-gold/20 border border-accent-gold/40 text-accent-gold flex items-center justify-center mx-auto">
+              <MessageSquarePlus className="w-8 h-8" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-lg font-bold font-display text-text-primary">
+                No Reviews Yet — Be the First! 🌟
+              </h3>
+              <p className="text-xs text-text-muted leading-relaxed">
+                Zero fake placeholder reviews. Share your authentic experience, financial impact, or feedback directly with the community!
+              </p>
+            </div>
+            <button
+              onClick={() => setIsSubmitModalOpen(true)}
+              className="px-6 py-3 rounded-2xl bg-gradient-to-r from-accent-gold to-amber-500 hover:from-amber-400 hover:to-amber-600 text-slate-950 font-mono font-bold text-xs uppercase tracking-wider shadow-xl hover:scale-105 transition-all inline-flex items-center gap-2 cursor-pointer"
+            >
+              <MessageSquarePlus className="w-4 h-4" /> Submit Your Real Review
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <AnimatePresence mode="popLayout">
+              {filteredReviews.map((item) => (
               <motion.div
                 key={item.id}
                 layout
@@ -416,6 +367,7 @@ export function CommunityReviews() {
             ))}
           </AnimatePresence>
         </div>
+        )}
 
         {/* Modal for Submitting a New Verified Review */}
         <AnimatePresence>
