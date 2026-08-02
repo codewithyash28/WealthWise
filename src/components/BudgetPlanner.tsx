@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { PieChart, Home, Utensils, Car, HeartPulse, Gamepad2, GraduationCap, CreditCard, Package, Save, RotateCcw, Copy, ChevronRight, AlertTriangle, CheckCircle2, TrendingUp, Download, Target, BarChart3, LineChart, Trash2, ShieldAlert, Terminal, FileCode, Check, ExternalLink, Activity, Sparkles, FileSpreadsheet, Filter, X } from "lucide-react";
+import { PieChart, Home, Utensils, Car, HeartPulse, Gamepad2, GraduationCap, CreditCard, Package, Save, RotateCcw, Copy, ChevronRight, AlertTriangle, CheckCircle2, TrendingUp, Download, Target, BarChart3, LineChart, Trash2, ShieldAlert, Terminal, FileCode, Check, ExternalLink, Activity, Sparkles, FileSpreadsheet, Filter, X, Lock, Unlock } from "lucide-react";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title } from 'chart.js';
 import { Doughnut, Bar, Line } from 'react-chartjs-2';
 import { formatCurrency, cn } from "../lib/utils";
@@ -64,6 +64,11 @@ export function BudgetPlanner({ user, onSave, initialPlan, gitProvider = "gitlab
 
   // Category filter state driven by D3 Donut Chart clicks
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string | null>(null);
+
+  // Auto-save state
+  const [lastAutoSaveTime, setLastAutoSaveTime] = useState<string>(() => {
+    return localStorage.getItem("ww_budget_last_autosave") || "Just now";
+  });
 
   const handleDownloadCsvTemplate = () => {
     const templateCsv = `Date,Description,Amount
@@ -227,6 +232,42 @@ export function BudgetPlanner({ user, onSave, initialPlan, gitProvider = "gitlab
     other: 500,
   });
 
+  // Goal Lock (Strict Mode) state
+  const [isGoalLocked, setIsGoalLocked] = useState<boolean>(() => {
+    return localStorage.getItem("ww_goal_locked") === "true";
+  });
+  const [isUnlockConfirmOpen, setIsUnlockConfirmOpen] = useState(false);
+
+  const handleToggleGoalLock = () => {
+    if (isGoalLocked) {
+      // Need confirmation to unlock
+      setIsUnlockConfirmOpen(true);
+    } else {
+      setIsGoalLocked(true);
+      localStorage.setItem("ww_goal_locked", "true");
+      window.dispatchEvent(new CustomEvent("ww-trigger-alert", {
+        detail: {
+          type: "success",
+          title: "🔒 Goal Lock Activated!",
+          message: "Strict Mode enabled. Spending budget limits are now locked and blurred to prevent impulsive cap changes."
+        }
+      }));
+    }
+  };
+
+  const handleConfirmUnlock = () => {
+    setIsGoalLocked(false);
+    localStorage.setItem("ww_goal_locked", "false");
+    setIsUnlockConfirmOpen(false);
+    window.dispatchEvent(new CustomEvent("ww-trigger-alert", {
+      detail: {
+        type: "info",
+        title: "🔓 Goal Lock Discarded",
+        message: "Strict Mode unlocked. Spending threshold limits can now be modified."
+      }
+    }));
+  };
+
   const currency = CURRENCIES[user.currency] || CURRENCIES.USD;
 
   // Mock historical data if not present
@@ -268,18 +309,22 @@ export function BudgetPlanner({ user, onSave, initialPlan, gitProvider = "gitlab
     plugins: {
       legend: { display: false },
       tooltip: {
-        backgroundColor: '#111827',
-        titleFont: { family: 'Syne', size: 14 },
+        backgroundColor: '#090d16',
+        titleFont: { family: 'Syne', size: 14, weight: 'bold' as const },
         bodyFont: { family: 'Outfit', size: 12 },
-        borderColor: 'rgba(240,180,41,0.2)',
-        borderWidth: 1,
-        padding: 12,
+        borderColor: 'rgba(240,180,41,0.4)',
+        borderWidth: 1.5,
+        padding: 14,
+        cornerRadius: 12,
         callbacks: {
           label: (context: any) => {
             const label = context.label || '';
             const value = context.raw || 0;
             const percent = income > 0 ? Math.round((value / income) * 100) : 0;
-            return `${label}: ${formatCurrency(value, user.currency, currency.locale)} (${percent}%)`;
+            const catKey = label.toLowerCase();
+            const categoryTrxs = (transactions || []).filter((t: any) => (t.category || "").toLowerCase() === catKey);
+            const countStr = categoryTrxs.length > 0 ? ` [${categoryTrxs.length} transaction${categoryTrxs.length > 1 ? 's' : ''}]` : '';
+            return `${label}: ${formatCurrency(value, user.currency, currency.locale)} (${percent}% of income)${countStr}`;
           }
         }
       }
@@ -404,6 +449,25 @@ export function BudgetPlanner({ user, onSave, initialPlan, gitProvider = "gitlab
     }
     return [];
   });
+
+  // 30-Second Auto-Save Persistence
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const draftData = {
+        income,
+        expenses,
+        goals,
+        transactions,
+        savedAt: new Date().toISOString(),
+      };
+      localStorage.setItem("ww_budget_draft", JSON.stringify(draftData));
+      const nowStr = new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
+      setLastAutoSaveTime(nowStr);
+      localStorage.setItem("ww_budget_last_autosave", nowStr);
+    }, 30000);
+
+    return () => clearInterval(timer);
+  }, [income, expenses, goals, transactions]);
 
   const [isConnecting, setIsConnecting] = useState(false);
 
@@ -732,6 +796,11 @@ export function BudgetPlanner({ user, onSave, initialPlan, gitProvider = "gitlab
         </div>
         
         <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex items-center gap-2 px-3.5 py-2 bg-indigo-500/10 border border-indigo-500/30 rounded-xl text-indigo-300 text-xs font-mono font-bold shadow-sm">
+            <span className="w-2 h-2 rounded-full bg-indigo-400 animate-ping shrink-0" />
+            <span>Auto-saved {lastAutoSaveTime}</span>
+          </div>
+
           <button 
             onClick={handleExportPDF}
             className="px-5 py-2.5 bg-accent-gold/10 border border-accent-gold/30 hover:border-accent-gold text-accent-gold text-xs font-bold uppercase tracking-widest rounded-xl hover:bg-accent-gold/20 transition-all flex items-center gap-2 cursor-pointer shadow-sm"
@@ -1333,13 +1402,63 @@ export function BudgetPlanner({ user, onSave, initialPlan, gitProvider = "gitlab
             </div>
           </div>
 
-          {/* Goals Section */}
-          <div className="card p-8 space-y-6">
-            <h3 className="text-xl font-bold flex items-center gap-2">
-              <Target className="w-5 h-5 text-accent-gold" /> Spending Thresholds
-            </h3>
-            <p className="text-xs text-text-secondary">Set strategic limits for each category to maintain financial discipline.</p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Goals Section with Goal Lock Strict Mode */}
+          <div className="card p-8 space-y-6 relative overflow-hidden">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-border/40">
+              <div>
+                <h3 className="text-xl font-bold flex items-center gap-2">
+                  <Target className="w-5 h-5 text-accent-gold" /> Spending Thresholds
+                </h3>
+                <p className="text-xs text-text-secondary mt-0.5">Set strategic limits for each category to maintain financial discipline.</p>
+              </div>
+
+              {/* Goal Lock Toggle Button */}
+              <button
+                type="button"
+                onClick={handleToggleGoalLock}
+                className={cn(
+                  "px-4 py-2 rounded-xl text-xs font-mono font-bold uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer shadow-md self-start sm:self-auto",
+                  isGoalLocked
+                    ? "bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500/30 ring-1 ring-amber-400/30"
+                    : "bg-bg-secondary text-text-muted border border-border hover:text-text-primary hover:border-accent-gold/40"
+                )}
+              >
+                {isGoalLocked ? (
+                  <>
+                    <Lock className="w-4 h-4 text-amber-400 animate-pulse" />
+                    <span>Goal Lock Active (Strict Mode)</span>
+                  </>
+                ) : (
+                  <>
+                    <Unlock className="w-4 h-4 text-text-muted" />
+                    <span>Enable Goal Lock</span>
+                  </>
+                )}
+              </button>
+            </div>
+
+            {/* Lock Status Banner if Enabled */}
+            {isGoalLocked && (
+              <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl flex items-center justify-between gap-3 text-xs text-amber-200">
+                <div className="flex items-center gap-2">
+                  <Lock className="w-4 h-4 text-amber-400 shrink-0" />
+                  <span><strong>Strict Mode Engaged:</strong> Spending caps are blurred and protected from accidental or impulsive modification.</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsUnlockConfirmOpen(true)}
+                  className="px-3 py-1 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 font-mono text-[10px] uppercase font-bold rounded-lg border border-amber-500/40 transition-all cursor-pointer shrink-0"
+                >
+                  Unlock
+                </button>
+              </div>
+            )}
+
+            {/* Threshold inputs with CSS blur when Goal Lock is active */}
+            <div className={cn(
+              "grid grid-cols-1 sm:grid-cols-2 gap-4 transition-all duration-300 relative",
+              isGoalLocked && "filter blur-[3.5px] opacity-75 pointer-events-none select-none"
+            )}>
               {Object.entries(expenses).map(([key, value]) => (
                 <div key={key} className="space-y-2">
                   <label className="text-[10px] font-medium text-text-muted uppercase tracking-wider">{key} Limit</label>
@@ -1347,6 +1466,7 @@ export function BudgetPlanner({ user, onSave, initialPlan, gitProvider = "gitlab
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-xs font-mono">{currency.symbol}</span>
                     <input
                       type="number"
+                      disabled={isGoalLocked}
                       value={(goals as any)[key] || ""}
                       onChange={(e) => {
                         const val = Number(e.target.value);
@@ -1375,6 +1495,17 @@ export function BudgetPlanner({ user, onSave, initialPlan, gitProvider = "gitlab
                 </div>
               ))}
             </div>
+
+            {/* Confirmation Dialog for Goal Lock Unlock */}
+            <ConfirmationDialog
+              isOpen={isUnlockConfirmOpen}
+              title="Confirm Unlock Strict Mode"
+              message="Unlocking Goal Lock will remove the CSS blur protection and allow modifying budget limits. Are you sure you want to proceed?"
+              confirmText="Unlock Budget Caps"
+              cancelText="Keep Locked"
+              onConfirm={handleConfirmUnlock}
+              onClose={() => setIsUnlockConfirmOpen(false)}
+            />
           </div>
         </div>
 

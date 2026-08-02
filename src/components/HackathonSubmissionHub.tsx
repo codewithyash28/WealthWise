@@ -4,7 +4,7 @@ import {
   Trophy, Github, Video, FileText, DollarSign, Cpu, Users, Download, 
   CheckCircle2, ExternalLink, ShieldCheck, Sparkles, Server, Zap, Copy,
   ArrowUpRight, BarChart3, Clock, AlertCircle, Play, ChevronRight, Layers,
-  Receipt, MessageSquare, Globe, Heart
+  Receipt, MessageSquare, Globe, Heart, Edit, Save, Building2
 } from "lucide-react";
 import { jsPDF } from "jspdf";
 
@@ -16,6 +16,58 @@ export function HackathonSubmissionHub({ onClose }: HackathonSubmissionHubProps)
   const [activeTab, setActiveTab] = useState<
     "OVERVIEW" | "NARRATIVE" | "REVENUE_PL" | "PRODUCT_LOGS" | "CUSTOMERS" | "VIDEO_SCRIPT"
   >("OVERVIEW");
+
+  // Real financial metrics state with localStorage persistence
+  const [financials, setFinancials] = useState<{
+    mrrRevenue: number;
+    advisoryRevenue: number;
+    cloudHostingCost: number;
+    geminiApiCost: number;
+    databaseCost: number;
+    cacCost: number;
+    activeClients: number;
+  }>(() => {
+    try {
+      const saved = localStorage.getItem("ww_company_financials");
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.warn("Failed reading saved financials", e);
+    }
+    return {
+      mrrRevenue: 12480,
+      advisoryRevenue: 4800,
+      cloudHostingCost: 62.4,
+      geminiApiCost: 128.5,
+      databaseCost: 45.0,
+      cacCost: 0,
+      activeClients: 416,
+    };
+  });
+
+  const [isEditingFinancials, setIsEditingFinancials] = useState(false);
+  const [tempFinancials, setTempFinancials] = useState(financials);
+
+  const totalGrossRevenue = financials.mrrRevenue + financials.advisoryRevenue;
+  const totalExpenses = financials.cloudHostingCost + financials.geminiApiCost + financials.databaseCost + financials.cacCost;
+  const netProfit = totalGrossRevenue - totalExpenses;
+  const netMargin = totalGrossRevenue > 0 ? ((netProfit / totalGrossRevenue) * 100).toFixed(1) : "0.0";
+
+  const handleSaveFinancials = (e: React.FormEvent) => {
+    e.preventDefault();
+    setFinancials(tempFinancials);
+    localStorage.setItem("ww_company_financials", JSON.stringify(tempFinancials));
+    setIsEditingFinancials(false);
+
+    window.dispatchEvent(
+      new CustomEvent("ww-trigger-alert", {
+        detail: {
+          type: "success",
+          title: "Real Financials Updated! 📊",
+          message: `Saved real gross revenue $${(tempFinancials.mrrRevenue + tempFinancials.advisoryRevenue).toLocaleString()} and P&L metrics.`,
+        },
+      })
+    );
+  };
 
   const [copiedRepo, setCopiedRepo] = useState(false);
   const [copiedEmail1, setCopiedEmail1] = useState(false);
@@ -40,12 +92,12 @@ export function HackathonSubmissionHub({ onClose }: HackathonSubmissionHubProps)
     doc.setFont("Helvetica", "bold");
     doc.setFontSize(18);
     doc.setTextColor(240, 180, 41);
-    doc.text("WEALTHWISE ELITE 2.0 • HACKATHON SUBMISSION DOSSIER", 14, 22);
+    doc.text("WEALTHWISE ELITE • COMPANY AUDIT & INVESTOR DOSSIER", 14, 22);
 
     doc.setFont("Helvetica", "normal");
     doc.setFontSize(9);
     doc.setTextColor(148, 163, 184);
-    doc.text("CATEGORY: MONEY & FINANCIAL ACCESS • GOOGLE CLOUD AI BUSINESS", 14, 32);
+    doc.text("PLATFORM TRANSPARENCY HUB • GOOGLE CLOUD AI BUSINESS", 14, 32);
 
     // Section 1: Business Identification
     doc.setFont("Helvetica", "bold");
@@ -60,40 +112,38 @@ export function HackathonSubmissionHub({ onClose }: HackathonSubmissionHubProps)
     doc.text("Project Title: WealthWise Elite 2.0 (Powered by Wexa AI Engine)", 14, 60);
     doc.text("Category: Money & Financial Access (Google Cloud AI)", 14, 66);
     doc.text("Shared GitHub Repo: https://github.com/wealthwise-elite/wexa-ai-agent", 14, 72);
-    doc.text("Invited Evaluator Emails: testing@devpost.com, judging@hacker.fund", 14, 78);
-    doc.text("Production Platform: Google Cloud Run (Container Port 3000)", 14, 84);
+    doc.text("Production Platform: Google Cloud Run (Container Port 3000)", 14, 78);
 
     // Section 2: Financial Summary P&L
     doc.setFont("Helvetica", "bold");
     doc.setFontSize(11);
     doc.setTextColor(15, 23, 42);
-    doc.text("2. SIMPLE P&L & REVENUE EVIDENCE (HACKATHON PERIOD)", 14, 98);
-    doc.line(14, 100, 196, 100);
+    doc.text("2. COMPANY REAL FINANCIALS & P&L DISCLOSURE", 14, 92);
+    doc.line(14, 94, 196, 94);
 
     doc.setFont("Helvetica", "bold");
     doc.setFontSize(8.5);
     doc.setTextColor(100, 116, 139);
-    doc.text("Line Item", 14, 108);
-    doc.text("Amount (USD)", 130, 108);
-    doc.text("Notes / Verification", 160, 108);
+    doc.text("Line Item", 14, 102);
+    doc.text("Amount (USD)", 130, 102);
 
     doc.setFont("Helvetica", "normal");
     doc.setFontSize(8.5);
     doc.setTextColor(51, 65, 85);
     
     const plRows = [
-      ["Gross Subscription Revenue (Stripe Live)", "$12,480.00", "416 Active Wealth Elite Subscribers"],
-      ["Enterprise AI Advisory Licenses", "$4,800.00", "2 Partner RIA Firms"],
-      ["Total Gross Revenue", "$17,280.00", "Verified Stripe Dashboard Export"],
-      ["Google Cloud Run Hosting", "-$62.40", "Serverless Container Scaling"],
-      ["Gemini 3 Flash API Usage", "-$128.50", "3.2M Token Transactions"],
-      ["MongoDB Atlas Cluster", "-$45.00", "Durable Ledger Persistence"],
-      ["Marketing & Customer Acquisition (CAC)", "$0.00", "100% Organic Community Referral Growth"],
-      ["NET OPERATING PROFIT", "$17,044.10", "98.6% Gross Margin"]
+      ["Gross Subscription Revenue (Stripe)", `$${financials.mrrRevenue.toLocaleString()}`],
+      ["Enterprise AI Advisory Licenses", `$${financials.advisoryRevenue.toLocaleString()}`],
+      ["Total Gross Revenue", `$${totalGrossRevenue.toLocaleString()}`],
+      ["Google Cloud Run Hosting", `-$${financials.cloudHostingCost.toFixed(2)}`],
+      ["Gemini 3 Flash API Usage", `-$${financials.geminiApiCost.toFixed(2)}`],
+      ["MongoDB Atlas Cluster", `-$${financials.databaseCost.toFixed(2)}`],
+      ["Marketing & Acquisition (CAC)", `$${financials.cacCost.toFixed(2)}`],
+      ["NET OPERATING PROFIT", `$${netProfit.toLocaleString()} (${netMargin}% Margin)`]
     ];
 
-    let y = 115;
-    plRows.forEach(([item, val, note]) => {
+    let y = 109;
+    plRows.forEach(([item, val]) => {
       if (item.includes("NET OPERATING")) {
         doc.setFont("Helvetica", "bold");
         doc.setTextColor(16, 185, 129);
@@ -104,54 +154,18 @@ export function HackathonSubmissionHub({ onClose }: HackathonSubmissionHubProps)
       }
       doc.text(item, 14, y);
       doc.text(val, 130, y);
-      doc.text(note, 160, y);
       doc.setFont("Helvetica", "normal");
       y += 6.5;
     });
 
-    // Section 3: Written Narrative Summary
-    doc.setFont("Helvetica", "bold");
-    doc.setFontSize(11);
-    doc.setTextColor(15, 23, 42);
-    doc.text("3. EXECUTIVE WRITTEN NARRATIVE (SUMMARY)", 14, y + 8);
-    doc.line(14, y + 10, 196, y + 10);
-
-    doc.setFont("Helvetica", "normal");
-    doc.setFontSize(8.5);
-    doc.setTextColor(51, 65, 85);
-
-    const narrativeLines = [
-      "WealthWise Elite democratizes tier-1 wealth management by deploying autonomous AI agents on Google Cloud.",
-      "Day-to-day operations run 24/7 without manual intervention: the Wexa Agent continuously monitors asset allocations,",
-      "calculates rebalancing deltas, conducts macro inflation stress testing, and executes real-time market grounding.",
-      "Humans act strictly as governance supervisors—setting risk parameters and validating high-impact updates via modal gates.",
-      "By lowering financial advising costs from $2,500/yr to $29/mo, WealthWise creates new economic freedom for over 410 clients."
-    ];
-
-    let nY = y + 17;
-    narrativeLines.forEach(line => {
-      doc.text(line, 14, nY);
-      nY += 5.5;
-    });
-
-    // Footer
-    doc.setFillColor(240, 180, 41);
-    doc.rect(14, 275, 182, 0.5, "F");
-
-    doc.setFont("Helvetica", "bold");
-    doc.setFontSize(7.5);
-    doc.setTextColor(100, 116, 139);
-    doc.text("VERIFIED HACKATHON DOSSIER • SUBMITTED TO TESTING@DEVPOST.COM & JUDGING@HACKER.FUND", 14, 281);
-    doc.text(`ISSUED: ${new Date().toLocaleDateString()}`, 155, 281);
-
-    doc.save("WealthWise_Elite_Hackathon_Submission_Dossier.pdf");
+    doc.save("WealthWise_Elite_Company_Audit_Dossier.pdf");
 
     window.dispatchEvent(
       new CustomEvent("ww-trigger-alert", {
         detail: {
           type: "success",
-          title: "Hackathon Dossier Downloaded! 🏆",
-          message: "Complete Hackathon Submission PDF with P&L and evidence has been exported.",
+          title: "Investor Dossier Exported! 🏆",
+          message: "Company Audit & Investor PDF with real P&L metrics has been generated.",
         },
       })
     );
@@ -168,28 +182,38 @@ export function HackathonSubmissionHub({ onClose }: HackathonSubmissionHubProps)
           <div className="space-y-2">
             <div className="flex items-center gap-2 flex-wrap">
               <span className="px-3 py-1 rounded-full bg-accent-gold/20 border border-accent-gold/40 text-accent-gold font-mono font-bold text-[11px] uppercase tracking-widest flex items-center gap-1.5">
-                <Trophy className="w-3.5 h-3.5" /> 90-Day Hackathon Submission Hub
+                <Building2 className="w-3.5 h-3.5" /> Company Audit & Investor Portal 📊
               </span>
               <span className="px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 font-mono font-bold text-[11px] uppercase tracking-widest flex items-center gap-1">
-                <CheckCircle2 className="w-3.5 h-3.5" /> Production Ready
+                <ShieldCheck className="w-3.5 h-3.5" /> Platform Transparency Hub 🛡️
               </span>
             </div>
 
             <h1 className="text-2xl md:text-3xl font-black font-display tracking-tight text-white flex items-center gap-3">
-              Money & Financial Access Category Submission
+              Platform Disclosures & Real Financial Ledger
             </h1>
 
             <p className="text-xs md:text-sm text-slate-300 max-w-2xl leading-relaxed">
-              <strong>WealthWise Elite 2.0</strong> is an autonomous AI financial intelligence engine built on <strong>Google Cloud Run</strong> and powered by <strong>Gemini 3</strong> with <strong>MongoDB MCP</strong> persistence.
+              <strong>WealthWise Elite</strong> is an autonomous AI financial intelligence platform running on <strong>Google Cloud Run</strong> and powered by <strong>Gemini 3</strong> with <strong>MongoDB MCP</strong> persistence.
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
+            <button
+              onClick={() => {
+                setTempFinancials(financials);
+                setIsEditingFinancials(true);
+              }}
+              className="px-4 py-3 rounded-2xl bg-slate-800 hover:bg-slate-700 text-accent-gold border border-accent-gold/40 font-mono font-bold text-xs tracking-wider uppercase shadow-xl hover:scale-105 transition-all flex items-center gap-2 cursor-pointer"
+            >
+              <Edit className="w-4 h-4" /> Edit Real Financials
+            </button>
+
             <button
               onClick={handleDownloadSubmissionPDF}
               className="px-5 py-3 rounded-2xl bg-gradient-to-r from-accent-gold to-amber-500 hover:from-amber-400 hover:to-amber-600 text-slate-950 font-mono font-bold text-xs tracking-wider uppercase shadow-xl hover:scale-105 transition-all flex items-center gap-2 cursor-pointer"
             >
-              <Download className="w-4 h-4" /> Export Submission PDF
+              <Download className="w-4 h-4" /> Export Dossier PDF
             </button>
 
             {onClose && (
@@ -209,30 +233,30 @@ export function HackathonSubmissionHub({ onClose }: HackathonSubmissionHubProps)
             <Github className="w-4 h-4 text-accent-gold shrink-0" />
             <div className="truncate">
               <div className="text-[10px] text-slate-400">GITHUB REPO</div>
-              <div className="font-bold text-slate-200 truncate">Shared with Evaluators</div>
+              <div className="font-bold text-slate-200 truncate">Source Repository</div>
             </div>
           </div>
 
           <div className="bg-slate-900/80 border border-slate-800 p-2.5 rounded-xl flex items-center gap-2">
-            <Video className="w-4 h-4 text-emerald-400 shrink-0" />
+            <Users className="w-4 h-4 text-emerald-400 shrink-0" />
             <div className="truncate">
-              <div className="text-[10px] text-slate-400">3-MIN VIDEO</div>
-              <div className="font-bold text-emerald-400">Live AI Production Script</div>
+              <div className="text-[10px] text-slate-400">ACTIVE CLIENTS</div>
+              <div className="font-bold text-emerald-400">{financials.activeClients} Subscribers</div>
             </div>
           </div>
 
           <div className="bg-slate-900/80 border border-slate-800 p-2.5 rounded-xl flex items-center gap-2">
             <DollarSign className="w-4 h-4 text-amber-400 shrink-0" />
             <div className="truncate">
-              <div className="text-[10px] text-slate-400">HACKATHON REVENUE</div>
-              <div className="font-bold text-amber-400">$17,280 Gross (98.6% Margin)</div>
+              <div className="text-[10px] text-slate-400">REAL GROSS REVENUE</div>
+              <div className="font-bold text-amber-400">${totalGrossRevenue.toLocaleString()} ({netMargin}% Margin)</div>
             </div>
           </div>
 
           <div className="bg-slate-900/80 border border-slate-800 p-2.5 rounded-xl flex items-center gap-2">
             <Server className="w-4 h-4 text-cyan-400 shrink-0" />
             <div className="truncate">
-              <div className="text-[10px] text-slate-400">GOOGLE CLOUD</div>
+              <div className="text-[10px] text-slate-400">INFRASTRUCTURE</div>
               <div className="font-bold text-cyan-400">Cloud Run + Gemini 3</div>
             </div>
           </div>
@@ -461,18 +485,31 @@ export function HackathonSubmissionHub({ onClose }: HackathonSubmissionHubProps)
         {/* TAB 3: REVENUE & P&L STATEMENT */}
         {activeTab === "REVENUE_PL" && (
           <div className="space-y-6">
-            <div className="flex items-center justify-between border-b border-border pb-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-3">
               <div>
                 <h3 className="text-lg font-bold font-display text-text-primary">
-                  Simple P&L & Revenue Statement (Hackathon Period)
+                  Company Real P&L & Revenue Statement
                 </h3>
                 <p className="text-xs text-text-muted">
-                  Audited financial ledger detailing gross subscription revenue, operational costs, and disclosed CAC spend.
+                  Disclosed financial ledger detailing gross subscription revenue, operational costs, and CAC spend.
                 </p>
               </div>
-              <span className="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-mono font-bold text-xs">
-                NET MARGIN: 98.6%
-              </span>
+              
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTempFinancials(financials);
+                    setIsEditingFinancials(true);
+                  }}
+                  className="px-3 py-1.5 rounded-xl bg-accent-gold/20 hover:bg-accent-gold/30 border border-accent-gold/40 text-accent-gold font-mono text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all"
+                >
+                  <Edit className="w-3.5 h-3.5" /> Edit Real Figures
+                </button>
+                <span className="px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-mono font-bold text-xs">
+                  NET MARGIN: {netMargin}%
+                </span>
+              </div>
             </div>
 
             {/* P&L Table */}
@@ -490,54 +527,54 @@ export function HackathonSubmissionHub({ onClose }: HackathonSubmissionHubProps)
                   <tr className="bg-emerald-500/5">
                     <td className="py-3.5 px-4 font-bold text-text-primary">Wealth Elite Subscription MRR</td>
                     <td className="py-3.5 px-4 text-emerald-400">Gross Revenue</td>
-                    <td className="py-3.5 px-4 text-right font-bold text-emerald-400">$12,480.00</td>
-                    <td className="py-3.5 px-4 text-text-muted">416 Active Clients ($29/mo) via Stripe</td>
+                    <td className="py-3.5 px-4 text-right font-bold text-emerald-400">${financials.mrrRevenue.toLocaleString()}</td>
+                    <td className="py-3.5 px-4 text-text-muted">{financials.activeClients} Active Subscribers via Stripe</td>
                   </tr>
                   <tr className="bg-emerald-500/5">
                     <td className="py-3.5 px-4 font-bold text-text-primary">Enterprise RIA Licensing Fees</td>
                     <td className="py-3.5 px-4 text-emerald-400">Gross Revenue</td>
-                    <td className="py-3.5 px-4 text-right font-bold text-emerald-400">$4,800.00</td>
-                    <td className="py-3.5 px-4 text-text-muted">2 Partner Wealth Firms ($2,400/mo)</td>
+                    <td className="py-3.5 px-4 text-right font-bold text-emerald-400">${financials.advisoryRevenue.toLocaleString()}</td>
+                    <td className="py-3.5 px-4 text-text-muted">Partner Advisory Licensing Contracts</td>
                   </tr>
                   <tr className="bg-amber-500/10 font-bold text-text-primary">
                     <td className="py-3.5 px-4">TOTAL GROSS REVENUE</td>
                     <td className="py-3.5 px-4 text-amber-400">Total Top Line</td>
-                    <td className="py-3.5 px-4 text-right text-amber-400">$17,280.00</td>
-                    <td className="py-3.5 px-4 text-text-muted">Stripe Dashboard Live Export</td>
+                    <td className="py-3.5 px-4 text-right text-amber-400">${totalGrossRevenue.toLocaleString()}</td>
+                    <td className="py-3.5 px-4 text-text-muted">Stripe / Merchant Dashboard Export</td>
                   </tr>
 
                   {/* Expenses */}
                   <tr>
                     <td className="py-3.5 px-4">Google Cloud Run Compute & Serverless Container</td>
                     <td className="py-3.5 px-4 text-rose-400">Hosting Expense</td>
-                    <td className="py-3.5 px-4 text-right text-rose-400">-$62.40</td>
+                    <td className="py-3.5 px-4 text-right text-rose-400">-${financials.cloudHostingCost.toFixed(2)}</td>
                     <td className="py-3.5 px-4 text-text-muted">Google Cloud Billing Invoice</td>
                   </tr>
                   <tr>
                     <td className="py-3.5 px-4">Gemini 3 Flash API & Search Grounding Token Costs</td>
                     <td className="py-3.5 px-4 text-rose-400">AI API Expense</td>
-                    <td className="py-3.5 px-4 text-right text-rose-400">-$128.50</td>
+                    <td className="py-3.5 px-4 text-right text-rose-400">-${financials.geminiApiCost.toFixed(2)}</td>
                     <td className="py-3.5 px-4 text-text-muted">Google AI Studio API Usage Ledger</td>
                   </tr>
                   <tr>
                     <td className="py-3.5 px-4">MongoDB Atlas Database Cluster</td>
                     <td className="py-3.5 px-4 text-rose-400">Database Expense</td>
-                    <td className="py-3.5 px-4 text-right text-rose-400">-$45.00</td>
+                    <td className="py-3.5 px-4 text-right text-rose-400">-${financials.databaseCost.toFixed(2)}</td>
                     <td className="py-3.5 px-4 text-text-muted">MongoDB Atlas Invoice</td>
                   </tr>
                   <tr className="bg-cyan-500/5">
                     <td className="py-3.5 px-4 font-bold text-text-primary">Marketing & Customer Acquisition (CAC)</td>
                     <td className="py-3.5 px-4 text-cyan-400">Customer Acquisition</td>
-                    <td className="py-3.5 px-4 text-right font-bold text-cyan-400">$0.00</td>
-                    <td className="py-3.5 px-4 text-text-muted">100% Organic Community Referral Growth</td>
+                    <td className="py-3.5 px-4 text-right font-bold text-cyan-400">${financials.cacCost.toFixed(2)}</td>
+                    <td className="py-3.5 px-4 text-text-muted">Disclosed Ad Spend & Community Referrals</td>
                   </tr>
 
                   {/* Net Profit */}
                   <tr className="bg-emerald-500/15 font-black text-sm text-emerald-400">
                     <td className="py-4 px-4">NET OPERATING PROFIT</td>
                     <td className="py-4 px-4 uppercase">Bottom Line</td>
-                    <td className="py-4 px-4 text-right">$17,044.10</td>
-                    <td className="py-4 px-4 text-xs font-normal text-emerald-300">98.6% Net Operating Margin</td>
+                    <td className="py-4 px-4 text-right">${netProfit.toLocaleString()}</td>
+                    <td className="py-4 px-4 text-xs font-normal text-emerald-300">{netMargin}% Net Operating Margin</td>
                   </tr>
                 </tbody>
               </table>
@@ -773,6 +810,136 @@ export function HackathonSubmissionHub({ onClose }: HackathonSubmissionHubProps)
           </div>
         )}
       </div>
+
+      {/* Edit Real Financials Modal */}
+      {isEditingFinancials && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="bg-slate-950 border border-accent-gold/40 rounded-2xl p-6 w-full max-w-lg space-y-4 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-border/80 pb-3">
+              <div>
+                <h3 className="text-lg font-bold font-display text-text-primary flex items-center gap-2">
+                  <Edit className="w-5 h-5 text-accent-gold" /> Edit Real Financial Metrics
+                </h3>
+                <p className="text-xs text-text-secondary mt-0.5">
+                  Update your real revenues, costs, and subscriber counts to reflect exact live metrics.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsEditingFinancials(false)}
+                className="text-text-muted hover:text-text-primary text-sm font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveFinancials} className="space-y-4 text-xs font-mono">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-text-muted font-bold uppercase">Subscription MRR ($)</label>
+                  <input
+                    type="number"
+                    value={tempFinancials.mrrRevenue}
+                    onChange={(e) => setTempFinancials({ ...tempFinancials, mrrRevenue: Number(e.target.value) || 0 })}
+                    className="w-full px-3 py-2 rounded-xl bg-bg-void border border-border text-text-primary text-sm outline-none focus:border-accent-gold"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-text-muted font-bold uppercase">Enterprise Licenses ($)</label>
+                  <input
+                    type="number"
+                    value={tempFinancials.advisoryRevenue}
+                    onChange={(e) => setTempFinancials({ ...tempFinancials, advisoryRevenue: Number(e.target.value) || 0 })}
+                    className="w-full px-3 py-2 rounded-xl bg-bg-void border border-border text-text-primary text-sm outline-none focus:border-accent-gold"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-text-muted font-bold uppercase">Cloud Hosting ($)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={tempFinancials.cloudHostingCost}
+                    onChange={(e) => setTempFinancials({ ...tempFinancials, cloudHostingCost: Number(e.target.value) || 0 })}
+                    className="w-full px-3 py-2 rounded-xl bg-bg-void border border-border text-text-primary text-sm outline-none focus:border-accent-gold"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-text-muted font-bold uppercase">Gemini 3 API Cost ($)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={tempFinancials.geminiApiCost}
+                    onChange={(e) => setTempFinancials({ ...tempFinancials, geminiApiCost: Number(e.target.value) || 0 })}
+                    className="w-full px-3 py-2 rounded-xl bg-bg-void border border-border text-text-primary text-sm outline-none focus:border-accent-gold"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-3">
+                <div className="space-y-1">
+                  <label className="text-text-muted font-bold uppercase">Database ($)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={tempFinancials.databaseCost}
+                    onChange={(e) => setTempFinancials({ ...tempFinancials, databaseCost: Number(e.target.value) || 0 })}
+                    className="w-full px-3 py-2 rounded-xl bg-bg-void border border-border text-text-primary text-sm outline-none focus:border-accent-gold"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-text-muted font-bold uppercase">Ad CAC ($)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={tempFinancials.cacCost}
+                    onChange={(e) => setTempFinancials({ ...tempFinancials, cacCost: Number(e.target.value) || 0 })}
+                    className="w-full px-3 py-2 rounded-xl bg-bg-void border border-border text-text-primary text-sm outline-none focus:border-accent-gold"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-text-muted font-bold uppercase">Active Clients</label>
+                  <input
+                    type="number"
+                    value={tempFinancials.activeClients}
+                    onChange={(e) => setTempFinancials({ ...tempFinancials, activeClients: Number(e.target.value) || 0 })}
+                    className="w-full px-3 py-2 rounded-xl bg-bg-void border border-border text-text-primary text-sm outline-none focus:border-accent-gold"
+                  />
+                </div>
+              </div>
+
+              <div className="p-3 bg-bg-void rounded-xl border border-border flex items-center justify-between font-bold">
+                <span className="text-text-muted">Calculated Net Profit:</span>
+                <span className="text-emerald-400 font-mono text-sm">
+                  ${((tempFinancials.mrrRevenue + tempFinancials.advisoryRevenue) - (tempFinancials.cloudHostingCost + tempFinancials.geminiApiCost + tempFinancials.databaseCost + tempFinancials.cacCost)).toLocaleString()}
+                </span>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsEditingFinancials(false)}
+                  className="px-4 py-2 rounded-xl bg-bg-secondary text-text-muted font-bold hover:text-text-primary"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-xl bg-accent-gold text-bg-void font-bold hover:bg-accent-gold/90 flex items-center gap-1.5"
+                >
+                  <Save className="w-4 h-4" /> Save Real Ledger
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

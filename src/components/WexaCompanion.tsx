@@ -121,6 +121,55 @@ export const WexaCompanion: React.FC<WexaCompanionProps> = ({ user, budget, onRe
   const [receiptImage, setReceiptImage] = useState<string | null>(null);
   const [isProcessingReceipt, setIsProcessingReceipt] = useState(false);
   const [latestReceiptResult, setLatestReceiptResult] = useState<ProcessedReceipt | null>(null);
+  
+  // Device Live Camera Viewfinder State
+  const [isCameraActive, setIsCameraActive] = useState(false);
+  const [cameraError, setCameraError] = useState<string | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
+
+  const startLiveCamera = async () => {
+    setCameraError(null);
+    setIsCameraActive(true);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } }
+      });
+      mediaStreamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        videoRef.current.play().catch(() => {});
+      }
+    } catch (err: any) {
+      console.warn("Camera access error:", err);
+      setCameraError("Unable to access camera device. Please allow camera permissions or upload an image file.");
+    }
+  };
+
+  const stopLiveCamera = () => {
+    if (mediaStreamRef.current) {
+      mediaStreamRef.current.getTracks().forEach(track => track.stop());
+      mediaStreamRef.current = null;
+    }
+    setIsCameraActive(false);
+  };
+
+  const snapPhotoFromCamera = () => {
+    if (!videoRef.current) return;
+    const video = videoRef.current;
+    const canvas = document.createElement("canvas");
+    canvas.width = video.videoWidth || 640;
+    canvas.height = video.videoHeight || 480;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const photoDataUrl = canvas.toDataURL("image/jpeg", 0.85);
+
+    stopLiveCamera();
+    setReceiptImage(photoDataUrl);
+    processReceiptData(photoDataUrl, "image/jpeg");
+  };
 
   // Session Persistent History State
   const [processedReceipts, setProcessedReceipts] = useState<ProcessedReceipt[]>(() => {
@@ -350,6 +399,7 @@ export const WexaCompanion: React.FC<WexaCompanionProps> = ({ user, budget, onRe
   const processReceiptData = async (base64: string, mimeType: string) => {
     setIsProcessingReceipt(true);
     setLatestReceiptResult(null);
+    window.dispatchEvent(new CustomEvent("ww-cloud-sync-start"));
 
     try {
       const res = await fetch("/api/gemini/receipt", {
@@ -431,6 +481,7 @@ export const WexaCompanion: React.FC<WexaCompanionProps> = ({ user, budget, onRe
       }
     } finally {
       setIsProcessingReceipt(false);
+      window.dispatchEvent(new CustomEvent("ww-cloud-sync-complete"));
     }
   };
 
@@ -877,36 +928,103 @@ export const WexaCompanion: React.FC<WexaCompanionProps> = ({ user, budget, onRe
                     className="hidden"
                   />
 
-                  {/* Haptic Visual Pulse Camera Button */}
-                  <div className="relative group">
+                  {/* Dual Action Buttons: Live Camera Capture vs File Upload */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <button
+                      type="button"
+                      onClick={startLiveCamera}
+                      disabled={isProcessingReceipt}
+                      className="py-3 px-4 bg-teal-500 hover:bg-teal-400 text-bg-void font-mono font-bold text-xs uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-teal-500/20"
+                    >
+                      <Camera className="w-4 h-4" />
+                      <span>Live Device Camera</span>
+                    </button>
+
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
                       disabled={isProcessingReceipt}
-                      className={cn(
-                        "w-full py-4 font-mono font-bold text-xs uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xl relative overflow-hidden",
-                        scanPulseActive
-                          ? "bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-500 text-bg-void ring-4 ring-emerald-400 shadow-[0_0_35px_rgba(16,185,129,0.8)] scale-102"
-                          : "bg-gradient-to-r from-accent-gold via-amber-500 to-yellow-400 hover:from-accent-gold/90 text-bg-void shadow-amber-500/20"
-                      )}
+                      className="py-3 px-4 bg-bg-void hover:bg-bg-primary border border-accent-gold/40 hover:border-accent-gold text-accent-gold font-mono font-bold text-xs uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md"
                     >
-                      {scanPulseActive && (
-                        <span className="absolute inset-0 bg-emerald-400/30 animate-ping rounded-xl"></span>
-                      )}
-                      
-                      {scanPulseActive ? (
-                        <>
-                          <CheckCircle2 className="w-5 h-5 text-bg-void animate-bounce" />
-                          <span>RECEIPT RECOGNIZED & LOGGED! 🧾</span>
-                        </>
-                      ) : (
-                        <>
-                          <Camera className="w-5 h-5 text-bg-void" />
-                          <span>Scan / Upload Paper Receipt</span>
-                        </>
-                      )}
+                      <Upload className="w-4 h-4" />
+                      <span>Upload Image File</span>
                     </button>
                   </div>
+
+                  {/* Live Camera Viewfinder Modal */}
+                  <AnimatePresence>
+                    {isCameraActive && (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
+                      >
+                        <div className="card max-w-lg w-full p-6 border-accent-gold/50 bg-bg-secondary space-y-4 shadow-2xl relative">
+                          <div className="flex items-center justify-between border-b border-border/60 pb-3">
+                            <div className="flex items-center gap-2 text-accent-gold font-bold text-sm font-mono uppercase">
+                              <Camera className="w-4 h-4" />
+                              Device Camera Viewfinder
+                            </div>
+                            <button
+                              type="button"
+                              onClick={stopLiveCamera}
+                              className="p-1 rounded-lg bg-bg-void text-text-muted hover:text-text-primary cursor-pointer"
+                            >
+                              ✕
+                            </button>
+                          </div>
+
+                          {cameraError ? (
+                            <div className="p-4 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-300 text-xs font-mono space-y-2">
+                              <div>{cameraError}</div>
+                              <button
+                                type="button"
+                                onClick={() => fileInputRef.current?.click()}
+                                className="px-3 py-1.5 bg-accent-gold text-bg-void rounded-lg font-bold"
+                              >
+                                Choose File Instead
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="relative rounded-xl overflow-hidden border-2 border-accent-gold/40 bg-black aspect-video flex items-center justify-center">
+                              <video
+                                ref={videoRef}
+                                autoPlay
+                                playsInline
+                                className="w-full h-full object-cover"
+                              />
+                              <div className="absolute inset-4 border-2 border-dashed border-teal-400/60 rounded-lg pointer-events-none flex items-center justify-center">
+                                <span className="bg-black/60 px-3 py-1 rounded text-[10px] font-mono text-teal-300">
+                                  Position receipt within target border
+                                </span>
+                              </div>
+                            </div>
+                          )}
+
+                          <div className="flex items-center justify-end gap-3 pt-2">
+                            <button
+                              type="button"
+                              onClick={stopLiveCamera}
+                              className="px-4 py-2 rounded-xl bg-bg-void border border-border text-xs text-text-muted font-mono"
+                            >
+                              Cancel
+                            </button>
+                            {!cameraError && (
+                              <button
+                                type="button"
+                                onClick={snapPhotoFromCamera}
+                                className="px-5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-bg-void font-mono font-bold text-xs uppercase tracking-wider flex items-center gap-2 shadow-lg shadow-emerald-500/20 cursor-pointer"
+                              >
+                                <Camera className="w-4 h-4" />
+                                Snap & Parse Receipt
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
 
                   <div className="text-[10px] text-text-muted text-center font-mono uppercase tracking-wider pt-1">
                     Or test with sample receipt preset:

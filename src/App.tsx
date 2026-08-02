@@ -101,7 +101,6 @@ import { RentVsBuySimulator } from "./components/RentVsBuySimulator";
 import { CurrencySelector, NameInput } from "./components/Modals";
 import { Onboarding } from "./components/Onboarding";
 import { JudgeTour } from "./components/JudgeTour";
-import { VoiceNavigationController } from "./components/VoiceNavigationController";
 import { GoalCelebrationOverlay } from "./components/GoalCelebration";
 import { StartupLogoAnimation } from "./components/StartupLogoAnimation";
 import { Logo } from "./components/Logo";
@@ -114,26 +113,38 @@ import { motion, AnimatePresence } from "motion/react";
 import { QuickTips } from "./components/QuickTips";
 import { Database, RefreshCw, Cloud, ShieldCheck, Mail, Lock, Server, LogIn, ArrowRight, Activity, Globe, Wifi, KeyRound } from "lucide-react";
 
-// Lazy loaded heavy charting/simulator engines on demand to optimize Core Web Vitals
-const Dashboard = lazy(() => import("./components/Dashboard").then(m => ({ default: m.Dashboard })));
-const BudgetPlanner = lazy(() => import("./components/BudgetPlanner").then(m => ({ default: m.BudgetPlanner })));
-const InvestmentSimulator = lazy(() => import("./components/InvestmentSimulator").then(m => ({ default: m.InvestmentSimulator })));
-const FinancialQuiz = lazy(() => import("./components/FinancialQuiz").then(m => ({ default: m.FinancialQuiz })));
-const ScenarioSimulator = lazy(() => import("./components/ScenarioSimulator").then(m => ({ default: m.ScenarioSimulator })));
-const Resources = lazy(() => import("./components/Resources").then(m => ({ default: m.Resources })));
-const AssetAllocation = lazy(() => import("./components/AssetAllocation").then(m => ({ default: m.AssetAllocation })));
-const AssetRebalancer = lazy(() => import("./components/AssetRebalancer").then(m => ({ default: m.AssetRebalancer })));
-const Badges = lazy(() => import("./components/Badges").then(m => ({ default: m.Badges })));
-const CaseStudy = lazy(() => import("./components/CaseStudy").then(m => ({ default: m.CaseStudy })));
-const QuestsHub = lazy(() => import("./components/QuestsHub").then(m => ({ default: m.QuestsHub })));
-const MacroPulse = lazy(() => import("./components/mastery/MacroPulse").then(m => ({ default: m.MacroPulse })));
-const TrendMarket = lazy(() => import("./components/mastery/TrendMarket").then(m => ({ default: m.TrendMarket })));
-const LiveOrLease = lazy(() => import("./components/mastery/LiveOrLease").then(m => ({ default: m.LiveOrLease })));
-const MockYield = lazy(() => import("./components/mastery/MockYield").then(m => ({ default: m.MockYield })));
-const PortfolioOverview = lazy(() => import("./components/PortfolioOverview").then(m => ({ default: m.PortfolioOverview })));
-const MonthlyFinancialReport = lazy(() => import("./components/MonthlyFinancialReport").then(m => ({ default: m.MonthlyFinancialReport })));
-const TaxEstimator = lazy(() => import("./components/TaxEstimator").then(m => ({ default: m.TaxEstimator })));
-const DebtPayoff = lazy(() => import("./components/DebtPayoff").then(m => ({ default: m.DebtPayoff })));
+// Performance monitoring utility tracking latency of each lazy-loaded financial engine module
+function trackLazyModule<T>(moduleName: string, importFn: () => Promise<{ default: React.ComponentType<any> }>) {
+  return lazy(() => {
+    const startTime = performance.now();
+    return importFn().then((module) => {
+      const duration = performance.now() - startTime;
+      console.log(`⚡ [PERFORMANCE MONITOR] Engine '${moduleName}' mounted in ${duration.toFixed(2)}ms`);
+      return module;
+    });
+  });
+}
+
+// Lazy loaded heavy charting/simulator engines with latency logging
+const Dashboard = trackLazyModule("Dashboard", () => import("./components/Dashboard").then(m => ({ default: m.Dashboard })));
+const BudgetPlanner = trackLazyModule("BudgetPlanner", () => import("./components/BudgetPlanner").then(m => ({ default: m.BudgetPlanner })));
+const InvestmentSimulator = trackLazyModule("InvestmentSimulator", () => import("./components/InvestmentSimulator").then(m => ({ default: m.InvestmentSimulator })));
+const FinancialQuiz = trackLazyModule("FinancialQuiz", () => import("./components/FinancialQuiz").then(m => ({ default: m.FinancialQuiz })));
+const ScenarioSimulator = trackLazyModule("ScenarioSimulator", () => import("./components/ScenarioSimulator").then(m => ({ default: m.ScenarioSimulator })));
+const Resources = trackLazyModule("Resources", () => import("./components/Resources").then(m => ({ default: m.Resources })));
+const AssetAllocation = trackLazyModule("AssetAllocation", () => import("./components/AssetAllocation").then(m => ({ default: m.AssetAllocation })));
+const AssetRebalancer = trackLazyModule("AssetRebalancer", () => import("./components/AssetRebalancer").then(m => ({ default: m.AssetRebalancer })));
+const Badges = trackLazyModule("Badges", () => import("./components/Badges").then(m => ({ default: m.Badges })));
+const CaseStudy = trackLazyModule("CaseStudy", () => import("./components/CaseStudy").then(m => ({ default: m.CaseStudy })));
+const QuestsHub = trackLazyModule("QuestsHub", () => import("./components/QuestsHub").then(m => ({ default: m.QuestsHub })));
+const MacroPulse = trackLazyModule("MacroPulse", () => import("./components/mastery/MacroPulse").then(m => ({ default: m.MacroPulse })));
+const TrendMarket = trackLazyModule("TrendMarket", () => import("./components/mastery/TrendMarket").then(m => ({ default: m.TrendMarket })));
+const LiveOrLease = trackLazyModule("LiveOrLease", () => import("./components/mastery/LiveOrLease").then(m => ({ default: m.LiveOrLease })));
+const MockYield = trackLazyModule("MockYield", () => import("./components/mastery/MockYield").then(m => ({ default: m.MockYield })));
+const PortfolioOverview = trackLazyModule("PortfolioOverview", () => import("./components/PortfolioOverview").then(m => ({ default: m.PortfolioOverview })));
+const MonthlyFinancialReport = trackLazyModule("MonthlyFinancialReport", () => import("./components/MonthlyFinancialReport").then(m => ({ default: m.MonthlyFinancialReport })));
+const TaxEstimator = trackLazyModule("TaxEstimator", () => import("./components/TaxEstimator").then(m => ({ default: m.TaxEstimator })));
+const DebtPayoff = trackLazyModule("DebtPayoff", () => import("./components/DebtPayoff").then(m => ({ default: m.DebtPayoff })));
 
 function ModuleLoadingSkeleton() {
   return (
@@ -1442,11 +1453,6 @@ function AppContent() {
       {showTutorial && (
         <Tutorial onClose={() => setShowTutorial(false)} />
       )}
-
-      <VoiceNavigationController onNavigate={(hash) => {
-        setCurrentHash(hash);
-        window.location.hash = hash;
-      }} />
 
       <GoalCelebrationOverlay />
     </div>

@@ -4,6 +4,7 @@ import { Plus, Trash2, ArrowRight, ShieldAlert, Sparkles, TrendingUp, DollarSign
 import { formatCurrency, cn } from "../lib/utils";
 import { CURRENCIES } from "../constants";
 import { UserProfile } from "../types";
+import { DebtPayoffVisualization } from "./DebtPayoffVisualization";
 
 interface Loan {
   id: string;
@@ -450,6 +451,13 @@ export function DebtPayoff({ user }: DebtPayoffProps) {
         user={user} 
         currency={currency} 
         onApplyExtra={(amt) => setExtraPayment(amt)} 
+      />
+
+      {/* Dynamic Debt Visualization Component with Countdown & Chart */}
+      <DebtPayoffVisualization 
+        user={user} 
+        loans={loans} 
+        initialExtraPayment={extraPayment} 
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">

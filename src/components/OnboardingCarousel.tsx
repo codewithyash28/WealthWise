@@ -1,18 +1,18 @@
-import React, { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { 
   Compass, 
   ChevronRight, 
   ChevronLeft, 
   CheckCircle2, 
-  Sparkles, 
   PieChart, 
   Bot, 
   TrendingUp, 
   Layers, 
   Trophy, 
   X,
-  ArrowRight
+  ArrowRight,
+  type LucideIcon
 } from "lucide-react";
 import { cn } from "../lib/utils";
 
@@ -23,7 +23,8 @@ export interface OnboardingStep {
   moduleName: string;
   hashLink: string;
   description: string;
-  icon: React.ReactNode;
+  icon: LucideIcon;
+  iconColor: string;
   badge: string;
   color: string;
 }
@@ -36,7 +37,8 @@ const ONBOARDING_STEPS: OnboardingStep[] = [
     moduleName: "Budget Planner Engine",
     hashLink: "#dashboard",
     description: "Establish your monthly net income, categorize fixed & discretionary liabilities, and calculate your safe-to-spend buffer.",
-    icon: <PieChart className="w-8 h-8 text-amber-400" />,
+    icon: PieChart,
+    iconColor: "text-amber-400",
     badge: "Essential Baseline",
     color: "from-amber-500/20 via-bg-secondary to-bg-primary"
   },
@@ -47,7 +49,8 @@ const ONBOARDING_STEPS: OnboardingStep[] = [
     moduleName: "Wexa Companion AI",
     hashLink: "#wexa-companion",
     description: "Upload paper receipts for Gemini Vision auto-categorization or ask Wexa Socratic questions like 'Can I afford a $45 dinner tonight?'.",
-    icon: <Bot className="w-8 h-8 text-teal-400" />,
+    icon: Bot,
+    iconColor: "text-teal-400",
     badge: "Multimodal AI",
     color: "from-teal-500/20 via-bg-secondary to-bg-primary"
   },
@@ -58,7 +61,8 @@ const ONBOARDING_STEPS: OnboardingStep[] = [
     moduleName: "Scenario Simulator",
     hashLink: "#dashboard",
     description: "Simulate interest rate hikes, inflation spikes, and economic downturns to test your portfolio's resilience over a 30-year horizon.",
-    icon: <TrendingUp className="w-8 h-8 text-cyan-400" />,
+    icon: TrendingUp,
+    iconColor: "text-cyan-400",
     badge: "Risk Defense",
     color: "from-cyan-500/20 via-bg-secondary to-bg-primary"
   },
@@ -69,7 +73,8 @@ const ONBOARDING_STEPS: OnboardingStep[] = [
     moduleName: "Asset Rebalancer",
     hashLink: "#rebalancer",
     description: "Align target portfolio weights across Stocks, Bonds, Cash, and High-Yield assets to eliminate structural asset drift.",
-    icon: <Layers className="w-8 h-8 text-purple-400" />,
+    icon: Layers,
+    iconColor: "text-purple-400",
     badge: "Portfolio Growth",
     color: "from-purple-500/20 via-bg-secondary to-bg-primary"
   },
@@ -80,28 +85,37 @@ const ONBOARDING_STEPS: OnboardingStep[] = [
     moduleName: "Leveling System & Vault",
     hashLink: "#vault",
     description: "Earn XP by completing daily quests, unlock achievement badges, and climb the ranks toward WealthWise Elite status.",
-    icon: <Trophy className="w-8 h-8 text-accent-gold" />,
+    icon: Trophy,
+    iconColor: "text-accent-gold",
     badge: "Gamified Mastery",
     color: "from-accent-gold/20 via-bg-secondary to-bg-primary"
   }
 ];
 
-export const OnboardingCarousel: React.FC = () => {
+export function OnboardingCarousel() {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [completedSteps, setCompletedSteps] = useState<string[]>(() => {
     try {
       const saved = localStorage.getItem("ww_completed_onboarding_steps");
       if (saved) return JSON.parse(saved);
-    } catch (e) {}
+    } catch (e) {
+      console.error(e);
+    }
     return [];
   });
+
   const [isDismissed, setIsDismissed] = useState<boolean>(() => {
-    return localStorage.getItem("ww_onboarding_dismissed") === "true";
+    try {
+      return localStorage.getItem("ww_onboarding_dismissed") === "true";
+    } catch (e) {
+      return false;
+    }
   });
 
   if (isDismissed) return null;
 
-  const currentStep = ONBOARDING_STEPS[currentStepIndex];
+  const currentStep = ONBOARDING_STEPS[currentStepIndex] || ONBOARDING_STEPS[0];
+  const StepIcon = currentStep.icon;
 
   const handleNext = () => {
     if (currentStepIndex < ONBOARDING_STEPS.length - 1) {
@@ -120,31 +134,39 @@ export const OnboardingCarousel: React.FC = () => {
       const next = prev.includes(stepId)
         ? prev.filter(id => id !== stepId)
         : [...prev, stepId];
-      localStorage.setItem("ww_completed_onboarding_steps", JSON.stringify(next));
+      try {
+        localStorage.setItem("ww_completed_onboarding_steps", JSON.stringify(next));
+      } catch (e) {
+        console.error(e);
+      }
       return next;
     });
   };
 
   const handleDismiss = () => {
     setIsDismissed(true);
-    localStorage.setItem("ww_onboarding_dismissed", "true");
+    try {
+      localStorage.setItem("ww_onboarding_dismissed", "true");
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
-      className="card p-6 border-accent-gold/40 bg-gradient-to-r from-bg-secondary/90 via-bg-primary to-bg-secondary/60 shadow-2xl relative overflow-hidden"
+      className="card p-6 border-accent-gold/40 bg-gradient-to-r from-bg-secondary/90 via-bg-primary to-bg-secondary/60 shadow-2xl relative overflow-hidden font-sans"
     >
       <div className="flex items-center justify-between border-b border-border/60 pb-3 mb-4">
         <div className="flex items-center gap-2">
           <div className="p-2 rounded-xl bg-accent-gold/15 border border-accent-gold/30 text-accent-gold">
-            <Compass className="w-5 h-5 animate-spin-slow" />
+            <Compass className="w-5 h-5 animate-pulse" />
           </div>
           <div>
             <h3 className="text-base font-bold font-display text-text-primary flex items-center gap-2">
               Get Started: Wealth Journey Tour
-              <span className="text-[10px] font-mono bg-accent-gold/15 text-accent-gold border border-accent-gold/30 px-2 py-0.5 rounded-full uppercase">
+              <span className="text-[10px] font-mono bg-accent-gold/15 text-accent-gold border border-accent-gold/30 px-2 py-0.5 rounded-full uppercase font-bold">
                 {completedSteps.length}/{ONBOARDING_STEPS.length} Completed
               </span>
             </h3>
@@ -177,7 +199,7 @@ export const OnboardingCarousel: React.FC = () => {
           >
             <div className="sm:col-span-2 flex justify-center">
               <div className="p-5 rounded-2xl bg-bg-void border border-border shadow-xl flex items-center justify-center">
-                {currentStep.icon}
+                <StepIcon className={cn("w-8 h-8", currentStep.iconColor)} />
               </div>
             </div>
 
@@ -272,4 +294,4 @@ export const OnboardingCarousel: React.FC = () => {
       </div>
     </motion.div>
   );
-};
+}

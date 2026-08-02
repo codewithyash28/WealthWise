@@ -30,7 +30,82 @@ type Scenario = {
 
 export function ScenarioSimulator({ user, budget, onComplete }: ScenarioSimulatorProps) {
   const currency = CURRENCIES[user.currency] || CURRENCIES.USD;
-  const [activeTab, setActiveTab] = useState<"life" | "retirement" | "stresstest">("retirement");
+  const [activeTab, setActiveTab] = useState<"life" | "retirement" | "stresstest" | "history">("retirement");
+
+  // Simulation History State
+  const [savedSimulations, setSavedSimulations] = useState<Array<{
+    id: string;
+    savedAt: string;
+    title: string;
+    type: "Retirement" | "Stress Test" | "Life Event";
+    summaryText: string;
+    projectedWealth: number;
+    parameters: Record<string, any>;
+  }>>(() => {
+    try {
+      const saved = localStorage.getItem("ww_saved_simulations");
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.warn("Failed reading saved simulations", e);
+    }
+    return [
+      {
+        id: "sim-sample-1",
+        savedAt: "Yesterday, 4:15 PM",
+        title: "FIRE Retirement at Age 55",
+        type: "Retirement",
+        summaryText: "Monthly contribution $1,200 for 25 years at 8.0% APY.",
+        projectedWealth: 1148200,
+        parameters: { years: 25, monthlyContribution: 1200, apy: 8 }
+      },
+      {
+        id: "sim-sample-2",
+        savedAt: "3 days ago",
+        title: "Stagflation Stress Test (-20% Equity, +9% Inflation)",
+        type: "Stress Test",
+        summaryText: "Immediate wealth loss -$24,000, 20-year capital gap -$180,000.",
+        projectedWealth: 620000,
+        parameters: { equityShock: -20, inflation: 9, incomeShock: -10 }
+      }
+    ];
+  });
+
+  const saveCurrentSimulation = (
+    type: "Retirement" | "Stress Test" | "Life Event",
+    title: string,
+    summaryText: string,
+    projectedWealth: number,
+    parameters: Record<string, any>
+  ) => {
+    const newSim = {
+      id: "sim-" + Date.now(),
+      savedAt: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }),
+      title,
+      type,
+      summaryText,
+      projectedWealth,
+      parameters
+    };
+    const updated = [newSim, ...savedSimulations];
+    setSavedSimulations(updated);
+    localStorage.setItem("ww_saved_simulations", JSON.stringify(updated));
+
+    window.dispatchEvent(
+      new CustomEvent("ww-trigger-alert", {
+        detail: {
+          type: "success",
+          title: "Simulation Saved!",
+          message: `Saved "${title}" to your Simulation History dashboard.`
+        }
+      })
+    );
+  };
+
+  const deleteSavedSimulation = (id: string) => {
+    const updated = savedSimulations.filter(s => s.id !== id);
+    setSavedSimulations(updated);
+    localStorage.setItem("ww_saved_simulations", JSON.stringify(updated));
+  };
 
   // Stress Test Shock State
   const [selectedShockPreset, setSelectedShockPreset] = useState<"stagflation" | "crash" | "rate_spike" | "recession" | "custom">("stagflation");
@@ -417,6 +492,19 @@ export function ScenarioSimulator({ user, budget, onComplete }: ScenarioSimulato
             <BrainCircuit className="w-4 h-4" />
             <span>Life Event Scenarios</span>
           </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("history")}
+            className={cn(
+              "flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-mono font-bold transition-all cursor-pointer",
+              activeTab === "history" 
+                ? "bg-accent-cyan text-bg-void shadow-lg shadow-accent-cyan/20" 
+                : "text-text-muted hover:text-text-primary"
+            )}
+          >
+            <Calendar className="w-4 h-4" />
+            <span>Simulation History ({savedSimulations.length})</span>
+          </button>
         </div>
       </div>
 
@@ -794,11 +882,26 @@ export function ScenarioSimulator({ user, budget, onComplete }: ScenarioSimulato
                 </div>
               </div>
 
-              {/* 5-Year Old Friendly Summary Box */}
+              {/* 5-Year Old Friendly Summary Box with Save Simulation button */}
               <div className="card p-6 bg-bg-secondary/60 border-border/80 space-y-3">
-                <div className="flex items-center gap-2 text-accent-gold">
-                  <Sparkles className="w-4 h-4" />
-                  <span className="text-xs font-mono font-bold uppercase tracking-wider">Super Simple Kid-Friendly Summary</span>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-accent-gold">
+                    <Sparkles className="w-4 h-4" />
+                    <span className="text-xs font-mono font-bold uppercase tracking-wider">Super Simple Summary</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => saveCurrentSimulation(
+                      "Retirement",
+                      `Retirement Goal: ${investmentYears} Yr Plan`,
+                      `Save ${formatCurrency(annualContribution, user.currency, currency.locale)}/yr for ${investmentYears} yrs.`,
+                      retirementAccumulationData.finalNominalWealth,
+                      { investmentYears, annualContribution, expectedReturn: retirementReturnRate }
+                    )}
+                    className="px-3.5 py-1.5 bg-accent-gold hover:bg-accent-gold/90 text-bg-void text-xs font-mono font-bold rounded-xl transition-all flex items-center gap-1.5 cursor-pointer shadow-md"
+                  >
+                    <PiggyBank className="w-3.5 h-3.5" /> Save Simulation
+                  </button>
                 </div>
                 <p className="text-sm text-text-primary leading-relaxed">
                   If you save <strong className="text-accent-emerald">{formatCurrency(annualContribution, user.currency, currency.locale)}</strong> every year for <strong className="text-accent-gold">{investmentYears} years</strong>, your money will grow to <strong className="text-accent-emerald">{formatCurrency(retirementAccumulationData.finalNominalWealth, user.currency, currency.locale)}</strong>! 
@@ -914,26 +1017,108 @@ export function ScenarioSimulator({ user, budget, onComplete }: ScenarioSimulato
                   </div>
                 </div>
 
-                <div className="card p-6 flex flex-col justify-center space-y-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-accent-gold/20 flex items-center justify-center">
-                      <BrainCircuit className="w-4 h-4 text-accent-gold" />
+                <div className="card p-6 flex flex-col justify-between space-y-3">
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-accent-gold/20 flex items-center justify-center">
+                        <BrainCircuit className="w-4 h-4 text-accent-gold" />
+                      </div>
+                      <h4 className="font-bold text-sm">Strategic Insight</h4>
                     </div>
-                    <h4 className="font-bold text-sm">Strategic Insight</h4>
+                    <p className="text-xs text-text-secondary leading-relaxed italic">
+                      {selectedScenarios.length === 0 
+                        ? "Select a scenario to see how your life choices ripple through time."
+                        : selectedScenarios.includes('car') && selectedScenarios.includes('raise')
+                        ? "Your raise covers the car, but investing that raise instead would have yielded a much higher net worth. Is the luxury worth the opportunity cost?"
+                        : selectedScenarios.includes('frugal')
+                        ? "Extreme frugality is a powerful lever. You're accelerating your financial independence by years."
+                        : "Every decision today is a trade-off with your future self. Choose wisely."}
+                    </p>
                   </div>
-                  <p className="text-xs text-text-secondary leading-relaxed italic">
-                    {selectedScenarios.length === 0 
-                      ? "Select a scenario to see how your life choices ripple through time."
-                      : selectedScenarios.includes('car') && selectedScenarios.includes('raise')
-                      ? "Your raise covers the car, but investing that raise instead would have yielded a much higher net worth. Is the luxury worth the opportunity cost?"
-                      : selectedScenarios.includes('frugal')
-                      ? "Extreme frugality is a powerful lever. You're accelerating your financial independence by years."
-                      : "Every decision today is a trade-off with your future self. Choose wisely."}
-                  </p>
+
+                  <button
+                    type="button"
+                    onClick={() => saveCurrentSimulation(
+                      "Life Event",
+                      `Life Event Scenario (${years} Yrs)`,
+                      `Selected ${selectedScenarios.length} events: ${selectedScenarios.join(", ")}`,
+                      projectionData.datasets[1].data[years] || 0,
+                      { years, growthRate, selectedScenarios }
+                    )}
+                    className="w-full py-2 bg-accent-gold text-bg-void text-xs font-mono font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-md"
+                  >
+                    <BrainCircuit className="w-3.5 h-3.5" /> Save Life Event Simulation
+                  </button>
                 </div>
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* TAB 4: SIMULATION HISTORY */}
+      {activeTab === "history" && (
+        <div className="space-y-6">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-4 border-b border-border/60">
+            <div>
+              <h2 className="text-2xl font-display font-bold">Saved Simulation History</h2>
+              <p className="text-text-secondary text-xs">Review past financial projections, stress tests, and retirement models.</p>
+            </div>
+            <div className="px-3 py-1 rounded-xl bg-accent-cyan/10 border border-accent-cyan/30 text-accent-cyan font-mono text-xs font-bold">
+              {savedSimulations.length} Saved Record{savedSimulations.length !== 1 ? "s" : ""}
+            </div>
+          </div>
+
+          {savedSimulations.length === 0 ? (
+            <div className="card p-12 text-center space-y-4 border-dashed border-border">
+              <Calendar className="w-10 h-10 text-text-muted mx-auto" />
+              <div className="space-y-1">
+                <h3 className="font-bold text-base">No Saved Simulations Yet</h3>
+                <p className="text-xs text-text-muted">Run a Retirement, Stress Test, or Life Event simulation and click "Save Simulation" to record it here.</p>
+              </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {savedSimulations.map((sim) => (
+                <div key={sim.id} className="card p-6 space-y-4 border-accent-gold/30 bg-bg-secondary/60 hover:border-accent-gold/60 transition-all shadow-md relative group">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="space-y-1">
+                      <span className={cn(
+                        "px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider border",
+                        sim.type === "Retirement" && "bg-emerald-500/15 border-emerald-500/30 text-emerald-300",
+                        sim.type === "Stress Test" && "bg-rose-500/15 border-rose-500/30 text-rose-300",
+                        sim.type === "Life Event" && "bg-amber-500/15 border-amber-500/30 text-amber-300"
+                      )}>
+                        {sim.type}
+                      </span>
+                      <h4 className="font-bold text-sm text-text-primary pt-1">{sim.title}</h4>
+                      <div className="text-[10px] text-text-muted font-mono">{sim.savedAt}</div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => deleteSavedSimulation(sim.id)}
+                      className="text-text-muted hover:text-rose-400 p-1.5 rounded-lg hover:bg-rose-500/10 transition-colors cursor-pointer"
+                      title="Delete Saved Simulation"
+                    >
+                      <AlertCircle className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  <p className="text-xs text-text-secondary leading-relaxed bg-bg-void/60 p-3 rounded-xl border border-border/60 font-mono">
+                    {sim.summaryText}
+                  </p>
+
+                  <div className="pt-2 border-t border-border/40 flex items-center justify-between">
+                    <span className="text-[10px] font-mono text-text-muted uppercase">Projected Net Wealth</span>
+                    <span className="text-lg font-mono font-bold text-accent-gold">
+                      {formatCurrency(sim.projectedWealth, user.currency, currency.locale)}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>

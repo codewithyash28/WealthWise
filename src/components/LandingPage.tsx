@@ -2,6 +2,7 @@ import { motion } from "motion/react";
 import { ChevronRight, Play, CheckCircle2, BookOpen, TrendingUp, Brain, Bot, PieChart, Sparkles, BrainCircuit, Trophy, ShieldCheck } from "lucide-react";
 import { cn } from "../lib/utils";
 import { Logo } from "./Logo";
+import { CommunityReviews } from "./CommunityReviews";
 
 export function LandingPage() {
   const fadeInUp = {
@@ -300,42 +301,8 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* Testimonials */}
-      <section className="container mx-auto px-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-16">
-          {[
-            { text: "Wexa AI helped me understand SIPs. Now I invest every month!", author: "Priya S.", age: 24, role: "Software Engineer" },
-            { text: "The budget planner showed me I was spending 40% on wants. Game changer.", author: "Marcus T.", age: 28, role: "Marketing Manager" },
-            { text: "Finally a financial tool that works in GBP and actually makes sense!", author: "Sophie L.", age: 22, role: "University Student" }
-          ].map((t, i) => (
-            <motion.div
-              key={i}
-              {...fadeInUp}
-              transition={{ delay: i * 0.1 }}
-              className="card p-8 flex flex-col justify-between"
-            >
-              <div className="space-y-4">
-                <div className="flex gap-1">
-                  {[1, 2, 3, 4, 5].map(s => <span key={s} className="text-accent-cyan text-base">★</span>)}
-                </div>
-                <p className="text-base font-sans text-text-secondary leading-relaxed">"{t.text}"</p>
-              </div>
-              <div className="mt-8 flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-linear-to-br from-accent-gold to-accent-emerald flex items-center justify-center font-bold text-bg-void">
-                  {t.author[0]}
-                </div>
-                <div>
-                  <div className="font-bold">{t.author}, {t.age}</div>
-                  <div className="text-xs text-text-muted uppercase tracking-wider">{t.role}</div>
-                </div>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-        <p className="text-center text-[10px] text-text-muted/60 mt-12 uppercase tracking-widest">
-          Testimonials are illustrative for education
-        </p>
-      </section>
+      {/* Verified Member Reviews & Case Studies Section */}
+      <CommunityReviews />
     </div>
   );
 }

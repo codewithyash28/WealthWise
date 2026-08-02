@@ -1,5 +1,5 @@
 import { motion } from "motion/react";
-import { TrendingUp, ShieldCheck, Target, BrainCircuit, ChevronRight, Sparkles, Wallet, PieChart, ArrowUpRight, ArrowDownRight, CheckCircle2, Info, Trophy, Settings, ChevronDown, Check, GitBranch, Download, Share2, FileJson, Copy, X, Calendar, Lock, Flame, Sliders, BookOpen, Coins, Star, ShoppingBag, Image as ImageIcon, Zap, Pencil, Edit3, Save, RefreshCw, BarChart2, Layers, PiggyBank, Bell } from "lucide-react";
+import { TrendingUp, ShieldCheck, Target, BrainCircuit, ChevronRight, Sparkles, Wallet, PieChart, ArrowUpRight, ArrowDownRight, CheckCircle2, Info, Trophy, Settings, ChevronDown, Check, GitBranch, Download, Share2, FileJson, Copy, X, Calendar, Lock, Flame, Sliders, BookOpen, Coins, Star, ShoppingBag, Image as ImageIcon, Zap, Pencil, Edit3, Save, RefreshCw, BarChart2, Layers, PiggyBank, Bell, Command } from "lucide-react";
 import confetti from "canvas-confetti";
 import { UserProfile, BudgetPlan } from "../types";
 import { formatCurrency, cn } from "../lib/utils";
@@ -20,7 +20,16 @@ import { EmergencyFundWidget } from "./EmergencyFundWidget";
 import { LevelingSystem } from "./LevelingSystem";
 import { DailyGoalTracker } from "./DailyGoalTracker";
 import { FinancialRoadmap } from "./FinancialRoadmap";
+import { WealthPulseWidget } from "./WealthPulseWidget";
+import { CommunityReviews } from "./CommunityReviews";
 import { OnboardingCarousel } from "./OnboardingCarousel";
+import { FinancialAffirmation } from "./FinancialAffirmation";
+import { GlobalIntelligenceWidget } from "./GlobalIntelligenceWidget";
+import { MidnightAuditor } from "./MidnightAuditor";
+import { GrowthTelemetryWidget } from "./GrowthTelemetryWidget";
+import { CommandPalette } from "./CommandPalette";
+import { FinancialGoalsWidget } from "./FinancialGoalsWidget";
+import { useEffect } from "react";
 
 interface WealthDashboardProps {
   user: UserProfile;
@@ -39,6 +48,20 @@ export function WealthDashboard({ user, budget, onUnlockAchievement, onUpdateGit
   const [showShareModal, setShowShareModal] = useState(false);
   const [copiedShareLink, setCopiedShareLink] = useState(false);
   const [intentInput, setIntentInput] = useState("");
+  const [isEasyMode, setIsEasyMode] = useState<boolean>(true);
+  const [activeSpecializedTab, setActiveSpecializedTab] = useState<"macropulse" | "trendmarket" | "liveorlease" | "mockyield">("macropulse");
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState<boolean>(false);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setIsCommandPaletteOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   // Quick Edit Net Worth modal state
   const [showQuickEditModal, setShowQuickEditModal] = useState(false);
@@ -676,8 +699,139 @@ export function WealthDashboard({ user, budget, onUnlockAchievement, onUpdateGit
 
   return (
     <div className="container mx-auto px-6 py-12 space-y-12">
+      {/* Daily AI Financial Affirmation Banner */}
+      <FinancialAffirmation />
+
       {/* Onboarding Carousel for New & Returning Users */}
       <OnboardingCarousel />
+
+      {/* 1-Click Super Easy Action Grid (Made so simple even a beginner can do it) */}
+      <div className="p-6 rounded-3xl bg-gradient-to-r from-zinc-950 via-slate-900 to-zinc-950 border-2 border-accent-gold/50 shadow-2xl space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-border/60">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-2xl bg-accent-gold text-bg-void font-bold">
+              <Zap className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-mono font-bold uppercase tracking-wider border border-emerald-500/30">
+                  1-Click Easy Actions
+                </span>
+                <span className="px-2.5 py-0.5 rounded-full bg-accent-gold/20 text-accent-gold text-[10px] font-mono font-bold uppercase tracking-wider border border-accent-gold/30">
+                  Zero Complexity
+                </span>
+              </div>
+              <h3 className="text-lg font-black font-display text-text-primary mt-0.5">
+                Super Easy 1-Click Money Control Hub
+              </h3>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setIsEasyMode(!isEasyMode)}
+            className={cn(
+              "px-4 py-2 rounded-xl border text-xs font-mono font-bold flex items-center gap-2 transition-all cursor-pointer shrink-0 shadow-md",
+              isEasyMode 
+                ? "bg-emerald-500 text-bg-void border-emerald-400" 
+                : "bg-bg-void text-text-muted border-border hover:text-text-primary"
+            )}
+          >
+            <Sparkles className="w-4 h-4" />
+            <span>{isEasyMode ? "Easy Plain-Language Mode: ON" : "Turn ON Easy Mode"}</span>
+          </button>
+        </div>
+
+        {/* 4 Super Intuitive Action Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <a
+            href="#wexa-companion"
+            className="p-4 rounded-2xl bg-teal-950/40 border border-teal-500/30 hover:border-teal-400 transition-all space-y-2 group cursor-pointer shadow-lg hover:scale-[1.02]"
+          >
+            <div className="flex items-center justify-between">
+              <div className="p-2 rounded-xl bg-teal-500/20 text-teal-300 font-bold">
+                📷
+              </div>
+              <span className="text-[10px] font-mono text-teal-300 font-bold uppercase">1-Click Scan</span>
+            </div>
+            <div>
+              <h4 className="text-sm font-bold text-text-primary group-hover:text-teal-300 transition-colors">
+                Scan Paper Bill / Receipt
+              </h4>
+              <p className="text-[11px] text-text-muted leading-tight mt-1">
+                Point camera at paper bill ➔ Gemini AI auto-reads total & logs it!
+              </p>
+            </div>
+          </a>
+
+          <button
+            type="button"
+            onClick={() => setShowQuickEditModal(true)}
+            className="p-4 rounded-2xl bg-amber-950/40 border border-amber-500/30 hover:border-amber-400 transition-all space-y-2 text-left group cursor-pointer shadow-lg hover:scale-[1.02]"
+          >
+            <div className="flex items-center justify-between">
+              <div className="p-2 rounded-xl bg-amber-500/20 text-amber-300 font-bold">
+                💰
+              </div>
+              <span className="text-[10px] font-mono text-amber-300 font-bold uppercase">1-Click Edit</span>
+            </div>
+            <div>
+              <h4 className="text-sm font-bold text-text-primary group-hover:text-amber-300 transition-colors">
+                Update Total Money (Net Worth)
+              </h4>
+              <p className="text-[11px] text-text-muted leading-tight mt-1">
+                Type what you own vs owe ➔ instant net worth recalculation!
+              </p>
+            </div>
+          </button>
+
+          <a
+            href="#debt-payoff"
+            className="p-4 rounded-2xl bg-emerald-950/40 border border-emerald-500/30 hover:border-emerald-400 transition-all space-y-2 group cursor-pointer shadow-lg hover:scale-[1.02]"
+          >
+            <div className="flex items-center justify-between">
+              <div className="p-2 rounded-xl bg-emerald-500/20 text-emerald-300 font-bold">
+                🎯
+              </div>
+              <span className="text-[10px] font-mono text-emerald-300 font-bold uppercase">1-Click Goal</span>
+            </div>
+            <div>
+              <h4 className="text-sm font-bold text-text-primary group-hover:text-emerald-300 transition-colors">
+                Pay Off Debt Fast
+              </h4>
+              <p className="text-[11px] text-text-muted leading-tight mt-1">
+                Slide extra payment ➔ watch months melt away to total debt freedom!
+              </p>
+            </div>
+          </a>
+
+          <a
+            href="#wexa-agent"
+            className="p-4 rounded-2xl bg-purple-950/40 border border-purple-500/30 hover:border-purple-400 transition-all space-y-2 group cursor-pointer shadow-lg hover:scale-[1.02]"
+          >
+            <div className="flex items-center justify-between">
+              <div className="p-2 rounded-xl bg-purple-500/20 text-purple-300 font-bold">
+                🤖
+              </div>
+              <span className="text-[10px] font-mono text-purple-300 font-bold uppercase">1-Click Ask</span>
+            </div>
+            <div>
+              <h4 className="text-sm font-bold text-text-primary group-hover:text-purple-300 transition-colors">
+                Ask AI Money Advisor
+              </h4>
+              <p className="text-[11px] text-text-muted leading-tight mt-1">
+                Type or speak in plain Hinglish/English ➔ AI plans & saves money!
+              </p>
+            </div>
+          </a>
+        </div>
+      </div>
+
+      {/* Growth Telemetry Widget - Real-time metrics reinforcing autonomous agent value */}
+      <GrowthTelemetryWidget />
+
+      {/* Autonomous Midnight Auditor - Daily budget drift & portfolio volatility scanner */}
+      <MidnightAuditor user={user} budget={budget} />
 
       {/* Wexa Autonomous Financial Agent Quick Launch Banner */}
       <div className="bg-gradient-to-r from-teal-950 via-slate-900 to-teal-950 border border-teal-800/60 rounded-2xl p-6 shadow-xl relative overflow-hidden">
@@ -719,6 +873,159 @@ export function WealthDashboard({ user, budget, onUnlockAchievement, onUpdateGit
           </div>
         </div>
       </div>
+
+      {/* Tabbed / Accordion Mastery Interface for Specialized Modules to Reduce Cognitive Load */}
+      <div className="card p-6 border-accent-gold/30 bg-bg-secondary/20 space-y-6 shadow-2xl">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border/60 pb-4">
+          <div>
+            <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-accent-gold/10 text-accent-gold border border-accent-gold/30 text-[10px] font-mono font-bold uppercase tracking-wider">
+              <Sparkles className="w-3.5 h-3.5 text-accent-gold" /> Specialized Intelligence Hub
+            </div>
+            <h2 className="text-2xl font-black font-display text-text-primary mt-1">
+              Mastery Engines & Financial Simulators
+            </h2>
+            <p className="text-xs text-text-muted mt-0.5">
+              Switch tabs to explore macro economic indicators, pop-culture trading, real-estate analysis, and DeFi yield staking.
+            </p>
+          </div>
+
+          {/* Tab Selection Navigation */}
+          <div className="flex items-center gap-1.5 p-1.5 bg-bg-void border border-border/80 rounded-2xl overflow-x-auto shrink-0">
+            <button
+              type="button"
+              onClick={() => setActiveSpecializedTab("macropulse")}
+              className={cn(
+                "px-3.5 py-2 rounded-xl text-xs font-mono font-bold flex items-center gap-2 transition-all cursor-pointer shrink-0",
+                activeSpecializedTab === "macropulse"
+                  ? "bg-accent-gold text-bg-void shadow-md"
+                  : "text-text-muted hover:text-text-primary"
+              )}
+            >
+              <BrainCircuit className="w-3.5 h-3.5" />
+              <span>MacroPulse & Intelligence</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveSpecializedTab("trendmarket")}
+              className={cn(
+                "px-3.5 py-2 rounded-xl text-xs font-mono font-bold flex items-center gap-2 transition-all cursor-pointer shrink-0",
+                activeSpecializedTab === "trendmarket"
+                  ? "bg-accent-emerald text-bg-void shadow-md"
+                  : "text-text-muted hover:text-text-primary"
+              )}
+            >
+              <TrendingUp className="w-3.5 h-3.5" />
+              <span>TrendMarket</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveSpecializedTab("liveorlease")}
+              className={cn(
+                "px-3.5 py-2 rounded-xl text-xs font-mono font-bold flex items-center gap-2 transition-all cursor-pointer shrink-0",
+                activeSpecializedTab === "liveorlease"
+                  ? "bg-accent-blue text-bg-void shadow-md"
+                  : "text-text-muted hover:text-text-primary"
+              )}
+            >
+              <PieChart className="w-3.5 h-3.5" />
+              <span>LiveOrLease (Rent vs Buy)</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveSpecializedTab("mockyield")}
+              className={cn(
+                "px-3.5 py-2 rounded-xl text-xs font-mono font-bold flex items-center gap-2 transition-all cursor-pointer shrink-0",
+                activeSpecializedTab === "mockyield"
+                  ? "bg-accent-purple text-bg-void shadow-md"
+                  : "text-text-muted hover:text-text-primary"
+              )}
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>MockYield DeFi</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Tab Content Display */}
+        <div className="pt-2">
+          {activeSpecializedTab === "macropulse" && (
+            <div className="space-y-6">
+              <GlobalIntelligenceWidget user={user} />
+              <DailyMarketPulse />
+            </div>
+          )}
+
+          {activeSpecializedTab === "trendmarket" && (
+            <div className="p-6 rounded-2xl bg-bg-void border border-emerald-500/30 space-y-4 shadow-lg">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <h3 className="text-lg font-bold text-text-primary flex items-center gap-2">
+                    <TrendingUp className="w-5 h-5 text-accent-emerald" /> TrendMarket Pop-Culture Trading
+                  </h3>
+                  <p className="text-xs text-text-muted mt-1">
+                    Simulate sentiment-driven trading on viral technology, entertainment, and macro economic culture trends.
+                  </p>
+                </div>
+                <a 
+                  href="#trendmarket" 
+                  className="px-4 py-2 bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-300 text-xs font-mono font-bold uppercase rounded-xl transition-all cursor-pointer shrink-0 flex items-center gap-2"
+                >
+                  <span>Launch TrendMarket Module</span>
+                  <ChevronRight className="w-4 h-4" />
+                </a>
+              </div>
+            </div>
+          )}
+
+          {activeSpecializedTab === "liveorlease" && (
+            <div className="p-6 rounded-2xl bg-bg-void border border-blue-500/30 space-y-4 shadow-lg">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <h3 className="text-lg font-bold text-text-primary flex items-center gap-2">
+                    <PieChart className="w-5 h-5 text-accent-blue" /> LiveOrLease Real Estate Simulator
+                  </h3>
+                  <p className="text-xs text-text-muted mt-1">
+                    Compare 30-year property equity accumulation vs index fund investing with rent liability decay.
+                  </p>
+                </div>
+                <a 
+                  href="#liveorlease" 
+                  className="px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/40 text-blue-300 text-xs font-mono font-bold uppercase rounded-xl transition-all cursor-pointer shrink-0 flex items-center gap-2"
+                >
+                  <span>Launch LiveOrLease Calculator</span>
+                  <ChevronRight className="w-4 h-4" />
+                </a>
+              </div>
+            </div>
+          )}
+
+          {activeSpecializedTab === "mockyield" && (
+            <div className="p-6 rounded-2xl bg-bg-void border border-purple-500/30 space-y-4 shadow-lg">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <h3 className="text-lg font-bold text-text-primary flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-accent-purple" /> MockYield Staking & DeFi Simulator
+                  </h3>
+                  <p className="text-xs text-text-muted mt-1">
+                    Master yield farming, liquid staking protocols, and APY compounding safely in a risk-free simulated sandbox.
+                  </p>
+                </div>
+                <a 
+                  href="#mockyield" 
+                  className="px-4 py-2 bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/40 text-purple-300 text-xs font-mono font-bold uppercase rounded-xl transition-all cursor-pointer shrink-0 flex items-center gap-2"
+                >
+                  <span>Launch MockYield Staking</span>
+                  <ChevronRight className="w-4 h-4" />
+                </a>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div className="space-y-2">
           <div className="flex items-center gap-3 flex-wrap">
@@ -867,6 +1174,19 @@ export function WealthDashboard({ user, budget, onUnlockAchievement, onUpdateGit
             <span className="hidden sm:inline">Export Chart PNG</span>
           </motion.button>
 
+          {/* Command Palette Trigger Button (Cmd+K) */}
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setIsCommandPaletteOpen(true)}
+            type="button"
+            title="Open Global Command Palette (Cmd+K)"
+            className="flex items-center justify-center gap-2 px-4 py-3 border border-accent-gold/40 hover:border-accent-gold text-accent-gold transition-all cursor-pointer rounded-xl bg-accent-gold/10 text-xs font-mono font-bold h-12"
+          >
+            <Command className="w-4 h-4 text-accent-gold" />
+            <span className="hidden sm:inline">⌘K Command Palette</span>
+          </motion.button>
+
           {/* New Offline JSON Download button */}
           <motion.button
             whileHover={{ scale: 1.05 }}
@@ -929,11 +1249,20 @@ export function WealthDashboard({ user, budget, onUnlockAchievement, onUpdateGit
         ))}
       </div>
 
+      {/* Real-Time Wealth Pulse Global Market Ticker */}
+      <WealthPulseWidget user={user} />
+
       {/* Financial Roadmap Visualizer */}
       <FinancialRoadmap user={user} />
 
+      {/* Community Verified Member Reviews & Case Studies */}
+      <CommunityReviews />
+
       {/* Daily Goal Tracker Widget */}
       <DailyGoalTracker user={user} onUpdateProfile={onUpdateProfile} />
+
+      {/* Visual Progress Tracker for Financial Goals */}
+      <FinancialGoalsWidget user={user} onUpdateProfile={onUpdateProfile} />
 
       {/* Standalone Emergency Fund Buffer Widget */}
       <EmergencyFundWidget user={user} budget={budget} />
@@ -1559,7 +1888,14 @@ export function WealthDashboard({ user, budget, onUnlockAchievement, onUpdateGit
               <Wallet className="w-12 h-12" />
             </div>
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold uppercase tracking-widest text-text-muted">Net Worth</h3>
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm font-bold uppercase tracking-widest text-text-muted">Net Worth</h3>
+                {isEasyMode && (
+                  <span className="px-2 py-0.5 rounded-md bg-accent-gold/20 text-accent-gold text-[10px] font-mono font-bold uppercase">
+                    Total Money Power
+                  </span>
+                )}
+              </div>
               <button
                 type="button"
                 onClick={() => {
@@ -1624,11 +1960,17 @@ export function WealthDashboard({ user, budget, onUnlockAchievement, onUpdateGit
 
             <div className="pt-6 border-t border-border grid grid-cols-2 gap-4">
               <div>
-                <div className="text-[10px] text-text-muted uppercase tracking-wider">Assets</div>
+                <div className="text-[10px] text-text-muted uppercase tracking-wider flex items-center gap-1">
+                  <span>Assets</span>
+                  {isEasyMode && <span className="text-emerald-400 font-mono">(Things You Own)</span>}
+                </div>
                 <div className="text-lg font-mono font-bold">{formatCurrency(user.netWorth.assets, user.currency, currency.locale)}</div>
               </div>
               <div>
-                <div className="text-[10px] text-text-muted uppercase tracking-wider">Liabilities</div>
+                <div className="text-[10px] text-text-muted uppercase tracking-wider flex items-center gap-1">
+                  <span>Liabilities</span>
+                  {isEasyMode && <span className="text-rose-400 font-mono">(Money Owed)</span>}
+                </div>
                 <div className="text-lg font-mono font-bold text-accent-red">{formatCurrency(user.netWorth.liabilities, user.currency, currency.locale)}</div>
               </div>
             </div>
@@ -2732,6 +3074,13 @@ export function WealthDashboard({ user, budget, onUnlockAchievement, onUpdateGit
           </div>
         </div>
       )}
+
+      {/* Global Command Palette Modal (Cmd+K) */}
+      <CommandPalette
+        isOpen={isCommandPaletteOpen}
+        onClose={() => setIsCommandPaletteOpen(false)}
+        onOpenEditNetWorthModal={() => setShowQuickEditModal(true)}
+      />
     </div>
   );
 }

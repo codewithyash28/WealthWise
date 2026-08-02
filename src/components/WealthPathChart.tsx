@@ -18,6 +18,8 @@ type ScenarioType = "yield" | "market" | "inflation";
 
 export function WealthPathChart({ user, budget }: WealthPathChartProps) {
   const [selectedScenario, setSelectedScenario] = useState<ScenarioType>("yield");
+  const [projectionTimeframe, setProjectionTimeframe] = useState<"6M" | "1Y" | "3Y" | "5Y">("6M");
+  const [customApy, setCustomApy] = useState<number>(8); // 8% default expected annual return
   const currency = CURRENCIES[user.currency] || CURRENCIES.USD;
 
   // Track systematic market bias pushed from MarketInsights component
@@ -107,30 +109,36 @@ export function WealthPathChart({ user, budget }: WealthPathChartProps) {
     if (marketBias === "bull") multiplier = 1.35; // Boost compound yields 35%
     if (marketBias === "bear") multiplier = 0.55; // Diminish interest rates by 45% due to systemic contraction
 
-    // 2. Future 6 months (Projections)
-    for (let i = 1; i <= 6; i++) {
-      const monthIdx = (currentMonthIndex + i) % 12;
-      labels.push(months[monthIdx]);
+    // 2. Future Projections based on selected timeframe
+    const futureSteps = projectionTimeframe === "6M" ? 6 : projectionTimeframe === "1Y" ? 12 : projectionTimeframe === "3Y" ? 36 : 60;
+    const stepInterval = projectionTimeframe === "3Y" ? 3 : projectionTimeframe === "5Y" ? 5 : 1;
+    
+    const monthlyRate = Math.pow(1 + customApy / 100, 1 / 12) - 1;
+
+    for (let i = stepInterval; i <= futureSteps; i += stepInterval) {
+      if (projectionTimeframe === "3Y" || projectionTimeframe === "5Y") {
+        labels.push(`+${i}M`);
+      } else {
+        const monthIdx = (currentMonthIndex + i) % 12;
+        labels.push(months[monthIdx]);
+      }
       historicalValues.push(null);
 
-      // Baseline Projection (standard passive bank savings or standard index investing rate)
-      const baselineVal = netWorth + (monthlySavings * i) * 1.008; // 0.8% organic monthly interest rate
+      // Baseline Projection
+      const baselineVal = netWorth * Math.pow(1 + 0.004, i) + (monthlySavings * i);
       baselineValues.push(baselineVal);
 
-      // Selected Scenario Projection
+      // Selected Scenario Projection overlaying compounding growth
       let scenarioVal = netWorth;
       if (selectedScenario === "yield") {
-        // High Yield APY compound simulations (DeFi stable staking)
-        const yieldRate = 1 + (0.025 * multiplier);
-        scenarioVal = netWorth + (monthlySavings * i) * yieldRate; 
+        const effRate = monthlyRate * 1.4 * multiplier;
+        scenarioVal = netWorth * Math.pow(1 + effRate, i) + (monthlySavings * i * 1.1);
       } else if (selectedScenario === "market") {
-        // Active Trend Trading growth projections
-        const marketRate = 1 + (0.045 * multiplier);
-        scenarioVal = netWorth + (monthlySavings * i) * marketRate; 
+        const effRate = monthlyRate * 1.8 * multiplier;
+        scenarioVal = netWorth * Math.pow(1 + effRate, i) + (monthlySavings * i * 1.25);
       } else if (selectedScenario === "inflation") {
-        // High inflation hits even harder during bearing conditions
-        const inflationErosion = 0.012 * (marketBias === "bear" ? 1.4 : marketBias === "bull" ? 0.7 : 1.0);
-        scenarioVal = (netWorth + (monthlySavings * i)) * (1 - (inflationErosion * i)); 
+        const inflationErosion = 0.006 * (marketBias === "bear" ? 1.5 : 1.0);
+        scenarioVal = (netWorth + (monthlySavings * i)) * Math.pow(1 - inflationErosion, i);
       }
       scenarioValues.push(scenarioVal);
     }
@@ -242,6 +250,45 @@ export function WealthPathChart({ user, budget }: WealthPathChartProps) {
       transition={{ duration: 0.5, ease: "easeOut" }}
       className="space-y-6"
     >
+      {/* Timeframe & Target APY Controls Bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-3.5 rounded-xl bg-bg-void border border-border/60">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-mono font-bold text-text-muted">Timeframe:</span>
+          <div className="flex items-center gap-1 p-1 bg-bg-secondary rounded-lg border border-border">
+            {(["6M", "1Y", "3Y", "5Y"] as const).map((tf) => (
+              <button
+                key={tf}
+                type="button"
+                onClick={() => setProjectionTimeframe(tf)}
+                className={cn(
+                  "px-2.5 py-1 text-xs font-mono font-bold rounded-md transition-all cursor-pointer",
+                  projectionTimeframe === tf
+                    ? "bg-accent-gold text-bg-void shadow-sm"
+                    : "text-text-muted hover:text-text-primary"
+                )}
+              >
+                {tf}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <span className="text-xs font-mono font-bold text-text-muted">Expected APY:</span>
+          <input
+            type="range"
+            min="1"
+            max="25"
+            value={customApy}
+            onChange={(e) => setCustomApy(Number(e.target.value))}
+            className="w-24 accent-accent-gold cursor-pointer"
+          />
+          <span className="text-xs font-mono font-bold text-accent-gold w-8 text-right">
+            {customApy}%
+          </span>
+        </div>
+      </div>
+
       {/* Interactive Scenario Selection Panel */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         {scenarios.map((scenario) => {

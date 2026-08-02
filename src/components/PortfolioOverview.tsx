@@ -659,7 +659,10 @@ export function PortfolioOverview({ user }: PortfolioOverviewProps) {
           </div>
         </div>
 
-        {/* Holdings Table */}
+        {/* Interactive D3 Portfolio Performance Heatmap */}
+      <D3PortfolioHeatmap user={user} currency={currency} totalValue={portfolio.totalValue} />
+
+      {/* Holdings Table */}
         <div className="lg:col-span-2 card p-8 space-y-6">
           <h3 className="text-xl font-bold flex items-center gap-2">
             <Briefcase className="w-5 h-5 text-accent-gold" /> Major Holdings

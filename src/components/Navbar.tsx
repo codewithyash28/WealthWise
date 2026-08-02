@@ -4,6 +4,7 @@ import { Menu, X, Globe, ChevronRight, Sun, Moon, Flame, Sparkles, Cloud, Monito
 import { NotificationCenter } from "./NotificationCenter";
 import { Logo } from "./Logo";
 import { CURRENCIES } from "../constants";
+import { cn } from "../lib/utils";
 
 interface NavbarProps {
   currentHash: string;
@@ -35,7 +36,25 @@ export function Navbar({
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isThemePanelOpen, setIsThemePanelOpen] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [lastSyncTime, setLastSyncTime] = useState<string>("Just now");
   const themePanelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleSyncStart = () => setIsSyncing(true);
+    const handleSyncComplete = () => {
+      setIsSyncing(false);
+      setLastSyncTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+    };
+
+    window.addEventListener("ww-cloud-sync-start", handleSyncStart);
+    window.addEventListener("ww-cloud-sync-complete", handleSyncComplete);
+
+    return () => {
+      window.removeEventListener("ww-cloud-sync-start", handleSyncStart);
+      window.removeEventListener("ww-cloud-sync-complete", handleSyncComplete);
+    };
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 80);
@@ -58,11 +77,12 @@ export function Navbar({
     { name: "Companion", hash: "#wexa-companion" },
     { name: "Bank Sync", hash: "#bank-sync" },
     { name: "Dashboard", hash: "#dashboard" },
+    { name: "Reviews", hash: "#reviews" },
     { name: "Monthly Report", hash: "#monthly-report" },
     { name: "Rent vs Buy", hash: "#rent-vs-buy" },
     { name: "Vault", hash: "#vault" },
     { name: "Rebalancer", hash: "#rebalancer" },
-    { name: "Submission Hub", hash: "#hackathon-hub" },
+    { name: "Company Portal", hash: "#hackathon-hub" },
     { name: "Audit Log", hash: "#audit-report" },
     { name: "MacroPulse", hash: "#macropulse" },
     { name: "Pricing", hash: "#pricing" },
@@ -90,6 +110,35 @@ export function Navbar({
           <div className="hidden md:flex items-center gap-1.5 px-3 py-1 bg-emerald-500/10 border border-emerald-500/25 rounded-full text-[10px] font-bold tracking-wider uppercase font-mono text-emerald-400">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
             <span>{user?.email ? "MongoDB Active" : "Production Mode"}</span>
+          </div>
+
+          {/* Cloud Sync Status Indicator */}
+          <div 
+            className={cn(
+              "hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono font-bold uppercase border transition-all cursor-pointer shadow-sm",
+              isSyncing 
+                ? "bg-amber-500/15 border-amber-500/40 text-amber-300 animate-pulse" 
+                : "bg-emerald-500/15 border-emerald-500/30 text-emerald-400"
+            )}
+            title={isSyncing ? "Syncing changes to cloud backend..." : `Saved to cloud backend (Last: ${lastSyncTime})`}
+            onClick={() => {
+              window.dispatchEvent(new CustomEvent("ww-cloud-sync-start"));
+              setTimeout(() => {
+                window.dispatchEvent(new CustomEvent("ww-cloud-sync-complete"));
+              }, 1200);
+            }}
+          >
+            {isSyncing ? (
+              <>
+                <Cloud className="w-3.5 h-3.5 text-amber-400 animate-bounce" />
+                <span>Syncing...</span>
+              </>
+            ) : (
+              <>
+                <Check className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Cloud Synced</span>
+              </>
+            )}
           </div>
 
           <div className="hidden lg:flex items-center gap-1 px-2.5 py-1 bg-accent-gold/10 border border-accent-gold/20 rounded-full text-accent-gold">

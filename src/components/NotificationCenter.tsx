@@ -14,7 +14,9 @@ import {
   X,
   Zap,
   Receipt,
-  ExternalLink
+  ExternalLink,
+  Volume2,
+  VolumeX
 } from "lucide-react";
 import { cn } from "../lib/utils";
 
@@ -79,7 +81,28 @@ export const NotificationCenter: React.FC = () => {
 
   const [isOpen, setIsOpen] = useState(false);
   const [activeFilter, setActiveFilter] = useState<"all" | "unread" | "warning" | "system">("all");
+  const [isVoiceAlertsEnabled, setIsVoiceAlertsEnabled] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem("ww_voice_alerts_enabled");
+      return saved === null ? true : saved === "true";
+    } catch (e) {
+      return true;
+    }
+  });
+
   const popoverRef = useRef<HTMLDivElement>(null);
+
+  const toggleVoiceAlerts = () => {
+    setIsVoiceAlertsEnabled(prev => {
+      const next = !prev;
+      try {
+        localStorage.setItem("ww_voice_alerts_enabled", String(next));
+      } catch (e) {
+        console.error(e);
+      }
+      return next;
+    });
+  };
 
   // Save to LocalStorage
   useEffect(() => {
@@ -112,12 +135,31 @@ export const NotificationCenter: React.FC = () => {
         };
 
         setNotifications(prev => [newNotif, ...prev.slice(0, 25)]);
+
+        // Voice Announce via SpeechSynthesis API for critical market alerts & achievements
+        if ('speechSynthesis' in window && isVoiceAlertsEnabled) {
+          try {
+            window.speechSynthesis.cancel();
+            let categoryText = "Alert";
+            if (notifType === "market") categoryText = "Critical Market Pulse Alert";
+            else if (notifType === "achievement") categoryText = "Goal Achievement Unlocked";
+            else if (notifType === "warning") categoryText = "Financial Warning";
+
+            const speechText = `${categoryText}: ${title || ""}. ${message || ""}`;
+            const utterance = new SpeechSynthesisUtterance(speechText);
+            utterance.rate = 1.0;
+            utterance.pitch = 1.0;
+            window.speechSynthesis.speak(utterance);
+          } catch (err) {
+            console.warn("[SpeechSynthesis] Voice readout error:", err);
+          }
+        }
       }
     };
 
     window.addEventListener("ww-trigger-alert", handleTriggerAlert);
     return () => window.removeEventListener("ww-trigger-alert", handleTriggerAlert);
-  }, []);
+  }, [isVoiceAlertsEnabled]);
 
   // Close dropdown on click outside
   useEffect(() => {
@@ -219,6 +261,21 @@ export const NotificationCenter: React.FC = () => {
               </div>
 
               <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={toggleVoiceAlerts}
+                  className={cn(
+                    "px-2 py-1 rounded-lg border text-[10px] font-mono font-bold transition-all cursor-pointer flex items-center gap-1",
+                    isVoiceAlertsEnabled
+                      ? "bg-amber-500/15 border-amber-500/40 text-amber-300"
+                      : "bg-bg-void border-border text-text-muted hover:text-text-primary"
+                  )}
+                  title={isVoiceAlertsEnabled ? "Voice Alerts (SpeechSynthesis): Active" : "Voice Alerts: Muted"}
+                >
+                  {isVoiceAlertsEnabled ? <Volume2 className="w-3 h-3 text-amber-400" /> : <VolumeX className="w-3 h-3 text-text-muted" />}
+                  <span>{isVoiceAlertsEnabled ? "Voice ON" : "Voice OFF"}</span>
+                </button>
+
                 {unreadCount > 0 && (
                   <button
                     type="button"
