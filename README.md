@@ -1,5 +1,5 @@
 
-#   W E X A   A I   --   A U T O N O M O U S   F I N A N C I A L   A G E N T   E N G I N E
+#   W E X A --  A I   --   A U T O N O M O U S   F I N A N C I A L   A G E N T   E N G I N E
 #   S P A T I A L   3 D   W E A L T H   I N T E L L I G E N C E   M A T R I X
 
 > **"Traditional personal finance applications are static, passive spreadsheets requiring tedious manual entry. Wexa AI is an autonomous, agentic financial engine that actively perceives, reasons, simulates, and executes money decisions in production."**
