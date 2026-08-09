@@ -6,7 +6,7 @@ import { formatCurrency, cn } from "../lib/utils";
 import { Logo } from "./Logo";
 import { jsPDF } from "jspdf";
 import { CURRENCIES } from "../constants";
-import { useMemo, useState } from "react";
+import { useMemo, useState, memo } from "react";
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip as RechartsTooltip, CartesianGrid, PieChart as RechartsPieChart, Pie, Cell, Legend } from "recharts";
 import { generateWealthAudit } from "../lib/gemini";
 import { WealthPathChart } from "./WealthPathChart";
@@ -41,7 +41,7 @@ interface WealthDashboardProps {
   onUpdateProfile?: (profile: UserProfile) => void;
 }
 
-export function WealthDashboard({ user, budget, onUnlockAchievement, onUpdateGitProvider, gitProvider = "github", onUpdateProfile }: WealthDashboardProps) {
+export const WealthDashboard = memo(function WealthDashboard({ user, budget, onUnlockAchievement, onUpdateGitProvider, gitProvider = "github", onUpdateProfile }: WealthDashboardProps) {
   const [isAuditing, setIsAuditing] = useState(false);
   const [auditResult, setAuditResult] = useState<string | null>(null);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
@@ -290,7 +290,7 @@ export function WealthDashboard({ user, budget, onUnlockAchievement, onUpdateGit
     ];
   }, [user.netWorth?.liabilities]);
 
-  const currency = CURRENCIES[user.currency] || CURRENCIES.USD;
+  const currency = useMemo(() => CURRENCIES[user.currency] || CURRENCIES.USD, [user.currency]);
 
   const netWorthTrendData = useMemo(() => {
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -346,11 +346,11 @@ export function WealthDashboard({ user, budget, onUnlockAchievement, onUpdateGit
   const hasGoals = (user.goals || []).length > 0;
   const hasAudit = !!auditResult;
 
-  const checklist = [
+  const checklist = useMemo(() => [
     { id: 'budget', label: 'Set Up Your Budget Architect', completed: hasBudget, hash: '#budget', desc: 'Define your income and primary expenditures.' },
     { id: 'goals', label: 'Define a Financial Goal', completed: hasGoals, hash: '#simulator', desc: 'What are you saving for?' },
     { id: 'audit', label: 'Run AI Wealth Audit', completed: hasAudit, hash: '#dashboard', desc: 'Get personalized AI insights.' },
-  ];
+  ], [hasBudget, hasGoals, hasAudit]);
 
   const isNewUser = !hasBudget || !hasGoals;
 
@@ -3087,4 +3087,4 @@ export function WealthDashboard({ user, budget, onUnlockAchievement, onUpdateGit
       />
     </div>
   );
-}
+});

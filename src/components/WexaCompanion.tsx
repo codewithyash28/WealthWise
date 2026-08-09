@@ -574,7 +574,7 @@ export const WexaCompanion: React.FC<WexaCompanionProps> = ({ user, budget, onRe
                   Wexa Autonomous Companion
                 </h2>
                 <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-[10px] font-mono font-bold uppercase tracking-wider flex items-center gap-1">
-                  <Sparkles className="w-3 h-3" /> Gemini 3.5 Vision
+                  <Sparkles className="w-3 h-3" /> Gemini 3.5 Vision {!user.isPremium && <span className="px-1.5 py-0.2 bg-accent-gold text-bg-void font-black text-[9px] rounded ml-1">🔒 PRO</span>}
                 </span>
               </div>
               <p className="text-xs text-text-secondary mt-0.5">

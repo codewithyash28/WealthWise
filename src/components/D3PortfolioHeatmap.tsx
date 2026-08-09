@@ -199,8 +199,8 @@ export function D3PortfolioHeatmap({ user }: D3PortfolioHeatmapProps) {
             <span className="px-2.5 py-0.5 rounded-full bg-teal-500/20 text-teal-300 border border-teal-500/30 text-[10px] font-mono font-bold uppercase tracking-wider flex items-center gap-1">
               <Grid className="w-3 h-3 text-teal-400" /> D3 Treemap Matrix Engine
             </span>
-            <span className="px-2.5 py-0.5 rounded-full bg-accent-gold/20 text-accent-gold border border-accent-gold/30 text-[10px] font-mono font-bold uppercase">
-              Interactive Yield Heatmap
+            <span className="px-2.5 py-0.5 rounded-full bg-accent-gold/20 text-accent-gold border border-accent-gold/30 text-[10px] font-mono font-bold uppercase flex items-center gap-1">
+              Interactive Yield Heatmap {!user.isPremium && <span className="px-1.5 py-0.2 bg-accent-gold text-bg-void font-black text-[9px] rounded">🔒 PRO</span>}
             </span>
           </div>
           <h3 className="text-xl font-extrabold font-display text-text-primary tracking-tight mt-1">

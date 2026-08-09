@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "motion/react";
-import { TrendingUp, Brain, Bot, PieChart, ArrowUpRight, ArrowDownRight, Flame, Calendar, Plus, Minus, Globe, RefreshCw, DollarSign } from "lucide-react";
+import { TrendingUp, Brain, Bot, PieChart, ArrowUpRight, ArrowDownRight, Flame, Calendar, Plus, Minus, Globe, RefreshCw, DollarSign, Crown, Sparkles } from "lucide-react";
 import { PieChart as RechartsPieChart, Pie, Cell, Tooltip as RechartsTooltip, ResponsiveContainer, Legend } from "recharts";
 import { formatCurrency, cn } from "../lib/utils";
 import { CURRENCIES } from "../constants";
@@ -654,6 +654,44 @@ export function Dashboard({ user, budget, onUpdateNetWorth }: DashboardProps) {
           </div>
         </a>
       </div>
+
+      {/* Persistent Low-Profile Upgrade to Pro Banner for Free Tier Users */}
+      {!user.isPremium && (
+        <motion.div 
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-4xl p-3.5 px-6 rounded-2xl bg-gradient-to-r from-bg-secondary/95 via-bg-secondary/95 to-bg-void/95 backdrop-blur-xl border border-accent-gold/40 shadow-[0_0_30px_rgba(240,180,41,0.25)] flex flex-col sm:flex-row items-center justify-between gap-3 text-left"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-accent-gold/20 border border-accent-gold/40 flex items-center justify-center text-accent-gold shrink-0 animate-pulse">
+              <Crown className="w-5 h-5 text-accent-gold" />
+            </div>
+            <div>
+              <div className="text-xs font-mono font-bold text-text-primary flex items-center gap-2">
+                <span>Upgrade to Wexa AI Pro</span>
+                <span className="px-2 py-0.5 rounded-full bg-accent-gold/20 text-accent-gold text-[9px] uppercase font-extrabold border border-accent-gold/30">
+                  SAVE 44% ($5/mo)
+                </span>
+              </div>
+              <p className="text-[11px] text-text-secondary mt-0.5">
+                Unlock Unlimited Gemini AI Scans, D3 Portfolio Treemaps & Executive PDF Exports.
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => {
+              window.dispatchEvent(new CustomEvent('ww-open-upgrade-modal', {
+                detail: { featureTitle: 'Wexa AI Pro Features' }
+              }));
+            }}
+            className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-accent-gold via-amber-400 to-yellow-400 text-bg-void font-mono text-xs font-black uppercase tracking-wider hover:opacity-95 transition-all shadow-md shrink-0 flex items-center gap-1.5 cursor-pointer hover:scale-105 active:scale-95"
+          >
+            <Sparkles className="w-4 h-4 fill-bg-void text-bg-void" />
+            <span>Upgrade Now 🚀</span>
+          </button>
+        </motion.div>
+      )}
     </div>
   );
 }

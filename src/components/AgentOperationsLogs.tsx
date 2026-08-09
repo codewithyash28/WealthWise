@@ -34,12 +34,13 @@ export function AgentOperationsLogs() {
     setIsLoading(true);
     try {
       const response = await fetch("/api/gemini/logs");
-      if (response.ok) {
+      const contentType = response.headers.get("content-type");
+      if (response.ok && contentType && contentType.includes("application/json")) {
         const data = await response.json();
         setLogs(data.logs || []);
       }
     } catch (err) {
-      console.error("Failed to fetch agent logs:", err);
+      console.warn("Could not fetch agent logs:", err);
     } finally {
       setIsLoading(false);
     }

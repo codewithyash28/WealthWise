@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useEffect, useRef, memo } from "react";
 import { motion } from "motion/react";
 import * as d3 from "d3";
 import { TrendingUp, Activity, DollarSign, PieChart, Info, AlertTriangle, GitBranch, Check, Terminal, RefreshCw, Send, Cpu, MessageSquare, Globe, Compass, MapPin } from "lucide-react";
@@ -10,7 +10,7 @@ interface MacroPulseProps {
   onUpdateProfile?: (profile: UserProfile) => void;
 }
 
-export function MacroPulse({ user, onUpdateProfile }: MacroPulseProps) {
+export const MacroPulse = memo(function MacroPulse({ user, onUpdateProfile }: MacroPulseProps) {
   const [inflation, setInflation] = useState(2.5);
   const [interestRate, setInterestRate] = useState(4.0);
   const [gdpGrowth, setGdpGrowth] = useState(2.1);
@@ -708,9 +708,9 @@ Keep the analysis concise, structured with bullet points, and elegant. Always en
       )}
     </div>
   );
-}
+});
 
-export function D3GlobalInflationMap({ activeInflation }: { activeInflation: number }) {
+export const D3GlobalInflationMap = memo(function D3GlobalInflationMap({ activeInflation }: { activeInflation: number }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
   const [selectedCountry, setSelectedCountry] = useState<string | null>("United States");
@@ -921,4 +921,4 @@ export function D3GlobalInflationMap({ activeInflation }: { activeInflation: num
       </div>
     </div>
   );
-}
+});

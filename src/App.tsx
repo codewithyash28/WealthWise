@@ -85,6 +85,7 @@ class ModuleErrorBoundary extends Component<{ children: ReactNode, moduleName: s
 import { Navbar } from "./components/Navbar";
 import { useClerkAuth, ClerkStatusBanner, ClerkSignInWidget } from "./lib/clerk";
 import { StripeBillingCenter } from "./components/StripeBillingCenter";
+import { UpgradeModal } from "./components/UpgradeModal";
 import { Footer } from "./components/Footer";
 import { LandingPage } from "./components/LandingPage";
 import { WealthDashboard } from "./components/WealthDashboard";
@@ -145,6 +146,7 @@ const PortfolioOverview = trackLazyModule("PortfolioOverview", () => import("./c
 const MonthlyFinancialReport = trackLazyModule("MonthlyFinancialReport", () => import("./components/MonthlyFinancialReport").then(m => ({ default: m.MonthlyFinancialReport })));
 const TaxEstimator = trackLazyModule("TaxEstimator", () => import("./components/TaxEstimator").then(m => ({ default: m.TaxEstimator })));
 const DebtPayoff = trackLazyModule("DebtPayoff", () => import("./components/DebtPayoff").then(m => ({ default: m.DebtPayoff })));
+const StockIntelligence = trackLazyModule("StockIntelligence", () => import("./components/StockIntelligence").then(m => ({ default: m.StockIntelligence })));
 
 function ModuleLoadingSkeleton() {
   return (
@@ -192,6 +194,19 @@ function AppContent() {
   const [isLoading, setIsLoading] = useState(false);
   const [unlockedAchievement, setUnlockedAchievement] = useState<Achievement | null>(null);
   const [gitProvider, setGitProvider] = useState<"gitlab" | "github" | "bitbucket">("github");
+  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
+  const [upgradeFeatureTitle, setUpgradeFeatureTitle] = useState("");
+
+  useEffect(() => {
+    const handleOpenUpgrade = (e: any) => {
+      setUpgradeFeatureTitle(e.detail?.featureTitle || "");
+      setIsUpgradeModalOpen(true);
+    };
+    window.addEventListener("ww-open-upgrade-modal" as any, handleOpenUpgrade);
+    return () => {
+      window.removeEventListener("ww-open-upgrade-modal" as any, handleOpenUpgrade);
+    };
+  }, []);
   const [alerts, setAlerts] = useState<any[]>([
     { id: 'welcome', type: 'market', title: 'Wexa Mastery Active', message: 'Inflation trends are shifting. Check the MacroPulse engine.', timestamp: 'Just now' }
   ]);
@@ -200,7 +215,10 @@ function AppContent() {
     // Fetch real-time, search-grounded global news alerts on mount
     fetch("/api/gemini/autonomous-alerts")
       .then((res) => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const ct = res.headers.get("content-type");
+        if (!res.ok || !ct || !ct.includes("application/json")) {
+          throw new Error(`Invalid response or non-JSON content-type: ${res.status}`);
+        }
         return res.json();
       })
       .then((data) => {
@@ -1187,6 +1205,15 @@ function AppContent() {
                   <div className="container mx-auto px-6 py-12"><TrendMarket /></div>
                 </ModuleErrorBoundary>
               );
+            case "#stocks":
+            case "#live-stocks":
+              return (
+                <ModuleErrorBoundary moduleName="Money Games & Global Stock Intelligence">
+                  <div className="container mx-auto px-6 py-12">
+                    <StockIntelligence user={user} />
+                  </div>
+                </ModuleErrorBoundary>
+              );
             case "#liveorlease": 
               return (
                 <ModuleErrorBoundary moduleName="LiveOrLease Arbitrage Simulator">
@@ -1453,6 +1480,15 @@ function AppContent() {
       {showTutorial && (
         <Tutorial onClose={() => setShowTutorial(false)} />
       )}
+
+      <UpgradeModal 
+        isOpen={isUpgradeModalOpen} 
+        onClose={() => setIsUpgradeModalOpen(false)} 
+        featureTitle={upgradeFeatureTitle}
+        onSuccess={() => {
+          if (profile) setProfile({ ...profile, isPremium: true });
+        }}
+      />
 
       <GoalCelebrationOverlay />
     </div>

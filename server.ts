@@ -1134,7 +1134,12 @@ let stripeClient: Stripe | null = null;
 
 function getStripeInstance(): Stripe | null {
   const stripeKey = process.env.STRIPE_SECRET_KEY;
-  if (!stripeKey || stripeKey === "undefined" || stripeKey === "null") {
+  if (!stripeKey || stripeKey === "undefined" || stripeKey === "null" || stripeKey === "1234" || stripeKey.trim() === "") {
+    return null;
+  }
+  // Check if it's a validly formatted key (Stripe secret keys start with sk_ or rk_)
+  if (!stripeKey.startsWith("sk_") && !stripeKey.startsWith("rk_")) {
+    console.warn("[Stripe Init Warning]: STRIPE_SECRET_KEY does not start with sk_ or rk_. Using Sandbox Mode.");
     return null;
   }
   if (!stripeClient) {
@@ -1144,6 +1149,7 @@ function getStripeInstance(): Stripe | null {
       });
     } catch (err) {
       console.error("[Stripe Init Error]:", err);
+      stripeClient = null;
     }
   }
   return stripeClient;
@@ -1155,11 +1161,11 @@ app.post("/api/stripe/create-checkout-session", async (req, res) => {
   const { email, uid } = req.body;
 
   if (!stripe) {
-    // Elegant sandbox checkout fallback if no live API key is set up yet
+    // Elegant sandbox checkout fallback if no valid live API key is set up yet
     return res.json({
       url: null,
       sandbox: true,
-      message: "Stripe is currently in high-fidelity Sandbox/Simulator Mode (no STRIPE_SECRET_KEY declared in environment).",
+      message: "Stripe is currently in high-fidelity Sandbox/Simulator Mode (no valid STRIPE_SECRET_KEY declared in environment).",
     });
   }
 
@@ -1195,7 +1201,23 @@ app.post("/api/stripe/create-checkout-session", async (req, res) => {
 
     res.json({ url: session.url, sandbox: false });
   } catch (error: any) {
-    console.error("[Stripe Session Error]:", error);
+    console.warn("[Stripe Session Warning]:", error?.message || error);
+
+    const isAuthError =
+      error?.type === "StripeAuthenticationError" ||
+      error?.name === "StripeAuthenticationError" ||
+      error?.statusCode === 401 ||
+      error?.message?.includes("Invalid API Key") ||
+      error?.message?.includes("apiKey");
+
+    if (isAuthError) {
+      return res.json({
+        url: null,
+        sandbox: true,
+        message: "Provided STRIPE_SECRET_KEY is invalid or placeholder. High-fidelity Sandbox/Simulator Mode engaged.",
+      });
+    }
+
     res.status(500).json({ error: error.message || "Unable to create checkout session." });
   }
 });

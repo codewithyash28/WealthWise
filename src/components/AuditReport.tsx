@@ -3,7 +3,7 @@ import { motion } from "motion/react";
 import { 
   TrendingUp, Wallet, ShieldCheck, Download, Search, RefreshCw, Filter, 
   ArrowUpRight, ArrowDownRight, CheckCircle2, AlertCircle, Sparkles, Building,
-  Briefcase, DollarSign, Calendar, MapPin, Layers, FileText
+  Briefcase, DollarSign, Calendar, MapPin, Layers, FileText, Share2, Printer, Target, Percent
 } from "lucide-react";
 import { jsPDF } from "jspdf";
 import { formatCurrency, cn } from "../lib/utils";
@@ -44,7 +44,8 @@ export function AuditReport({ user }: AuditReportProps) {
       setIsLoading(true);
       try {
         const response = await fetch("/api/billing/transactions");
-        if (response.ok) {
+        const contentType = response.headers.get("content-type");
+        if (response.ok && contentType && contentType.includes("application/json")) {
           const data = await response.json();
           setTransactions(data.transactions || []);
         } else {
@@ -426,6 +427,55 @@ export function AuditReport({ user }: AuditReportProps) {
     }
   };
 
+  const handleShareAudit = async () => {
+    const summaryText = `🛡️ Wexa AI Platform Audit Report\nUser: ${user.name}\nNet Margin: $${netProfits.toFixed(2)}\nGross Volume: $${totalRevenue.toFixed(2)}\nIntegrity Verification: 100% Cryptographically Synchronized`;
+    
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Wexa AI Revenue Audit Summary',
+          text: summaryText,
+          url: window.location.href,
+        });
+        window.dispatchEvent(new CustomEvent('ww-trigger-alert', {
+          detail: {
+            type: 'success',
+            title: 'Audit Shared! 🚀',
+            message: 'Audit report summary was shared successfully.'
+          }
+        }));
+      } catch (err) {
+        // Fallback to clipboard
+        copyAuditToClipboard(summaryText);
+      }
+    } else {
+      copyAuditToClipboard(summaryText);
+    }
+  };
+
+  const copyAuditToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text).then(() => {
+      window.dispatchEvent(new CustomEvent('ww-trigger-alert', {
+        detail: {
+          type: 'success',
+          title: 'Copied to Clipboard! 📋',
+          message: 'Audit report summary copied to clipboard.'
+        }
+      }));
+    });
+  };
+
+  const handlePrintAudit = () => {
+    window.print();
+  };
+
+  // Savings Goal Variance Calculations
+  const goalsList = user.goals || [];
+  const totalTargetSavings = goalsList.reduce((acc, g) => acc + (g.targetAmount || 0), 0) || 50000;
+  const totalActualSavings = goalsList.reduce((acc, g) => acc + (g.currentAmount || 0), 0) || (user.netWorth?.assets || 28500);
+  const goalVariance = totalActualSavings - totalTargetSavings;
+  const goalVariancePercent = Math.round((totalActualSavings / (totalTargetSavings || 1)) * 100);
+
   return (
     <div className="space-y-8" id="audit-report">
       {/* View Header */}
@@ -449,11 +499,24 @@ export function AuditReport({ user }: AuditReportProps) {
         
         <div className="flex flex-wrap gap-3">
           <button
-            onClick={handleDownloadSummaryPDF}
-            className="flex items-center gap-1.5 px-4 py-2 bg-accent-gold/15 hover:bg-accent-gold/25 border border-accent-gold/40 rounded-xl text-accent-gold text-xs font-bold uppercase tracking-wider font-mono transition-all cursor-pointer shadow-sm"
+            onClick={() => {
+              if (user.isPremium) {
+                handleDownloadSummaryPDF();
+              } else {
+                window.dispatchEvent(new CustomEvent('ww-open-upgrade-modal', {
+                  detail: { featureTitle: 'Executive PDF Summary Export' }
+                }));
+              }
+            }}
+            className="flex items-center gap-1.5 px-4 py-2 bg-accent-gold/15 hover:bg-accent-gold/25 border border-accent-gold/40 rounded-xl text-accent-gold text-xs font-bold uppercase tracking-wider font-mono transition-all cursor-pointer shadow-sm relative group"
           >
             <FileText className="w-4 h-4" />
             <span>Download Summary (PDF)</span>
+            {!user.isPremium && (
+              <span className="px-1.5 py-0.5 rounded bg-accent-gold text-bg-void font-extrabold text-[9px] flex items-center gap-0.5 ml-1">
+                🔒 PRO
+              </span>
+            )}
           </button>
 
           <button
@@ -463,6 +526,22 @@ export function AuditReport({ user }: AuditReportProps) {
           >
             <ShieldCheck className="w-4 h-4" />
             <span>{isAuditing ? "Running AI Ledger Audit..." : "Run AI Ledger Audit"}</span>
+          </button>
+
+          <button
+            onClick={handleShareAudit}
+            className="flex items-center gap-1.5 px-4 py-2 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/25 rounded-xl text-blue-400 text-xs font-bold uppercase tracking-wider font-mono transition-all cursor-pointer"
+          >
+            <Share2 className="w-4 h-4" />
+            <span>Share Audit</span>
+          </button>
+
+          <button
+            onClick={handlePrintAudit}
+            className="flex items-center gap-1.5 px-4 py-2 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/25 rounded-xl text-purple-400 text-xs font-bold uppercase tracking-wider font-mono transition-all cursor-pointer"
+          >
+            <Printer className="w-4 h-4" />
+            <span>Print Audit</span>
           </button>
 
           <button
@@ -546,6 +625,74 @@ export function AuditReport({ user }: AuditReportProps) {
             <p className="text-[10px] text-text-muted mt-1 font-mono">
               Standard secure routing fees
             </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Savings Goal Variance Progress Bar & Bar Chart */}
+      <div className="card p-6 border border-accent-gold/30 bg-gradient-to-br from-bg-secondary to-bg-secondary/80 font-mono space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <Target className="w-5 h-5 text-accent-gold" />
+            <div>
+              <h3 className="text-base font-bold text-text-primary">Savings Goal Variance Analysis</h3>
+              <p className="text-xs text-text-secondary">Projected Target Savings vs. Actual Accumulated Reserves</p>
+            </div>
+          </div>
+
+          <span className={`px-3 py-1 rounded-xl text-xs font-black uppercase font-mono ${
+            goalVariance >= 0 
+              ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" 
+              : "bg-amber-500/20 text-amber-400 border border-amber-500/30"
+          }`}>
+            {goalVariance >= 0 ? "🟢 TARGET SURPLUS" : "🟡 TARGET VARIANCE DEFICIT"}
+          </span>
+        </div>
+
+        {/* Progress Bar Container */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between text-xs font-bold">
+            <span className="text-text-secondary">Accumulated Progress ({goalVariancePercent}%)</span>
+            <span className="text-text-primary">
+              {currency.symbol}{totalActualSavings.toLocaleString()} / {currency.symbol}{totalTargetSavings.toLocaleString()}
+            </span>
+          </div>
+
+          <div className="w-full h-4 bg-bg-void rounded-full overflow-hidden border border-border p-0.5 relative">
+            <div 
+              className={`h-full rounded-full transition-all duration-500 ${
+                goalVariancePercent >= 100 
+                  ? "bg-gradient-to-r from-emerald-500 to-teal-400" 
+                  : goalVariancePercent >= 60 
+                  ? "bg-gradient-to-r from-accent-gold to-amber-400" 
+                  : "bg-gradient-to-r from-rose-500 to-amber-500"
+              }`}
+              style={{ width: `${Math.min(100, goalVariancePercent)}%` }}
+            />
+          </div>
+        </div>
+
+        {/* Breakdown Metric Strip */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 text-xs">
+          <div className="p-3 rounded-xl bg-bg-void/60 border border-border">
+            <span className="text-text-muted text-[10px] uppercase font-bold block">Projected Target</span>
+            <span className="text-sm font-bold text-text-primary mt-1 block">
+              {currency.symbol}{totalTargetSavings.toLocaleString()}
+            </span>
+          </div>
+
+          <div className="p-3 rounded-xl bg-bg-void/60 border border-border">
+            <span className="text-text-muted text-[10px] uppercase font-bold block">Actual Accumulated</span>
+            <span className="text-sm font-bold text-emerald-400 mt-1 block">
+              {currency.symbol}{totalActualSavings.toLocaleString()}
+            </span>
+          </div>
+
+          <div className="p-3 rounded-xl bg-bg-void/60 border border-border">
+            <span className="text-text-muted text-[10px] uppercase font-bold block">Net Goal Variance</span>
+            <span className={`text-sm font-bold mt-1 block ${goalVariance >= 0 ? "text-emerald-400" : "text-amber-400"}`}>
+              {goalVariance >= 0 ? "+" : ""}{currency.symbol}{goalVariance.toLocaleString()} ({goalVariancePercent}% of target)
+            </span>
           </div>
         </div>
       </div>

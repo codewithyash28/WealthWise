@@ -146,8 +146,8 @@ export function StripeBillingCenter({ user, onUpdateProfile }: StripeBillingCent
       window.dispatchEvent(new CustomEvent('ww-trigger-alert', {
         detail: {
           type: 'success',
-          title: 'Premium Activated! 👑',
-          message: 'Socratic MacroPulse signals and Unlimited AI Wealth Audits have been unlocked.'
+          title: 'Subscription Upgrade Successful! 🚀',
+          message: 'Thank you for upgrading to Wexa AI Pro! Your new status is active, unlocking unlimited Gemini AI scans, D3 portfolio treemaps & executive PDF audit exports.'
         }
       }));
     }, 1800);
@@ -395,7 +395,7 @@ export function StripeBillingCenter({ user, onUpdateProfile }: StripeBillingCent
           <div className="card p-6 border-border/80 space-y-4">
             <h3 className="text-xs font-bold uppercase tracking-widest text-text-primary flex items-center gap-2">
               <Receipt className="w-4 h-4 text-accent-gold" />
-              Receipt Historical Ledger
+              Billing History
             </h3>
             
             <div className="space-y-3">

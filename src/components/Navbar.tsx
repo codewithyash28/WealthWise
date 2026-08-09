@@ -7,7 +7,6 @@ import {
 } from "lucide-react";
 import { NotificationCenter } from "./NotificationCenter";
 import { Logo } from "./Logo";
-import { TransparencyScoreBadge } from "./TransparencyScoreBadge";
 import { CURRENCIES } from "../constants";
 import { cn } from "../lib/utils";
 
@@ -79,44 +78,42 @@ export function Navbar({
 
   // Main feature tabs displayed in center header bar
   const mainTabs = [
-    { name: "MacroPulse", hash: "#macropulse", icon: TrendingUp },
-    { name: "TrendMarket", hash: "#trendmarket", icon: Zap },
-    { name: "LiveOrLease", hash: "#rent-vs-buy", icon: Building2 },
+    { name: "Market Weather 🌤️", hash: "#macropulse", icon: TrendingUp },
+    { name: "TrendMarket 📈", hash: "#trendmarket", icon: Zap },
+    { name: "Money Games & Stocks 📈", hash: "#stocks", icon: BarChart2 },
     { name: "Platform Transparency Hub 🛡️", hash: "#hackathon-hub", icon: ShieldCheck, highlight: true },
   ];
 
-  // Drawer grouped features
+  // Drawer grouped into 4 simple sections
   const drawerSections = [
     {
-      title: "🤖 AI TOOLS",
+      title: "📸 MAGIC TOOLS",
       items: [
-        { name: "Gemini Vision Receipt Scanner", hash: "#wexa-companion", icon: Bot, desc: "AI OCR for receipts & tax deductions" },
-        { name: "Autonomous Midnight Auditor", hash: "#audit-report", icon: ShieldCheck, desc: "Real-time drift detection & modal locking" },
+        { name: "Magic Bill Reader 📸", hash: "#wexa-companion", icon: Bot, desc: "AI OCR for receipts & instant expense logging" },
+        { name: "Daily Money Helper 🌅", hash: "#audit-report", icon: ShieldCheck, desc: "Autonomous Auditor & drift detection" },
       ]
     },
     {
-      title: "📊 MARKET & WEALTH ENGINES",
+      title: "🌤️ MARKET WEATHER",
       items: [
-        { name: "MacroPulse Volatility Stress Test", hash: "#macropulse", icon: TrendingUp, desc: "Macro inflation & yield stress testing" },
-        { name: "TrendMarket Live Signals", hash: "#trendmarket", icon: Zap, desc: "Live market trends & volatility heatmaps" },
-        { name: "D3 Portfolio Heatmap & Rebalancing", hash: "#rebalancer", icon: PieChart, desc: "Slippage-free asset reallocation matrix" },
-        { name: "Global News & Portfolio Impact", hash: "#intelligence", icon: Globe, desc: "Grounding news with direct asset delta" },
+        { name: "Market Weather 🌤️", hash: "#macropulse", icon: TrendingUp, desc: "Macro inflation & yield stress testing" },
+        { name: "Money Games & Stocks 📈", hash: "#stocks", icon: BarChart2, desc: "Live global stock quotes & AI sentiment" },
+        { name: "TrendMarket Signals 📈", hash: "#trendmarket", icon: Zap, desc: "Live market trends & volatility heatmaps" },
       ]
     },
     {
-      title: "🎯 BUDGET & DEBT",
+      title: "🐷 MY PIGGY BANK",
       items: [
-        { name: "Traffic-Light Budget Auditor", hash: "#budget", icon: Target, desc: "Green/Yellow/Red safe-to-spend tracking" },
-        { name: "Goal Lock Guardrails", hash: "#goals", icon: Trophy, desc: "CSS blur-lock discipline for savings goals" },
-        { name: "Snowball & Avalanche Debt Payoff", hash: "#debt", icon: DollarSign, desc: "High-yield liability elimination strategy" },
+        { name: "Easy Budgeter 🐷", hash: "#budget", icon: Target, desc: "Green/Yellow/Red safe-to-spend tracking" },
+        { name: "Debt Payoff 💳", hash: "#debt", icon: DollarSign, desc: "High-yield liability elimination strategy" },
+        { name: "Goal Guardrails 🎯", hash: "#goals", icon: Trophy, desc: "Lock discipline for savings targets" },
       ]
     },
     {
       title: "🛡️ COMPANY & AUDITS",
       items: [
-        { name: "Platform Transparency Hub", hash: "#hackathon-hub", icon: Building2, desc: "Real P&L Manager & Investor Portal" },
-        { name: "Structured PDF Report Exporter", hash: "#monthly-report", icon: FileText, desc: "Export audited monthly financial statements" },
-        { name: "7-Tier Gamified Wealth Leveling", hash: "#badges", icon: Award, desc: "Level 1 to 12 Diamond rank milestones" },
+        { name: "Platform Transparency Hub 🛡️", hash: "#hackathon-hub", icon: Building2, desc: "Real P&L Manager & Investor Portal" },
+        { name: "Executive Report Exporter 📄", hash: "#monthly-report", icon: FileText, desc: "Export audited monthly financial statements" },
       ]
     }
   ];
@@ -180,7 +177,6 @@ export function Navbar({
             
             {/* 1. USER PROFILE ICON (YC / User Avatar) */}
             <div className="flex items-center gap-2">
-              <TransparencyScoreBadge className="hidden xl:inline-flex" />
 
               {user ? (
                 <div 
@@ -351,15 +347,6 @@ export function Navbar({
 
               {/* Drawer Body - Grouped Sections */}
               <div className="p-6 space-y-6 flex-1 font-mono">
-                
-                {/* Transparency Score Badge Card inside Drawer */}
-                <div className="p-4 rounded-2xl bg-gradient-to-r from-accent-gold/15 to-emerald-500/15 border border-accent-gold/30 flex items-center justify-between">
-                  <div>
-                    <div className="text-[10px] font-bold text-accent-gold uppercase">Venture Audit Score</div>
-                    <div className="text-lg font-black text-emerald-400 font-display">10,000 / 100 • LEGENDARY 👑</div>
-                  </div>
-                  <TransparencyScoreBadge showDetailsModalOnClick={true} />
-                </div>
 
                 {drawerSections.map((section, idx) => (
                   <div key={idx} className="space-y-2.5">

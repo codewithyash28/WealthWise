@@ -65,25 +65,25 @@ export const PricingPage: React.FC<PricingPageProps> = ({ userProfile }) => {
           <div className="bg-bg-secondary p-1 rounded-2xl border border-border inline-flex items-center gap-1 font-mono text-xs">
             <button
               onClick={() => setBillingCycle("monthly")}
-              className={`px-4 py-2 rounded-xl font-bold transition-all ${
+              className={`px-4 py-2 rounded-xl font-bold transition-all cursor-pointer ${
                 billingCycle === "monthly" 
                   ? "bg-accent-gold text-bg-void shadow-md" 
                   : "text-text-secondary hover:text-text-primary"
               }`}
             >
-              Monthly ($1/mo)
+              Monthly ($9/mo)
             </button>
             <button
               onClick={() => setBillingCycle("annual")}
-              className={`px-4 py-2 rounded-xl font-bold transition-all relative ${
+              className={`px-4 py-2 rounded-xl font-bold transition-all relative cursor-pointer ${
                 billingCycle === "annual" 
                   ? "bg-accent-gold text-bg-void shadow-md" 
                   : "text-text-secondary hover:text-text-primary"
               }`}
             >
-              Annual ($10/yr)
-              <span className="absolute -top-2 -right-2 px-1.5 py-0.5 bg-emerald-500 text-bg-void text-[9px] font-extrabold rounded-full">
-                SAVE 16%
+              Annual ($5/mo)
+              <span className="ml-1.5 px-2 py-0.5 bg-emerald-500 text-bg-void text-[9px] font-extrabold rounded-full">
+                SAVE 44%
               </span>
             </button>
           </div>
@@ -169,13 +169,13 @@ export const PricingPage: React.FC<PricingPageProps> = ({ userProfile }) => {
 
             <div className="flex items-baseline gap-2">
               <span className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-accent-gold via-amber-300 to-yellow-200">
-                {billingCycle === "monthly" ? "$1" : "$10"}
+                {billingCycle === "monthly" ? "$9" : "$5"}
               </span>
               <span className="text-sm font-mono text-accent-gold font-bold">
-                USD / {billingCycle === "monthly" ? "month" : "year"}
+                USD / {billingCycle === "monthly" ? "month" : "month (billed $60/yr)"}
               </span>
               <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 ml-2">
-                Special Rate
+                {billingCycle === "annual" ? "Save 44%" : "Standard Rate"}
               </span>
             </div>
 
@@ -267,6 +267,48 @@ export const PricingPage: React.FC<PricingPageProps> = ({ userProfile }) => {
         {/* Embedded Clerk PricingTable */}
         <div className="clerk-pricing-table-wrapper rounded-2xl p-4 bg-bg-void border border-border min-h-[220px] flex items-center justify-center">
           <ClerkPricingTableContainer planId={PLAN_ID} />
+        </div>
+      </div>
+
+      {/* Side-by-Side Plan Comparison Table */}
+      <div className="max-w-5xl mx-auto space-y-6">
+        <div className="text-center space-y-2">
+          <h2 className="text-2xl font-bold text-text-primary">
+            Plan Feature Comparison Matrix
+          </h2>
+          <p className="text-xs text-text-secondary">See how Wexa AI Pro supercharges your wealth management suite</p>
+        </div>
+
+        <div className="card overflow-hidden border border-border/80 text-left">
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="bg-bg-secondary/80 text-text-muted font-mono uppercase tracking-widest text-[10px] border-b border-border">
+                  <th className="p-4 pl-6 text-left">Feature / Capability</th>
+                  <th className="p-4 text-center w-40">Starter Free</th>
+                  <th className="p-4 text-center w-48 bg-accent-gold/10 text-accent-gold font-bold">Wexa AI Pro 🚀</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border/40 font-mono">
+                {[
+                  { feature: "Gemini AI Receipt Vision OCR", free: "3 Scans / Day", pro: "Unlimited Scans ⚡" },
+                  { feature: "D3 Portfolio Treemap & Yield Heatmap", free: "Basic View", pro: "Full Interactive Treemap 📊" },
+                  { feature: "24/7 Autonomous Portfolio Rebalancing", free: "Manual Only", pro: "24/7 Automated Drift Lock 🤖" },
+                  { feature: "Executive PDF Audit Summary Export", free: "Text Summary", pro: "Official PDF Download 📄" },
+                  { feature: "24/7 Midnight Auditor Drift Alerts", free: "Daily Digest", pro: "Instant Real-Time Stream 🌙" },
+                  { feature: "Goal Guardrails & Strict Lock Mode", free: "Soft Reminders", pro: "Hard Lock Protection 🛡️" },
+                  { feature: "Live MacroPulse & Trend Market Signals", free: "24h Delayed", pro: "Real-Time Grounding 🔥" },
+                  { feature: "Persistent Cloud Database Storage", free: "Browser LocalStorage", pro: "MongoDB Atlas Direct Sync 💾" },
+                ].map((row, idx) => (
+                  <tr key={idx} className="hover:bg-bg-secondary/40 transition-colors">
+                    <td className="p-4 pl-6 font-sans font-medium text-text-primary">{row.feature}</td>
+                    <td className="p-4 text-center text-text-muted">{row.free}</td>
+                    <td className="p-4 text-center font-bold text-accent-gold bg-accent-gold/5">{row.pro}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 

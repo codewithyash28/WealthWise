@@ -46,12 +46,13 @@ export function JudgeModeTerminal({ onClose }: JudgeModeTerminalProps) {
     setIsRefreshing(true);
     try {
       const res = await fetch("/api/gemini/logs");
-      if (res.ok) {
+      const contentType = res.headers.get("content-type");
+      if (res.ok && contentType && contentType.includes("application/json")) {
         const data = await res.json();
         setLogs(data.logs || []);
       }
     } catch (err) {
-      console.error("Failed to fetch logs for terminal:", err);
+      console.warn("Could not fetch logs for terminal:", err);
     } finally {
       setIsRefreshing(false);
     }
