@@ -35,42 +35,7 @@ export function FinancialGoalsWidget({ user, onUpdateProfile }: FinancialGoalsWi
   const [newCategory, setNewCategory] = useState<FinancialGoal["category"]>("HOUSE");
   const [newDeadline, setNewDeadline] = useState("2028-12-31");
 
-  const goalsList: FinancialGoal[] = (user.goals && user.goals.length > 0)
-    ? user.goals
-    : [
-        {
-          id: "goal_retire",
-          title: "Early Retirement Nest Egg (FIRE)",
-          targetAmount: 500000,
-          currentAmount: 185000,
-          deadline: "2042-12-31",
-          category: "RETIREMENT",
-        },
-        {
-          id: "goal_house",
-          title: "Sovereign Penthouse Downpayment",
-          targetAmount: 120000,
-          currentAmount: 64000,
-          deadline: "2029-06-30",
-          category: "HOUSE",
-        },
-        {
-          id: "goal_car",
-          title: "EV Supercar Reserve Fund",
-          targetAmount: 65000,
-          currentAmount: 39000,
-          deadline: "2027-09-30",
-          category: "CAR",
-        },
-        {
-          id: "goal_reserve",
-          title: "6-Month Liquid Buffer Reserve",
-          targetAmount: 30000,
-          currentAmount: 24500,
-          deadline: "2026-12-31",
-          category: "OTHER",
-        },
-      ];
+  const goalsList: FinancialGoal[] = user.goals || [];
 
   const getCategoryIcon = (category: FinancialGoal["category"]) => {
     switch (category) {
@@ -185,16 +150,23 @@ export function FinancialGoalsWidget({ user, onUpdateProfile }: FinancialGoalsWi
       </div>
 
       {/* Goals Grid with Progress Bars */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {goalsList.map((goal) => {
-          const pct = Math.min(100, Math.round((goal.currentAmount / goal.targetAmount) * 100));
-          const remaining = Math.max(0, goal.targetAmount - goal.currentAmount);
+      {goalsList.length === 0 ? (
+        <div className="p-8 text-center bg-bg-void/60 border border-dashed border-border/80 rounded-2xl space-y-3">
+          <Target className="w-8 h-8 text-text-muted mx-auto" />
+          <p className="text-sm text-text-secondary font-medium">No financial goals created yet.</p>
+          <p className="text-xs text-text-muted">Click 'Add Goal' above to define your first real-life financial milestone!</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {goalsList.map((goal) => {
+            const pct = Math.min(100, Math.round((goal.currentAmount / goal.targetAmount) * 100));
+            const remaining = Math.max(0, goal.targetAmount - goal.currentAmount);
 
-          return (
-            <div
-              key={goal.id}
-              className="p-5 bg-bg-void/90 border border-border/80 hover:border-accent-gold/40 rounded-2xl space-y-4 transition-all shadow-lg group relative overflow-hidden"
-            >
+            return (
+              <div
+                key={goal.id}
+                className="p-5 bg-bg-void/90 border border-border/80 hover:border-accent-gold/40 rounded-2xl space-y-4 transition-all shadow-lg group relative overflow-hidden"
+              >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3">
                   <div className="p-2.5 rounded-xl bg-bg-secondary border border-border/80 shrink-0">
@@ -273,6 +245,7 @@ export function FinancialGoalsWidget({ user, onUpdateProfile }: FinancialGoalsWi
           );
         })}
       </div>
+      )}
 
       {/* Contribute Deposit Modal */}
       {depositGoalId && (

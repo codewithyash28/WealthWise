@@ -121,7 +121,7 @@ function MockClerkProvider({ children }: { children: ReactNode }) {
         lastVisit: new Date().toISOString(),
         visitDates: [new Date().toISOString().split('T')[0]],
         highScore: 0,
-        netWorth: { assets: 180000, liabilities: 40000 },
+        netWorth: { assets: 0, liabilities: 0 },
         gitProvider: "github"
       };
       localStorage.setItem("ww_profile", JSON.stringify(initialProfile));
@@ -208,7 +208,7 @@ function RealClerkContextAdapter({ children }: { children: ReactNode }) {
         lastVisit: new Date().toISOString(),
         visitDates: [new Date().toISOString().split('T')[0]],
         highScore: 0,
-        netWorth: { assets: 150000, liabilities: 50000 },
+        netWorth: { assets: 0, liabilities: 0 },
         gitProvider: "github"
       };
       localStorage.setItem("ww_profile", JSON.stringify(initialProfile));

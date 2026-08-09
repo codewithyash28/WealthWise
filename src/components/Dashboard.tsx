@@ -76,7 +76,7 @@ export function Dashboard({ user, budget, onUpdateNetWorth }: DashboardProps) {
           color: colors[idx % colors.length]
         };
       }).filter(item => item.value > 0)
-    : defaultExpenseCategories;
+    : [];
 
   const totalExpenseAmount = expenseChartData.reduce((acc, curr) => acc + curr.value, 0);
 

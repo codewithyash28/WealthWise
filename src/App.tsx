@@ -829,19 +829,13 @@ function AppContent() {
                     onClick={() => { setAuthMode("clerk"); setAuthError(null); }}
                     className={`flex-1 pb-3 text-xs uppercase tracking-wider font-extrabold transition-all border-b-2 ${authMode === "clerk" ? "border-accent-gold text-accent-gold" : "border-transparent text-text-muted hover:text-text-primary"}`}
                   >
-                    Clerk Secure SSO
+                    Clerk SSO
                   </button>
                   <button
                     onClick={() => { setAuthMode("mongodb_login"); setAuthError(null); }}
                     className={`flex-1 pb-3 text-xs uppercase tracking-wider font-extrabold transition-all border-b-2 ${authMode === "mongodb_login" ? "border-accent-gold text-accent-gold" : "border-transparent text-text-muted hover:text-text-primary"}`}
                   >
-                    Restore Session
-                  </button>
-                  <button
-                    onClick={() => { setAuthMode("mongodb_register"); setAuthError(null); }}
-                    className={`flex-1 pb-3 text-xs uppercase tracking-wider font-extrabold transition-all border-b-2 ${authMode === "mongodb_register" ? "border-accent-gold text-accent-gold" : "border-transparent text-text-muted hover:text-text-primary"}`}
-                  >
-                    Create Backed Workspace
+                    Sign In / Restore
                   </button>
                   <button
                     onClick={() => { setAuthMode("guest"); setAuthError(null); }}
@@ -948,21 +942,21 @@ function AppContent() {
                               lastVisit: new Date().toISOString(),
                               visitDates: [new Date().toISOString().split('T')[0]],
                               highScore: 0,
-                              netWorth: { assets: 150000, liabilities: 50000 },
+                              netWorth: { assets: 0, liabilities: 0 },
                               gitProvider: "github"
                             };
 
                             const initialBudget: BudgetPlan = {
-                              income: 9000,
+                              income: 0,
                               expenses: {
-                                housing: 2800,
-                                food: 850,
-                                transport: 650,
-                                health: 450,
-                                entertainment: 550,
-                                education: 1000,
-                                loans: 1200,
-                                other: 1500
+                                housing: 0,
+                                food: 0,
+                                transport: 0,
+                                health: 0,
+                                entertainment: 0,
+                                education: 0,
+                                loans: 0,
+                                other: 0
                               },
                               timestamp: new Date().toISOString()
                             };

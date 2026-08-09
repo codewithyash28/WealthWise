@@ -831,8 +831,8 @@ export function WhatIfStressTest({ user, currency }: { user: UserProfile; curren
   };
 
   const stressResults = useMemo(() => {
-    const assets = user.netWorth?.assets || 100000;
-    const liabilities = user.netWorth?.liabilities || 20000;
+    const assets = user.netWorth?.assets || 0;
+    const liabilities = user.netWorth?.liabilities || 0;
     const currentNetWorth = assets - liabilities;
 
     const stocks = assets * 0.50;

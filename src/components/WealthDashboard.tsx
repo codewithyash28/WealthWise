@@ -256,13 +256,13 @@ export const WealthDashboard = memo(function WealthDashboard({ user, budget, onU
   }, [user.riskProfile, advisorPersona, user.netWorth]);
 
   const assetSparklineData = useMemo(() => {
-    const currentAssets = user.netWorth?.assets || 10000;
+    const currentAssets = user.netWorth?.assets || 0;
     const points = [];
     for (let i = 29; i >= 0; i--) {
       const d = new Date();
       d.setDate(d.getDate() - i);
-      const portFactor = 1 - (i * 0.0018) + (Math.sin((i + marketTick) * 0.7) * 0.004);
-      const spFactor = 1 - (i * 0.0012) + (Math.cos((i + marketTick) * 0.5) * 0.003);
+      const portFactor = currentAssets > 0 ? (1 - (i * 0.0018) + (Math.sin((i + marketTick) * 0.7) * 0.004)) : 0;
+      const spFactor = currentAssets > 0 ? (1 - (i * 0.0012) + (Math.cos((i + marketTick) * 0.5) * 0.003)) : 0;
       points.push({
         day: d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
         "Assets": Math.round(currentAssets * portFactor),
@@ -275,12 +275,7 @@ export const WealthDashboard = memo(function WealthDashboard({ user, budget, onU
   const debtDistributionData = useMemo(() => {
     const totalLiabilities = user.netWorth?.liabilities || 0;
     if (totalLiabilities <= 0) {
-      return [
-        { name: "Mortgage", value: 18000, color: "#3b82f6" },
-        { name: "Student Loans", value: 8500, color: "#8b5cf6" },
-        { name: "Credit Cards", value: 3200, color: "#ef4444" },
-        { name: "Auto Loans", value: 5000, color: "#f59e0b" },
-      ];
+      return [];
     }
     return [
       { name: "Mortgage", value: Math.round(totalLiabilities * 0.52), color: "#3b82f6" },
@@ -300,8 +295,7 @@ export const WealthDashboard = memo(function WealthDashboard({ user, budget, onU
     
     for (let i = 5; i >= 0; i--) {
       const monthIdx = (currentMonthIndex - i + 12) % 12;
-      // Growth trajectory ending precisely at currentNetWorth
-      const factor = 1 - (i * 0.045) + (Math.sin((5 - i) * 1.2) * 0.012);
+      const factor = netWorth !== 0 ? (1 - (i * 0.045) + (Math.sin((5 - i) * 1.2) * 0.012)) : 0;
       data.push({
         name: months[monthIdx],
         "Net Worth": Math.round(netWorth * factor)
@@ -311,35 +305,7 @@ export const WealthDashboard = memo(function WealthDashboard({ user, budget, onU
   }, [user.netWorth, user.currency]);
 
   const activeGoals = useMemo(() => {
-    if (user.goals && user.goals.length > 0) {
-      return user.goals;
-    }
-    return [
-      {
-        id: "default_retirement",
-        title: "Elite Retirement Nest Egg",
-        targetAmount: 500000,
-        currentAmount: 125000,
-        deadline: "2045-12-31",
-        category: "RETIREMENT" as const
-      },
-      {
-        id: "default_house",
-        title: "Sovereign Penthouse Downpayment",
-        targetAmount: 150000,
-        currentAmount: 45000,
-        deadline: "2029-06-30",
-        category: "HOUSE" as const
-      },
-      {
-        id: "default_other",
-        title: "Alpha Growth Emergency Fund",
-        targetAmount: 30000,
-        currentAmount: 18000,
-        deadline: "2027-12-31",
-        category: "OTHER" as const
-      }
-    ];
+    return user.goals || [];
   }, [user.goals]);
 
   const hasBudget = !!budget;

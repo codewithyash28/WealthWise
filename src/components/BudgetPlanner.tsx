@@ -26,28 +26,28 @@ interface BudgetPlannerProps {
 export function BudgetPlanner({ user, onSave, initialPlan, gitProvider = "gitlab", onUnlockAchievement }: BudgetPlannerProps) {
   const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false);
   // Support state for backing up original un-crunch planning configuration
-  const [originalIncome, setOriginalIncome] = useState(initialPlan?.income || 6500);
+  const [originalIncome, setOriginalIncome] = useState(initialPlan?.income || 0);
   const [originalExpenses, setOriginalExpenses] = useState(initialPlan?.expenses || {
-    housing: 2000,
-    food: 800,
-    transport: 400,
-    health: 200,
-    entertainment: 600,
-    education: 100,
-    loans: 500,
-    other: 400,
+    housing: 0,
+    food: 0,
+    transport: 0,
+    health: 0,
+    entertainment: 0,
+    education: 0,
+    loans: 0,
+    other: 0,
   });
 
-  const [income, setIncome] = useState(initialPlan?.income || 6500);
+  const [income, setIncome] = useState(initialPlan?.income || 0);
   const [expenses, setExpenses] = useState(initialPlan?.expenses || {
-    housing: 2000,
-    food: 800,
-    transport: 400,
-    health: 200,
-    entertainment: 600,
-    education: 100,
-    loans: 500,
-    other: 400,
+    housing: 0,
+    food: 0,
+    transport: 0,
+    health: 0,
+    entertainment: 0,
+    education: 0,
+    loans: 0,
+    other: 0,
   });
 
   // Emergency Medical Crunch States
@@ -222,14 +222,14 @@ export function BudgetPlanner({ user, onSave, initialPlan, gitProvider = "gitlab
   };
 
   const [goals, setGoals] = useState(initialPlan?.goals || {
-    housing: 2200,
-    food: 1000,
-    transport: 500,
-    health: 300,
-    entertainment: 800,
-    education: 200,
-    loans: 600,
-    other: 500,
+    housing: 0,
+    food: 0,
+    transport: 0,
+    health: 0,
+    entertainment: 0,
+    education: 0,
+    loans: 0,
+    other: 0,
   });
 
   // Goal Lock (Strict Mode) state

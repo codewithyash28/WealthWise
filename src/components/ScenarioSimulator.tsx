@@ -146,9 +146,9 @@ export function ScenarioSimulator({ user, budget, onComplete }: ScenarioSimulato
     const baselineSeries = [];
     const stressedSeries = [];
 
-    const baseAssets = user.netWorth?.assets || 100000;
-    const baseLiabilities = user.netWorth?.liabilities || 20000;
-    const baseMonthlySurplus = budget ? Math.max(0, budget.income - Object.values(budget.expenses).reduce((a, b) => a + b, 0)) : 1000;
+    const baseAssets = user.netWorth?.assets || 0;
+    const baseLiabilities = user.netWorth?.liabilities || 0;
+    const baseMonthlySurplus = budget ? Math.max(0, budget.income - Object.values(budget.expenses).reduce((a, b) => a + b, 0)) : 0;
 
     // Immediate initial shock
     const shockedAssets = baseAssets * (1 + stressEquityShock / 100);
@@ -220,8 +220,8 @@ export function ScenarioSimulator({ user, budget, onComplete }: ScenarioSimulato
   const [userAgeInput, setUserAgeInput] = useState<string>(() => user.age ? String(user.age) : "");
   const [targetRetirementAge, setTargetRetirementAge] = useState<number>(60);
   const [annualContribution, setAnnualContribution] = useState<number>(() => {
-    const surplus = budget ? Math.max(0, budget.income - Object.values(budget.expenses).reduce((a, b) => a + b, 0)) * 12 : 12000;
-    return surplus > 0 ? Math.round(surplus) : 12000;
+    const surplus = budget ? Math.max(0, budget.income - Object.values(budget.expenses).reduce((a, b) => a + b, 0)) * 12 : 0;
+    return surplus > 0 ? Math.round(surplus) : 0;
   });
   const [targetRetirementGoal, setTargetRetirementGoal] = useState<number>(1000000);
   const [retirementReturnRate, setRetirementReturnRate] = useState<number>(8);
