@@ -33,7 +33,8 @@ if (apiKey && apiKey !== "undefined" && apiKey !== "null" && apiKey.length >= 10
 // --- Database Configuration & Fallback Engine ---
 const PORT = 3000;
 const app = express();
-app.use(express.json());
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
 // Environment variables configuration
 const MONGODB_URI = process.env.MONGODB_URI || process.env.MONGO_URL || "mongodb://localhost:27017/wexa_mcp";
@@ -507,7 +508,7 @@ const ALERTS_CACHE_DURATION_MS = 15 * 60 * 1000; // 15 minutes cache to complete
 // Global Gemini circuit breaker for quota protection (prevents redundant 429 quota exceptions in production)
 let isGeminiQuotaExceeded = false;
 let geminiQuotaResetTime = 0;
-const QUOTA_COOLDOWN_MS = 10 * 60 * 1000; // 10 minutes cooldown before retrying Gemini
+const QUOTA_COOLDOWN_MS = 15 * 1000; // 15 seconds cooldown before retrying Gemini
 
 function checkGeminiQuotaStatus(): boolean {
   if (isGeminiQuotaExceeded) {

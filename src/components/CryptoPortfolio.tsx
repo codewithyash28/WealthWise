@@ -29,18 +29,9 @@ interface CryptoPriceData {
   usd_24h_change: number;
 }
 
-const DEFAULT_HOLDINGS: CryptoHolding[] = [
-  { id: "bitcoin", symbol: "BTC", name: "Bitcoin", amount: 0.25, avgBuyPrice: 58000 },
-  { id: "ethereum", symbol: "ETH", name: "Ethereum", amount: 2.5, avgBuyPrice: 2900 },
-  { id: "solana", symbol: "SOL", name: "Solana", amount: 15, avgBuyPrice: 135 },
-  { id: "cardano", symbol: "ADA", name: "Cardano", amount: 1200, avgBuyPrice: 0.42 },
-];
+const DEFAULT_HOLDINGS: CryptoHolding[] = [];
 
-const DEFAULT_ALERTS: CryptoPriceAlert[] = [
-  { id: "alert-1", coinId: "bitcoin", symbol: "BTC", name: "Bitcoin", targetPriceUSD: 70000, condition: "above", createdAt: new Date().toISOString() },
-  { id: "alert-2", coinId: "ethereum", symbol: "ETH", name: "Ethereum", targetPriceUSD: 3200, condition: "below", createdAt: new Date().toISOString() },
-  { id: "alert-3", coinId: "solana", symbol: "SOL", name: "Solana", targetPriceUSD: 200, condition: "above", createdAt: new Date().toISOString() },
-];
+const DEFAULT_ALERTS: CryptoPriceAlert[] = [];
 
 const SUPPORTED_COINS = [
   { id: "bitcoin", symbol: "BTC", name: "Bitcoin", defaultPrice: 65000, change: 2.4 },
@@ -416,6 +407,13 @@ export function CryptoPortfolio({ user, currency: propCurrency }: CryptoPortfoli
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/30">
+                {holdings.length === 0 && (
+                  <tr>
+                    <td colSpan={7} className="py-8 text-center text-text-muted font-mono text-xs">
+                      No crypto holdings tracked yet. Click "+ Add Holding" above to start tracking real assets!
+                    </td>
+                  </tr>
+                )}
                 {holdings.map((h) => {
                   const livePriceUSD = getCoinPrice(h.id);
                   const change24h = getCoinChange(h.id);

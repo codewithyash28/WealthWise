@@ -112,7 +112,7 @@ import { PulseAlert } from "./components/mastery/PulseAlert";
 import { Skeleton } from "./components/ui/Skeleton";
 import { motion, AnimatePresence } from "motion/react";
 import { QuickTips } from "./components/QuickTips";
-import { Database, RefreshCw, Cloud, ShieldCheck, Mail, Lock, Server, LogIn, ArrowRight, Activity, Globe, Wifi, KeyRound } from "lucide-react";
+import { Database, RefreshCw, Cloud, ShieldCheck, Mail, Lock, Server, LogIn, ArrowRight, Activity, Globe, Wifi, KeyRound, AlertTriangle } from "lucide-react";
 
 // Performance monitoring utility tracking latency of each lazy-loaded financial engine module
 function trackLazyModule<T>(moduleName: string, importFn: () => Promise<{ default: React.ComponentType<any> }>) {
@@ -849,9 +849,40 @@ function AppContent() {
                   <motion.div 
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="p-4 rounded-xl border border-accent-red/20 bg-accent-red/5 text-xs text-accent-red text-left font-mono"
+                    className="p-4 rounded-xl border border-accent-red/20 bg-accent-red/5 text-xs text-accent-red text-left font-mono space-y-2"
                   >
-                    ✖ {authError}
+                    <div className="flex items-center gap-2 font-bold">
+                      <AlertTriangle className="w-4 h-4 text-accent-red shrink-0" />
+                      <span>{authError}</span>
+                    </div>
+                    <div className="pt-2 border-t border-accent-red/10 flex items-center justify-between">
+                      <span className="text-[11px] text-text-muted">Or enter without sign-in:</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const tempUid = "guest_" + Math.random().toString(36).substring(2, 11);
+                          const guestUser = {
+                            uid: tempUid,
+                            displayName: "Guest User",
+                            email: null,
+                            photoURL: null
+                          };
+                          setUser(guestUser);
+                          localStorage.setItem("ww_user", JSON.stringify(guestUser));
+                          localStorage.setItem("ww_sync_enabled", "false");
+                          const savedProfile = localStorage.getItem("ww_profile");
+                          if (savedProfile) {
+                            setProfile(JSON.parse(savedProfile));
+                          } else {
+                            setShowExpertOnboarding(true);
+                          }
+                          setAuthError(null);
+                        }}
+                        className="px-2.5 py-1 rounded-lg bg-accent-gold/15 hover:bg-accent-gold/25 text-accent-gold font-bold text-[10px] uppercase transition-all cursor-pointer"
+                      >
+                        Launch Offline Guest Sandbox →
+                      </button>
+                    </div>
                   </motion.div>
                 )}
 
@@ -1082,6 +1113,22 @@ function AppContent() {
                           {isAuthenticating ? "Verifying..." : authMode === "mongodb_register" ? "Initialize & Cloud Sync" : "Sync From Backup PIN"}
                         </span>
                       </button>
+
+                      <div className="flex items-center justify-between pt-2 text-xs font-mono">
+                        <span className="text-text-muted">
+                          {authMode === "mongodb_login" ? "Need a new account?" : "Already registered?"}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setAuthMode(authMode === "mongodb_login" ? "mongodb_register" : "mongodb_login");
+                            setAuthError(null);
+                          }}
+                          className="text-accent-gold hover:underline font-bold cursor-pointer"
+                        >
+                          {authMode === "mongodb_login" ? "Create Backed Account" : "Sign In to Existing"}
+                        </button>
+                      </div>
                     </motion.form>
                   )}
                 </AnimatePresence>
