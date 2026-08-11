@@ -291,29 +291,34 @@ app.post("/api/auth/sync", async (req, res) => {
 async function recordAgentLog(
   agentName: string,
   action: string,
-  inputContext: string,
-  decision: string,
-  tokenUsage: { promptTokens?: number; candidatesTokens?: number; totalTokens?: number },
-  latencyMs: number
+  inputContext?: string,
+  decision?: string,
+  tokenUsage: { promptTokens?: number; candidatesTokens?: number; totalTokens?: number } = {},
+  latencyMs: number = 0
 ) {
-  const logDoc = {
-    id: `log_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
-    timestamp: new Date().toISOString(),
-    agentName,
-    action,
-    inputContext,
-    decision,
-    tokenUsage: {
-      promptTokens: tokenUsage.promptTokens || Math.round(inputContext.length / 4),
-      candidatesTokens: tokenUsage.candidatesTokens || Math.round(decision.length / 4),
-      totalTokens: (tokenUsage.promptTokens || Math.round(inputContext.length / 4)) + (tokenUsage.candidatesTokens || Math.round(decision.length / 4))
-    },
-    latencyMs,
-    cloudProvider: "Google Cloud (Vertex AI / Google AI Studio)",
-    status: "SUCCESS"
-  };
-
   try {
+    const safeInputContext = String(inputContext || "");
+    const safeDecision = String(decision || "");
+    const safePromptTokens = (tokenUsage && tokenUsage.promptTokens) || Math.round(safeInputContext.length / 4);
+    const safeCandidatesTokens = (tokenUsage && tokenUsage.candidatesTokens) || Math.round(safeDecision.length / 4);
+
+    const logDoc = {
+      id: `log_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+      timestamp: new Date().toISOString(),
+      agentName: String(agentName || "System Agent"),
+      action: String(action || "execution"),
+      inputContext: safeInputContext,
+      decision: safeDecision,
+      tokenUsage: {
+        promptTokens: safePromptTokens,
+        candidatesTokens: safeCandidatesTokens,
+        totalTokens: safePromptTokens + safeCandidatesTokens
+      },
+      latencyMs: Number(latencyMs) || 0,
+      cloudProvider: "Google Cloud (Vertex AI / Google AI Studio)",
+      status: "SUCCESS"
+    };
+
     if (isRealMongoActive && mongoDb) {
       await mongoDb.collection("agent_execution_logs").insertOne(logDoc);
     } else {
@@ -336,7 +341,7 @@ async function recordAgentLog(
     // --- Google Cloud Logging Integration (Hackathon compliance for AI production transparency) ---
     // In Google Cloud Run containers, writing structured JSON to stdout sends it directly to GCP Cloud Logging.
     const googleCloudLogEntry = {
-      message: `[Google Cloud Logging] AI Agent Execution: ${agentName} | Action: ${action}`,
+      message: `[Google Cloud Logging] AI Agent Execution: ${logDoc.agentName} | Action: ${logDoc.action}`,
       severity: "INFO",
       timestamp: logDoc.timestamp,
       serviceContext: {
@@ -353,8 +358,8 @@ async function recordAgentLog(
       },
       "logging.googleapis.com/labels": {
         "hackathon_transparency": "enabled",
-        "agent_name": agentName,
-        "action_type": action,
+        "agent_name": logDoc.agentName,
+        "action_type": logDoc.action,
       },
       inputContext: logDoc.inputContext,
       tokenUsage: logDoc.tokenUsage
