@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { 
   Menu, X, Sun, Moon, Flame, Sparkles, Cloud, Check, Trophy, 
   Bot, TrendingUp, BarChart2, PieChart, Globe, ShieldCheck, Target, 
-  DollarSign, Award, FileText, Building2, Zap, User, ArrowRight, Palette, Monitor
+  DollarSign, Award, FileText, Building2, Zap, User, ArrowRight, Palette, Monitor, LogOut, ChevronDown
 } from "lucide-react";
 import { NotificationCenter } from "./NotificationCenter";
 import { Logo } from "./Logo";
@@ -40,9 +40,11 @@ export function Navbar({
   const [isScrolled, setIsScrolled] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isThemePanelOpen, setIsThemePanelOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [lastSyncTime, setLastSyncTime] = useState<string>("Just now");
   const themePanelRef = useRef<HTMLDivElement>(null);
+  const userMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleSyncStart = () => setIsSyncing(true);
@@ -70,6 +72,9 @@ export function Navbar({
     const handleClickOutside = (e: MouseEvent) => {
       if (themePanelRef.current && !themePanelRef.current.contains(e.target as Node)) {
         setIsThemePanelOpen(false);
+      }
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+        setIsUserMenuOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -175,35 +180,91 @@ export function Navbar({
           {/* FAR RIGHT END: Controls in order -> User Profile Icon (YC) -> Dark/Light Mode -> Currency -> Hamburger Menu (☰) */}
           <div className="flex items-center gap-2.5">
             
-            {/* 1. USER PROFILE ICON (YC / User Avatar) */}
-            <div className="flex items-center gap-2">
-
+            {/* 1. USER PROFILE ICON & DROPDOWN MENU */}
+            <div className="relative" ref={userMenuRef}>
               {user ? (
-                <div 
-                  className="flex items-center gap-2 p-1 rounded-xl bg-bg-secondary border border-border hover:border-accent-gold/40 transition-all cursor-pointer"
-                  onClick={() => handleNavClick("#badges")}
-                  title={`Logged in as ${user.displayName || user.email || "Verified Member"}`}
+                <button
+                  type="button"
+                  onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                  className="flex items-center gap-1.5 p-1 pr-2 rounded-xl bg-bg-secondary border border-border hover:border-accent-gold/50 transition-all cursor-pointer shadow-sm"
+                  title={`Account options for ${user.displayName || user.email || "User"}`}
                 >
                   <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent-gold to-amber-600 text-slate-950 font-black font-mono text-xs flex items-center justify-center border border-amber-300 shadow-sm shrink-0">
                     {user.photoURL ? (
                       <img src={user.photoURL} alt="User Avatar" className="w-full h-full object-cover rounded-lg" referrerPolicy="no-referrer" />
                     ) : (
-                      (user.displayName || "YC").slice(0, 2).toUpperCase()
+                      (user.displayName || user.email || "YC").slice(0, 2).toUpperCase()
                     )}
                   </div>
                   <span className="hidden sm:inline-block text-xs font-bold text-text-primary max-w-[80px] truncate font-mono">
-                    {user.displayName?.split(" ")[0] || "YC"}
+                    {user.displayName?.split(" ")[0] || "Account"}
                   </span>
-                </div>
+                  <ChevronDown className="w-3.5 h-3.5 text-text-muted" />
+                </button>
               ) : (
-                <div 
-                  className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500 to-accent-gold text-slate-950 font-black font-mono text-xs flex items-center justify-center border border-amber-300 shadow-sm cursor-pointer hover:scale-105 transition-all"
+                <button 
+                  type="button"
                   onClick={() => handleNavClick("#dashboard")}
+                  className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500 to-accent-gold text-slate-950 font-black font-mono text-xs flex items-center justify-center border border-amber-300 shadow-sm cursor-pointer hover:scale-105 transition-all"
                   title="YC Investor / Verified Member"
                 >
                   YC
-                </div>
+                </button>
               )}
+
+              {/* User Dropdown Menu */}
+              <AnimatePresence>
+                {isUserMenuOpen && user && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute right-0 mt-2 w-64 bg-bg-secondary border border-border shadow-2xl rounded-2xl p-3 z-50 space-y-3 backdrop-blur-xl font-mono text-xs"
+                  >
+                    <div className="p-2 rounded-xl bg-bg-tertiary border border-border/60">
+                      <div className="font-bold text-text-primary truncate">{user.displayName || "Active User"}</div>
+                      {user.email && <div className="text-[10px] text-text-muted truncate mt-0.5">{user.email}</div>}
+                      <div className="mt-1.5 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[9px] font-bold uppercase">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                        Authenticated Session
+                      </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <button
+                        onClick={() => { setIsUserMenuOpen(false); handleNavClick("#badges"); }}
+                        className="w-full flex items-center gap-2 p-2 rounded-xl hover:bg-bg-tertiary text-text-secondary hover:text-text-primary transition-all cursor-pointer"
+                      >
+                        <Trophy className="w-4 h-4 text-accent-gold" />
+                        <span>Badges & Achievements</span>
+                      </button>
+
+                      <button
+                        onClick={() => { setIsUserMenuOpen(false); handleNavClick("#hackathon-hub"); }}
+                        className="w-full flex items-center gap-2 p-2 rounded-xl hover:bg-bg-tertiary text-text-secondary hover:text-text-primary transition-all cursor-pointer"
+                      >
+                        <ShieldCheck className="w-4 h-4 text-accent-emerald" />
+                        <span>Platform Transparency Hub</span>
+                      </button>
+                    </div>
+
+                    <div className="pt-2 border-t border-border/60">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsUserMenuOpen(false);
+                          if (onSignOut) onSignOut();
+                        }}
+                        className="w-full flex items-center justify-center gap-2 p-2.5 rounded-xl bg-accent-red/10 border border-accent-red/30 hover:bg-accent-red/20 text-accent-red font-bold transition-all cursor-pointer"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        <span>Sign Out Session</span>
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             {/* 2. DARK/LIGHT MODE TOGGLE */}
@@ -389,6 +450,28 @@ export function Navbar({
 
               {/* Drawer Footer */}
               <div className="p-6 border-t border-border/80 bg-slate-950 space-y-3 font-mono text-xs">
+                {user && (
+                  <div className="p-3 rounded-xl bg-slate-900 border border-border/60 flex items-center justify-between">
+                    <div className="truncate pr-2">
+                      <div className="text-xs font-bold text-text-primary truncate">{user.displayName || "Active Session"}</div>
+                      {user.email && <div className="text-[10px] text-text-muted truncate">{user.email}</div>}
+                    </div>
+                    {onSignOut && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsDrawerOpen(false);
+                          onSignOut();
+                        }}
+                        className="px-3 py-1.5 rounded-lg bg-accent-red/15 hover:bg-accent-red/25 border border-accent-red/30 text-accent-red font-bold text-[11px] flex items-center gap-1.5 transition-all cursor-pointer shrink-0"
+                        title="Sign Out Session"
+                      >
+                        <LogOut className="w-3.5 h-3.5" /> Sign Out
+                      </button>
+                    )}
+                  </div>
+                )}
+
                 <div className="flex items-center justify-between text-text-muted text-[11px]">
                   <span>Environment: <strong className="text-emerald-400">Google Cloud Run</strong></span>
                   <span>Port: <strong className="text-cyan-400">3000</strong></span>

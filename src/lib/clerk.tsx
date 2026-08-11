@@ -425,6 +425,26 @@ export function ClerkSignInWidget() {
           {clerkAuth.isClerkActive ? "Trigger Clerk Secure Popup" : "Authorize Clerk Sandbox Identity"}
         </span>
       </button>
+
+      {clerkAuth.isClerkActive && (
+        <div className="p-3.5 rounded-xl border border-accent-gold/20 bg-accent-gold/5 text-xs text-text-muted space-y-2 mt-4 font-mono">
+          <div className="flex items-center gap-2 text-accent-gold font-bold">
+            <Sparkles className="w-4 h-4 shrink-0" />
+            <span>Clerk Waitlist / Access Note</span>
+          </div>
+          <p className="text-[11px] leading-relaxed">
+            If Clerk says <em>"Sign-ups are currently unavailable. Join the waitlist..."</em>, it means new sign-ups are restricted on this Clerk test key.
+          </p>
+          <div className="pt-1.5 border-t border-accent-gold/10 flex flex-wrap gap-2 text-[11px]">
+            <span className="text-text-primary">Alternatives:</span>
+            <span className="text-accent-gold font-bold">1. Use Sign In (if registered)</span>
+            <span>•</span>
+            <span className="text-accent-emerald font-bold">2. Switch to 'Sign In / Restore' tab</span>
+            <span>•</span>
+            <span className="text-accent-blue font-bold">3. Switch to 'Offline Guest' tab</span>
+          </div>
+        </div>
+      )}
     </form>
   );
 }
