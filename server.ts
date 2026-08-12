@@ -513,7 +513,7 @@ const ALERTS_CACHE_DURATION_MS = 15 * 60 * 1000; // 15 minutes cache to complete
 // Global Gemini circuit breaker for quota protection (prevents redundant 429 quota exceptions in production)
 let isGeminiQuotaExceeded = false;
 let geminiQuotaResetTime = 0;
-const QUOTA_COOLDOWN_MS = 15 * 1000; // 15 seconds cooldown before retrying Gemini
+const QUOTA_COOLDOWN_MS = 60 * 1000; // 60 seconds cooldown before retrying Gemini
 
 function checkGeminiQuotaStatus(): boolean {
   if (isGeminiQuotaExceeded) {
@@ -526,12 +526,11 @@ function checkGeminiQuotaStatus(): boolean {
   return false;
 }
 
-function tripGeminiQuotaCircuitBreaker() {
-  if (!isGeminiQuotaExceeded) {
-    isGeminiQuotaExceeded = true;
-    geminiQuotaResetTime = Date.now() + QUOTA_COOLDOWN_MS;
-    console.warn(`[Gemini Engine] Quota limit exceeded. Circuit breaker tripped. Cooldown active until ${new Date(geminiQuotaResetTime).toISOString()}`);
-  }
+function tripGeminiQuotaCircuitBreaker(overrideCooldownMs?: number) {
+  const duration = overrideCooldownMs || QUOTA_COOLDOWN_MS;
+  isGeminiQuotaExceeded = true;
+  geminiQuotaResetTime = Math.max(geminiQuotaResetTime, Date.now() + duration);
+  console.warn(`[Gemini Engine] Quota limit hit. Circuit breaker active until ${new Date(geminiQuotaResetTime).toISOString()}`);
 }
 
 // Autonomous Real-Time News Grounding Alerts

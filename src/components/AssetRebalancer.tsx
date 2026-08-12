@@ -467,11 +467,16 @@ Provide a crisp, professional, high-performance financial commentary! Limit to e
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt })
       });
-      const data = await response.json();
-      setAdviceAI(data.text || "AI Advisor temporarily unavailable. Maintain consistent diversification guides.");
+      const contentType = response.headers.get("content-type") || "";
+      if (response.ok && contentType.includes("application/json")) {
+        const data = await response.json();
+        setAdviceAI(data.text || "AI Advisor temporarily unavailable. Maintain consistent diversification guides.");
+      } else {
+        setAdviceAI("AI Advisor operating in standby mode. Maintain consistent asset allocation parameters across portfolio buckets.");
+      }
     } catch (err) {
-      console.error(err);
-      setAdviceAI("Failed to proxy AI rebalance insights. Continue with system heuristic guidelines.");
+      console.warn("Rebalancer AI Proxy Warning:", err);
+      setAdviceAI("Continue with system heuristic rebalancing guidelines to maintain target allocation ratios.");
     } finally {
       setLoadingAI(false);
     }

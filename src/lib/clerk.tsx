@@ -32,7 +32,8 @@ const ClerkAuthContext = createContext<ClerkAuthContextType | undefined>(undefin
 
 const CLERK_PUBLISHABLE_KEY = (
   ((import.meta as any).env?.VITE_CLERK_PUBLISHABLE_KEY as string) || 
-  "pk_test_dXAtZWxlcGhhbnQtNTYuY2xlcmsuYWNjb3VudHMuZGV2JA"
+  ((import.meta as any).env?.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY as string) ||
+  "pk_test_YXdhaXRlZC1zcXVpcnJlbC01LmNsZXJrLmFjY291bnRzLmRldiQ"
 ).trim();
 const isClerkConfigured = typeof CLERK_PUBLISHABLE_KEY === "string" && 
   (CLERK_PUBLISHABLE_KEY.startsWith("pk_test_") || CLERK_PUBLISHABLE_KEY.startsWith("pk_live_"));

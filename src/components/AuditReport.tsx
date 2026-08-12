@@ -251,7 +251,8 @@ export function AuditReport({ user }: AuditReportProps) {
         body: JSON.stringify({ prompt, isJudgeMode: judgeModeActive })
       });
 
-      if (response.ok) {
+      const contentType = response.headers.get("content-type") || "";
+      if (response.ok && contentType.includes("application/json")) {
         const data = await response.json();
         setAuditVerdict(data.text);
         

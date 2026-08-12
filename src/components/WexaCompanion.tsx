@@ -361,7 +361,8 @@ export const WexaCompanion: React.FC<WexaCompanionProps> = ({ user, budget, onRe
       });
 
       let reply = "";
-      if (res.ok) {
+      const contentType = res.headers.get("content-type") || "";
+      if (res.ok && contentType.includes("application/json")) {
         const data = await res.json();
         reply = data.text || "";
       }

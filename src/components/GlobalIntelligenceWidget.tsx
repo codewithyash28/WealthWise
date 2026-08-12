@@ -69,9 +69,12 @@ export function GlobalIntelligenceWidget({ user }: GlobalIntelligenceWidgetProps
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ headlines, portfolioType: portfolioStrategy })
       });
-      const data = await res.json();
-      if (data?.impactAnalyses) {
-        setImpactMap(data.impactAnalyses);
+      const contentType = res.headers.get("content-type") || "";
+      if (res.ok && contentType.includes("application/json")) {
+        const data = await res.json();
+        if (data?.impactAnalyses) {
+          setImpactMap(data.impactAnalyses);
+        }
       }
     } catch (err) {
       console.warn("Failed fetching headline impacts:", err);

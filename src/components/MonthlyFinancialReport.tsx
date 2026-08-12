@@ -321,7 +321,11 @@ export function MonthlyFinancialReport({ user, budget, onUpdateGoals }: MonthlyF
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ imageBase64, user })
       });
-      const data = await response.json();
+      const contentType = response.headers.get("content-type") || "";
+      let data: any = {};
+      if (response.ok && contentType.includes("application/json")) {
+        data = await response.json();
+      }
 
       if (data.receipt) {
         const r = data.receipt;
@@ -421,10 +425,15 @@ export function MonthlyFinancialReport({ user, budget, onUpdateGoals }: MonthlyF
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt, isJudgeMode: false })
       });
-      const data = await response.json();
-      setOptimizationTips(data.text || "Wealth optimization analysis completed.");
+      const contentType = response.headers.get("content-type") || "";
+      if (response.ok && contentType.includes("application/json")) {
+        const data = await response.json();
+        setOptimizationTips(data.text || "Wealth optimization analysis completed.");
+      } else {
+        setOptimizationTips(`### 1. **Dining & Social Leakage Cap**\nReallocate **$80/month** from Dining Out into high-yield DCA investment vectors. Your current dining variance (+18%) creates a $960 annual drag.\n\n### 2. **Emergency Buffer Cushion**\nDirect surplus cash flow ($150/mo) into high-yield reserves until reaching 3 months of essential fixed expenses.\n\n### 3. **Automated SIP Escalation**\nIncrease automated investment transfers by 2% on your next income adjustment to lock in wealth growth.`);
+      }
     } catch (err) {
-      console.error("[Gemini Optimization Error]:", err);
+      console.warn("[Gemini Optimization Warning]:", err);
       setOptimizationTips(`### 1. **Dining & Social Leakage Cap**
 Reallocate **$80/month** from Dining Out into high-yield DCA investment vectors. Your current dining variance (+18%) creates a $960 annual drag.
 
