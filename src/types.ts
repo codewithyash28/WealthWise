@@ -42,6 +42,13 @@ export interface UserProfile {
     completed: boolean;
     date: string;
   };
+  userRevenueData?: {
+    amount: number;
+    source: string;
+    frequency: "monthly" | "annual" | "weekly" | "one_time";
+    lastUpdated?: string;
+    notes?: string;
+  };
 }
 
 export interface Achievement {

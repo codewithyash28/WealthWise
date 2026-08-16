@@ -1,0 +1,45 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User profile with financial configuration and goals",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "currency": { "type": "string" },
+        "monthlyIncome": { "type": "number" },
+        "goals": { "type": "array" },
+        "riskTolerance": { "type": "string" }
+      },
+      "required": ["userId", "name"]
+    },
+    "BudgetPlan": {
+      "title": "BudgetPlan",
+      "description": "Budget allocations and expenses",
+      "type": "object",
+      "properties": {
+        "monthlyIncome": { "type": "number" },
+        "needsPercentage": { "type": "number" },
+        "wantsPercentage": { "type": "number" },
+        "savingsPercentage": { "type": "number" },
+        "expenses": { "type": "array" }
+      }
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User profile documents"
+    },
+    "/users/{userId}/budgets/{budgetId}": {
+      "schema": "BudgetPlan",
+      "description": "User budgets and financial plans"
+    },
+    "/users/{userId}/portfolios/{portfolioId}": {
+      "schema": "UserProfile",
+      "description": "User portfolio snapshots"
+    }
+  }
+}

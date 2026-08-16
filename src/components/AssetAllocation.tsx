@@ -9,13 +9,6 @@ ChartJS.register(ArcElement, Tooltip, Legend);
 
 type RiskLevel = "CONSERVATIVE" | "MODERATE" | "AGGRESSIVE" | "VERY_AGGRESSIVE";
 
-const RISK_TRAFFIC_LIGHTS: Record<RiskLevel, { badge: string; label: string; desc: string }> = {
-  CONSERVATIVE: { badge: "🟢 SAFE", label: "Low Volatility", desc: "Capital preservation is priority. Minimal market fluctuations." },
-  MODERATE: { badge: "🟡 BALANCED", label: "Moderate Risk", desc: "Balance between capital growth and safety buffers." },
-  AGGRESSIVE: { badge: "🟠 HIGH GROWTH", label: "Higher Volatility", desc: "Focus on long-term capital accumulation." },
-  VERY_AGGRESSIVE: { badge: "🔴 MAXIMUM RISK", label: "High Volatility", desc: "Maximum exposure to high-growth assets and speculative markets." },
-};
-
 interface Allocation {
   label: string;
   value: number;
@@ -108,10 +101,13 @@ export function AssetAllocation() {
                 >
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-xs font-bold uppercase tracking-widest">{level.replace("_", " ")}</span>
-                    <span className="text-[10px] font-mono font-bold">{RISK_TRAFFIC_LIGHTS[level].badge}</span>
+                    {level === "VERY_AGGRESSIVE" && <Zap className="w-4 h-4 text-accent-purple" />}
                   </div>
                   <p className="text-[10px] text-text-secondary group-hover:text-text-primary transition-colors">
-                    {RISK_TRAFFIC_LIGHTS[level].desc}
+                    {level === "CONSERVATIVE" ? "Capital preservation is priority." :
+                     level === "MODERATE" ? "Balance between growth and safety." :
+                     level === "AGGRESSIVE" ? "Focus on long-term wealth creation." :
+                     "Maximum exposure to high-growth assets."}
                   </p>
                 </button>
               ))}

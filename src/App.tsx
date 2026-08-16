@@ -83,6 +83,8 @@ class ModuleErrorBoundary extends Component<{ children: ReactNode, moduleName: s
   }
 }
 import { Navbar } from "./components/Navbar";
+import { useFirebaseAuth } from "./lib/firebaseAuthContext";
+import { FirebaseAuthBanner, FirebaseAuthSignInWidget } from "./components/FirebaseAuthWidgets";
 import { StripeBillingCenter } from "./components/StripeBillingCenter";
 import { UpgradeModal } from "./components/UpgradeModal";
 import { Footer } from "./components/Footer";
@@ -186,6 +188,7 @@ export default function App() {
 }
 
 function AppContent() {
+  const firebaseAuth = useFirebaseAuth();
   const [user, setUser] = useState<LocalUser | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [budget, setBudget] = useState<BudgetPlan | null>(null);
@@ -196,15 +199,21 @@ function AppContent() {
   const [gitProvider, setGitProvider] = useState<"gitlab" | "github" | "bitbucket">("github");
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
   const [upgradeFeatureTitle, setUpgradeFeatureTitle] = useState("");
+  const [isEvidenceEngineOpen, setIsEvidenceEngineOpen] = useState(false);
 
   useEffect(() => {
     const handleOpenUpgrade = (e: any) => {
       setUpgradeFeatureTitle(e.detail?.featureTitle || "");
       setIsUpgradeModalOpen(true);
     };
+    const handleOpenEvidence = () => {
+      setIsEvidenceEngineOpen(true);
+    };
     window.addEventListener("ww-open-upgrade-modal" as any, handleOpenUpgrade);
+    window.addEventListener("ww-open-evidence-engine" as any, handleOpenEvidence);
     return () => {
       window.removeEventListener("ww-open-upgrade-modal" as any, handleOpenUpgrade);
+      window.removeEventListener("ww-open-evidence-engine" as any, handleOpenEvidence);
     };
   }, []);
   const [alerts, setAlerts] = useState<any[]>([
@@ -514,10 +523,55 @@ function AppContent() {
     setIsAuthReady(true);
   }, []);
 
+  // Synchronize Firebase auth state into AppContent user/profile state
+  useEffect(() => {
+    if (!firebaseAuth.loading) {
+      if (firebaseAuth.user) {
+        const firebaseUserObj = {
+          uid: firebaseAuth.user.uid,
+          displayName: firebaseAuth.user.displayName || "Yash Choubey",
+          email: firebaseAuth.user.email,
+          photoURL: firebaseAuth.user.photoURL
+        };
+        setUser(firebaseUserObj);
+        localStorage.setItem("ww_user", JSON.stringify(firebaseUserObj));
+        localStorage.setItem("ww_sync_enabled", "true");
+
+        // Load profile from Firestore or local storage
+        firebaseAuth.loadUserDataFromFirestore(firebaseAuth.user.uid).then((cloudData) => {
+          if (cloudData?.profile) {
+            setProfile(cloudData.profile);
+            localStorage.setItem("ww_profile", JSON.stringify(cloudData.profile));
+            if (cloudData.budget) {
+              setBudget(cloudData.budget);
+              localStorage.setItem("ww_budget", JSON.stringify(cloudData.budget));
+            }
+          } else {
+            const savedProfile = localStorage.getItem("ww_profile");
+            if (savedProfile) {
+              try {
+                const parsed = JSON.parse(savedProfile);
+                if (firebaseAuth.user?.displayName) parsed.name = firebaseAuth.user.displayName;
+                setProfile(parsed);
+              } catch {}
+            }
+          }
+        });
+      } else {
+        // If user logged out of Firebase and was using Firebase auth
+        if (user && (user.uid.startsWith("firebase_") || user.email)) {
+          setUser(null);
+          setProfile(null);
+          setBudget(null);
+        }
+      }
+    }
+  }, [firebaseAuth.loading, firebaseAuth.user]);
+
   // Sync state tracking variables
   const [authEmail, setAuthEmail] = useState("");
   const [authPassword, setAuthPassword] = useState("");
-  const [authMode, setAuthMode] = useState<"guest" | "mongodb_register" | "mongodb_login">("mongodb_login");
+  const [authMode, setAuthMode] = useState<"guest" | "mongodb_register" | "mongodb_login" | "firebase">("firebase");
   const [dbHealth, setDbHealth] = useState<{ status: string, database: string, connectionString?: string } | null>(null);
   const [authError, setAuthError] = useState<string | null>(null);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
@@ -762,6 +816,7 @@ function AppContent() {
     localStorage.removeItem("ww_profile");
     localStorage.removeItem("ww_budget");
     localStorage.removeItem("ww_sync_enabled");
+    firebaseAuth.signOut();
     window.location.hash = "#home";
   };
 
@@ -875,6 +930,12 @@ function AppContent() {
                 {/* Visual tabs to choose auth mechanism */}
                 <div className="flex border-b border-border/50">
                   <button
+                    onClick={() => { setAuthMode("firebase"); setAuthError(null); }}
+                    className={`flex-1 pb-3 text-xs uppercase tracking-wider font-extrabold transition-all border-b-2 ${authMode === "firebase" ? "border-accent-gold text-accent-gold" : "border-transparent text-text-muted hover:text-text-primary"}`}
+                  >
+                    Google / Firebase
+                  </button>
+                  <button
                     onClick={() => { setAuthMode("mongodb_login"); setAuthError(null); }}
                     className={`flex-1 pb-3 text-xs uppercase tracking-wider font-extrabold transition-all border-b-2 ${authMode === "mongodb_login" ? "border-accent-gold text-accent-gold" : "border-transparent text-text-muted hover:text-text-primary"}`}
                   >
@@ -906,7 +967,7 @@ function AppContent() {
                           const tempUid = "guest_" + Math.random().toString(36).substring(2, 11);
                           const guestUser = {
                             uid: tempUid,
-                            displayName: "Guest User",
+                            displayName: "Yash Choubey",
                             email: null,
                             photoURL: null
                           };
@@ -930,7 +991,29 @@ function AppContent() {
                 )}
 
                 <AnimatePresence mode="wait">
-                  {authMode === "guest" ? (
+                  {authMode === "firebase" ? (
+                    <motion.div
+                      key="firebase-auth-card"
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="space-y-6 text-left py-2"
+                    >
+                      <FirebaseAuthBanner />
+                      <FirebaseAuthSignInWidget 
+                        onGuestSuccess={(guestUser) => {
+                          setUser(guestUser);
+                          localStorage.setItem("ww_user", JSON.stringify(guestUser));
+                          const savedProfile = localStorage.getItem("ww_profile");
+                          if (savedProfile) {
+                            setProfile(JSON.parse(savedProfile));
+                          } else {
+                            setShowExpertOnboarding(true);
+                          }
+                        }}
+                      />
+                    </motion.div>
+                  ) : authMode === "guest" ? (
                     <motion.div
                       key="guest-card"
                       initial={{ opacity: 0, scale: 0.95 }}
@@ -1569,6 +1652,16 @@ function AppContent() {
         featureTitle={upgradeFeatureTitle}
         onSuccess={() => {
           if (profile) setProfile({ ...profile, isPremium: true });
+        }}
+      />
+
+      <EvidenceEngineModal
+        isOpen={isEvidenceEngineOpen}
+        onClose={() => setIsEvidenceEngineOpen(false)}
+        userProfile={profile}
+        onUpdateProfile={(updated) => {
+          setProfile(updated);
+          localStorage.setItem("ww_profile", JSON.stringify(updated));
         }}
       />
 

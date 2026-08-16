@@ -173,12 +173,7 @@ export function Dashboard({ user, budget, onUpdateNetWorth }: DashboardProps) {
           className="card p-6 space-y-4 hover:border-border-active hover:shadow-[0_0_20px_rgba(240,180,41,0.05)]"
         >
           <div className="flex items-center justify-between">
-            <div className="text-text-secondary text-sm font-medium flex items-center gap-1.5">
-              <span>Monthly Savings Rate</span>
-              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-bg-void border border-border">
-                {savingsRate >= 20 ? "🟢 Strong" : savingsRate >= 10 ? "🟡 Fair" : "🔴 Low"}
-              </span>
-            </div>
+            <div className="text-text-secondary text-sm font-medium">Monthly Savings Rate</div>
             <div className="w-8 h-8 rounded-lg bg-accent-emerald/10 flex items-center justify-center text-accent-emerald">
               <Plus className="w-4 h-4" />
             </div>
@@ -187,7 +182,7 @@ export function Dashboard({ user, budget, onUpdateNetWorth }: DashboardProps) {
             <div className={cn("text-3xl font-mono font-bold", savingsRate >= 20 ? "text-accent-emerald" : savingsRate >= 10 ? "text-accent-gold" : "text-accent-red")}>
               {budget ? `${savingsRate}%` : "Fill Budget →"}
             </div>
-            <div className="text-xs text-text-muted">Target: 20%+ for wealth building</div>
+            <div className="text-xs text-text-muted">▲ 3% vs last month</div>
           </div>
           <div className="h-1 bg-border rounded-full overflow-hidden">
             <motion.div initial={{ width: 0 }} animate={{ width: `${savingsRate}%` }} className="h-full bg-accent-emerald" />
@@ -278,12 +273,7 @@ export function Dashboard({ user, budget, onUpdateNetWorth }: DashboardProps) {
           className="card p-6 space-y-4 hover:border-border-active hover:shadow-[0_0_20px_rgba(240,180,41,0.05)]"
         >
           <div className="flex items-center justify-between">
-            <div className="text-text-secondary text-sm font-medium flex items-center gap-1.5">
-              <span>Debt-to-Income</span>
-              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-bg-void border border-border">
-                {dtiRatio <= 36 ? "🟢 Safe" : dtiRatio <= 43 ? "🟡 Moderate" : "🔴 High Debt"}
-              </span>
-            </div>
+            <div className="text-text-secondary text-sm font-medium">Debt-to-Income</div>
             <div className="w-8 h-8 rounded-lg bg-accent-red/10 flex items-center justify-center text-accent-red">
               <ArrowDownRight className="w-4 h-4" />
             </div>
@@ -292,7 +282,7 @@ export function Dashboard({ user, budget, onUpdateNetWorth }: DashboardProps) {
             <div className={cn("text-3xl font-mono font-bold", dtiRatio <= 36 ? "text-accent-emerald" : dtiRatio <= 43 ? "text-accent-gold" : "text-accent-red")}>
               {dtiRatio}%
             </div>
-            <div className="text-xs text-text-muted">Healthy range is under 36%</div>
+            <div className="text-xs text-text-muted">Total Debt / Annual Income</div>
           </div>
           <div className="h-1 bg-border rounded-full overflow-hidden">
             <motion.div initial={{ width: 0 }} animate={{ width: `${Math.min(100, dtiRatio)}%` }} className={cn("h-full", dtiRatio <= 36 ? "bg-accent-emerald" : "bg-accent-red")} />

@@ -256,7 +256,7 @@ export function NameInput({ isOpen, initialName = "", initialCurrency = "USD", o
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Yash, Investor One"
+              placeholder="e.g. Yash Choubey, Investor One"
               className="input-field w-full text-sm py-2.5 px-3 border-accent-gold/40 focus:border-accent-gold font-mono"
               autoFocus
             />

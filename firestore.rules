@@ -1,0 +1,36 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper function to check valid user
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+
+    // User profile documents - private to each user
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+    
+    // User financial ledgers / budgets - private to each user
+    match /users/{userId}/budgets/{budgetId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    // User portfolios / investment logs - private to each user
+    match /users/{userId}/portfolios/{portfolioId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    // Connection testing
+    match /test/{docId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    // Public audits or demo logs
+    match /audit_logs/{logId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+  }
+}

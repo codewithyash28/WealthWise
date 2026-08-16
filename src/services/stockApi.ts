@@ -4,16 +4,6 @@
 
 const TWELVE_DATA_API_KEY = "83ef983ad1e1433485c05957a560aa5c";
 const BASE_URL = "https://api.twelvedata.com";
-const CACHE_TTL_MS = 60000; // 60-second client-side cache layer
-
-interface CacheEntry<T> {
-  data: T;
-  timestamp: number;
-}
-
-const quoteCache = new Map<string, CacheEntry<StockQuote>>();
-const timeSeriesCache = new Map<string, CacheEntry<TimeSeriesPoint[]>>();
-const batchQuoteCache = new Map<string, CacheEntry<Record<string, StockQuote>>>();
 
 export interface StockQuote {
   symbol: string;
@@ -198,39 +188,23 @@ const FALLBACK_QUOTES: Record<string, StockQuote> = {
  */
 export async function getLiveQuote(symbol: string): Promise<StockQuote> {
   const cleanSymbol = symbol.trim().toUpperCase();
-  const cacheKey = `quote:${cleanSymbol}`;
-  const now = Date.now();
-
-  const cached = quoteCache.get(cacheKey);
-  if (cached && (now - cached.timestamp < CACHE_TTL_MS)) {
-    return cached.data;
-  }
-
   const url = `${BASE_URL}/quote?symbol=${encodeURIComponent(cleanSymbol)}&apikey=${TWELVE_DATA_API_KEY}`;
 
   try {
     const res = await fetch(url);
-    if (res.status === 429) {
-      console.warn(`Twelve Data 429 Rate Limit Hit for ${cleanSymbol}. Serving fallback.`);
-      const fallback = getFallbackQuote(cleanSymbol);
-      quoteCache.set(cacheKey, { data: fallback, timestamp: now });
-      return fallback;
-    }
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
 
-    if (data.status === "error" || data.code === 429 || !data.price) {
+    if (data.status === "error" || !data.price) {
       console.warn(`Twelve Data API fallback for ${cleanSymbol}:`, data.message || "No price data");
-      const fallback = getFallbackQuote(cleanSymbol);
-      quoteCache.set(cacheKey, { data: fallback, timestamp: now });
-      return fallback;
+      return getFallbackQuote(cleanSymbol);
     }
 
     const price = parseFloat(data.price || data.close || "0");
     const change = parseFloat(data.change || "0");
     const percent_change = parseFloat(data.percent_change || "0");
 
-    const result: StockQuote = {
+    return {
       symbol: data.symbol || cleanSymbol,
       name: data.name || cleanSymbol,
       price: isNaN(price) ? 100 : price,
@@ -246,14 +220,9 @@ export async function getLiveQuote(symbol: string): Promise<StockQuote> {
       is_market_open: data.is_market_open ?? true,
       exchange: data.exchange || "GLOBAL"
     };
-
-    quoteCache.set(cacheKey, { data: result, timestamp: now });
-    return result;
   } catch (error) {
     console.warn(`Twelve Data fetch error for ${cleanSymbol}, using fallback:`, error);
-    const fallback = getFallbackQuote(cleanSymbol);
-    quoteCache.set(cacheKey, { data: fallback, timestamp: now });
-    return fallback;
+    return getFallbackQuote(cleanSymbol);
   }
 }
 
@@ -266,35 +235,19 @@ export async function getTimeSeries(
   outputsize = 30
 ): Promise<TimeSeriesPoint[]> {
   const cleanSymbol = symbol.trim().toUpperCase();
-  const cacheKey = `series:${cleanSymbol}:${interval}:${outputsize}`;
-  const now = Date.now();
-
-  const cached = timeSeriesCache.get(cacheKey);
-  if (cached && (now - cached.timestamp < CACHE_TTL_MS)) {
-    return cached.data;
-  }
-
   const url = `${BASE_URL}/time_series?symbol=${encodeURIComponent(cleanSymbol)}&interval=${interval}&outputsize=${outputsize}&apikey=${TWELVE_DATA_API_KEY}`;
 
   try {
     const res = await fetch(url);
-    if (res.status === 429) {
-      console.warn(`Twelve Data 429 TimeSeries Rate Limit for ${cleanSymbol}. Serving fallback.`);
-      const fallback = generateFallbackTimeSeries(cleanSymbol, outputsize);
-      timeSeriesCache.set(cacheKey, { data: fallback, timestamp: now });
-      return fallback;
-    }
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
 
-    if (data.status === "error" || data.code === 429 || !Array.isArray(data.values)) {
+    if (data.status === "error" || !Array.isArray(data.values)) {
       console.warn(`Twelve Data TimeSeries fallback for ${cleanSymbol}`);
-      const fallback = generateFallbackTimeSeries(cleanSymbol, outputsize);
-      timeSeriesCache.set(cacheKey, { data: fallback, timestamp: now });
-      return fallback;
+      return generateFallbackTimeSeries(cleanSymbol, outputsize);
     }
 
-    const points = data.values.map((v: any) => ({
+    return data.values.map((v: any) => ({
       datetime: v.datetime,
       open: parseFloat(v.open),
       high: parseFloat(v.high),
@@ -302,14 +255,9 @@ export async function getTimeSeries(
       close: parseFloat(v.close),
       volume: parseInt(v.volume || "0", 10)
     })).reverse(); // Reverse so earliest is first
-
-    timeSeriesCache.set(cacheKey, { data: points, timestamp: now });
-    return points;
   } catch (error) {
     console.warn(`Twelve Data TimeSeries error for ${cleanSymbol}:`, error);
-    const fallback = generateFallbackTimeSeries(cleanSymbol, outputsize);
-    timeSeriesCache.set(cacheKey, { data: fallback, timestamp: now });
-    return fallback;
+    return generateFallbackTimeSeries(cleanSymbol, outputsize);
   }
 }
 
@@ -319,43 +267,15 @@ export async function getTimeSeries(
 export async function getBatchQuotes(symbols: string[]): Promise<Record<string, StockQuote>> {
   if (!symbols.length) return {};
   
-  const symbolString = symbols.map(s => s.trim().toUpperCase()).sort().join(",");
-  const cacheKey = `batch:${symbolString}`;
-  const now = Date.now();
-
-  const cached = batchQuoteCache.get(cacheKey);
-  if (cached && (now - cached.timestamp < CACHE_TTL_MS)) {
-    return cached.data;
-  }
-
+  const symbolString = symbols.map(s => s.trim().toUpperCase()).join(",");
   const url = `${BASE_URL}/quote?symbol=${encodeURIComponent(symbolString)}&apikey=${TWELVE_DATA_API_KEY}`;
 
   try {
     const res = await fetch(url);
-    if (res.status === 429) {
-      console.warn("Twelve Data 429 BatchQuote Rate Limit Hit, returning cached/fallback quotes");
-      const results: Record<string, StockQuote> = {};
-      symbols.forEach(s => {
-        const clean = s.trim().toUpperCase();
-        results[clean] = getFallbackQuote(clean);
-      });
-      batchQuoteCache.set(cacheKey, { data: results, timestamp: now });
-      return results;
-    }
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
 
     const results: Record<string, StockQuote> = {};
-
-    if (data && (data.status === "error" || data.code === 429)) {
-      console.warn("Twelve Data BatchQuote status error:", data.message);
-      symbols.forEach(s => {
-        const clean = s.trim().toUpperCase();
-        results[clean] = getFallbackQuote(clean);
-      });
-      batchQuoteCache.set(cacheKey, { data: results, timestamp: now });
-      return results;
-    }
 
     // Twelve Data returns object keyed by symbol if multi-symbol request succeeds
     if (typeof data === "object" && !data.status) {
@@ -391,7 +311,6 @@ export async function getBatchQuotes(symbols: string[]): Promise<Record<string, 
       }
     });
 
-    batchQuoteCache.set(cacheKey, { data: results, timestamp: now });
     return results;
   } catch (error) {
     console.warn("Twelve Data BatchQuote fetch error, returning fallbacks:", error);
@@ -400,7 +319,6 @@ export async function getBatchQuotes(symbols: string[]): Promise<Record<string, 
       const clean = s.trim().toUpperCase();
       results[clean] = getFallbackQuote(clean);
     });
-    batchQuoteCache.set(cacheKey, { data: results, timestamp: now });
     return results;
   }
 }

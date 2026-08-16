@@ -186,7 +186,7 @@ export function StripeBillingCenter({ user, onUpdateProfile }: StripeBillingCent
             className="flex items-center gap-1.5 px-3.5 py-1.5 bg-accent-gold/20 border border-accent-gold/50 rounded-xl text-accent-gold text-xs font-bold font-mono hover:bg-accent-gold hover:text-bg-void transition-all shadow-sm"
           >
             <Sparkles className="w-3.5 h-3.5" />
-            <span>Instamojo Pro Plan ($9/mo)</span>
+            <span>Clerk Pricing Page ($1/mo)</span>
           </a>
           <div className="flex items-center gap-1.5 px-3 py-1.5 bg-bg-secondary border border-border rounded-xl text-text-secondary text-xs font-bold font-mono">
             <CreditCard className="w-3.5 h-3.5 text-accent-gold" />
