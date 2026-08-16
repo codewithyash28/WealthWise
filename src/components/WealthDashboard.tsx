@@ -10,6 +10,8 @@ import { useMemo, useState, memo } from "react";
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip as RechartsTooltip, CartesianGrid, PieChart as RechartsPieChart, Pie, Cell, Legend } from "recharts";
 import { generateWealthAudit } from "../lib/gemini";
 import { WealthPathChart } from "./WealthPathChart";
+import { ProjectedGrowthChart } from "./ProjectedGrowthChart";
+import { ACHIEVEMENTS } from "../constants";
 import { MarketInsights } from "./MarketInsights";
 import { GitOpsControlCenter } from "./GitOpsControlCenter";
 import { AgentOperationsLogs } from "./AgentOperationsLogs";
@@ -517,21 +519,44 @@ export const WealthDashboard = memo(function WealthDashboard({ user, budget, onU
 
     // Section 4: Registered Financial Goals
     const userGoals = user.goals || [];
+    let curY = 214;
     if (userGoals.length > 0) {
       doc.setFont("Helvetica", "bold");
       doc.setFontSize(12);
       doc.setTextColor(17, 24, 39);
-      doc.text("4. ACTIVE SAVINGS & COMPOUND GOALS", 20, 214);
-      doc.line(20, 217, 190, 217);
+      doc.text("4. ACTIVE SAVINGS & COMPOUND GOALS", 20, curY);
+      doc.line(20, curY + 3, 190, curY + 3);
 
       doc.setFont("Helvetica", "normal");
       doc.setFontSize(9);
       doc.setTextColor(55, 65, 81);
-      let gY = 225;
-      userGoals.slice(0, 4).forEach((goal, idx) => {
+      let gY = curY + 11;
+      userGoals.slice(0, 3).forEach((goal, idx) => {
         doc.text(`${idx + 1}. ${goal.title} (${goal.category || 'General'}) — Target: ${currency.symbol} ${goal.targetAmount.toLocaleString()} | Deadline: ${new Date(goal.deadline).toLocaleDateString()}`, 25, gY);
-        gY += 7;
+        gY += 6;
       });
+      curY = gY + 4;
+    }
+
+    // Section 5: Achievements & Financial Mastery Highlights
+    doc.setFont("Helvetica", "bold");
+    doc.setFontSize(12);
+    doc.setTextColor(17, 24, 39);
+    doc.text("5. ACHIEVEMENTS & FINANCIAL MASTERY HIGHLIGHTS", 20, curY);
+    doc.line(20, curY + 3, 190, curY + 3);
+
+    doc.setFont("Helvetica", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(55, 65, 81);
+    doc.text(`- Experience Points (XP): ${user.xp || 400} XP | Daily Login Streak: ${user.streak || 1} Days | Financial IQ: Level ${Math.floor((user.xp || 400) / 100) + 1}`, 25, curY + 11);
+    
+    const userAchIds = new Set((user.achievements || []).map(a => typeof a === 'string' ? a : (a as any).id));
+    const unlockedAchievements = ACHIEVEMENTS.filter(a => userAchIds.has(a.id));
+    if (unlockedAchievements.length > 0) {
+      const badgeList = unlockedAchievements.map(a => `${a.icon} ${a.title}`).join("  |  ");
+      doc.text(`- Unlocked Badges: ${badgeList}`, 25, curY + 17);
+    } else {
+      doc.text("- Unlocked Badges: Starter Journey Badge Active", 25, curY + 17);
     }
     
     // Page 2: Generative Artificial Audit advice (if present)
@@ -549,7 +574,7 @@ export const WealthDashboard = memo(function WealthDashboard({ user, budget, onU
       
       doc.setFontSize(12);
       doc.setTextColor(17, 24, 39);
-      doc.text("5. DEEP GENERATIVE ARTIFICIAL WEALTH AUDIT", 20, 32);
+      doc.text("6. DEEP GENERATIVE ARTIFICIAL WEALTH AUDIT", 20, 32);
       doc.line(20, 35, 190, 35);
       
       doc.setFont("Helvetica", "normal");
@@ -2619,6 +2644,30 @@ export const WealthDashboard = memo(function WealthDashboard({ user, budget, onU
             💡 Monthly Savings Surplus: <strong className="text-accent-emerald">{formatCurrency(retirementReadiness.monthlySurplus, user.currency, currency.locale)}</strong> reinvested automatically.
           </div>
         </div>
+      </motion.div>
+
+      {/* Visual Projected Growth Line Chart (Recharts Dynamic Trajectory) */}
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        className="card p-8 space-y-6 mt-8 border-accent-gold/25 shadow-xl relative overflow-hidden"
+      >
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-border/60 pb-4">
+          <div className="space-y-1">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-accent-gold/15 border border-accent-gold/30 text-accent-gold text-[10px] font-mono font-bold uppercase tracking-wider">
+              <TrendingUp className="w-3.5 h-3.5 text-accent-gold" /> Dynamic Wealth Trajectory
+            </div>
+            <h3 className="text-2xl font-bold font-display text-text-primary flex items-center gap-2">
+              Projected Growth Engine
+            </h3>
+            <p className="text-xs text-text-secondary">
+              Interactive multi-year compounding simulator powered by your real-time net worth and monthly savings surplus.
+            </p>
+          </div>
+        </div>
+
+        <ProjectedGrowthChart user={user} budget={budget} />
       </motion.div>
 
       {/* Financial Savings Goals Tracker */}

@@ -90,14 +90,14 @@ export function LandingPage() {
           transition={{ delay: 0.5, duration: 0.8 }}
           className="flex flex-col sm:flex-row items-center gap-4 mb-20"
         >
-          <div className="flex flex-col items-center gap-2">
+          <div className="flex flex-col items-center gap-2 w-full sm:w-auto">
             <a href="#wexa-agent" className="btn-primary text-base px-9 py-4 w-full sm:w-auto font-mono uppercase font-bold tracking-wider" aria-label="Enter Wexa AI Platform">
               Launch Agent Platform <ChevronRight className="w-5 h-5 ml-2" />
             </a>
-            <span className="text-[9px] font-bold text-text-muted uppercase tracking-tighter font-mono">Live AI Agent Console</span>
+            <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider font-mono">Live AI Agent Console</span>
           </div>
           
-          <div className="flex flex-col items-center gap-2">
+          <div className="flex flex-col items-center gap-2 w-full sm:w-auto">
             <button 
               className="btn-secondary text-base px-9 py-4 flex items-center gap-2 w-full sm:w-auto font-mono uppercase font-bold tracking-wider" 
               onClick={() => window.dispatchEvent(new CustomEvent('start-judge-tour'))}
@@ -105,7 +105,7 @@ export function LandingPage() {
             >
               <Play className="w-5 h-5 fill-current text-accent-gold" /> System Walkthrough
             </button>
-            <span className="text-[9px] font-bold text-text-muted uppercase tracking-tighter font-mono">Platform Feature Tour</span>
+            <span className="text-[10px] font-bold text-accent-gold uppercase tracking-wider font-mono">Platform Feature Tour</span>
           </div>
         </motion.div>
 
@@ -127,18 +127,18 @@ export function LandingPage() {
           transition={{ delay: 0.8, duration: 1 }}
           className="mt-16 w-full max-w-4xl mx-auto"
         >
-          <div className="card p-1 border-accent-cyan/15 shadow-[0_0_50px_rgba(14,165,233,0.05)] overflow-hidden">
+          <div className="card p-1 border-accent-cyan/25 shadow-[0_0_50px_rgba(14,165,233,0.08)] overflow-hidden">
             <div className="bg-bg-secondary/50 rounded-2xl grid grid-cols-1 lg:grid-cols-12 overflow-hidden">
                {/* Left: Input */}
-               <div className="lg:col-span-4 p-8 border-b lg:border-b-0 lg:border-r border-border/50 text-left space-y-6">
+               <div className="lg:col-span-5 p-6 sm:p-8 border-b lg:border-b-0 lg:border-r border-border/50 text-left space-y-6">
                   <div className="space-y-1">
-                    <h3 className="text-xl font-bold">Try the Engine</h3>
-                    <p className="text-xs text-text-muted">Simulate the "Invisible Tax" (Inflation)</p>
+                    <h3 className="text-xl font-bold font-display text-text-primary">Try the Engine</h3>
+                    <p className="text-xs text-text-secondary">Simulate the "Invisible Tax" (Inflation)</p>
                   </div>
                   
                   <div className="space-y-4">
                     <div className="space-y-2">
-                       <label htmlFor="starting-wealth" className="text-[10px] uppercase font-bold tracking-widest text-text-muted">Starting Wealth</label>
+                       <label htmlFor="starting-wealth" className="text-[10px] uppercase font-bold tracking-widest text-text-muted font-mono">Starting Wealth</label>
                        <div className="relative">
                           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-accent-cyan font-semibold">$</span>
                           <input 
@@ -146,12 +146,12 @@ export function LandingPage() {
                             type="number" 
                             defaultValue="100000" 
                             aria-label="Enter starting wealth for simulation"
-                            className="w-full bg-bg-primary/50 border border-border rounded-xl py-3 pl-8 pr-4 text-sm focus:border-accent-cyan outline-hidden transition-all"
+                            className="w-full bg-bg-primary/50 border border-border rounded-xl py-3 pl-8 pr-4 text-sm font-mono focus:border-accent-cyan outline-hidden transition-all"
                           />
                        </div>
                     </div>
                     <div className="space-y-2">
-                       <label htmlFor="inflation-rate" className="text-[10px] uppercase font-bold tracking-widest text-text-muted">Inflation Rate (%)</label>
+                       <label htmlFor="inflation-rate" className="text-[10px] uppercase font-bold tracking-widest text-text-muted font-mono">Inflation Rate (%)</label>
                        <input 
                         id="inflation-rate"
                         type="range" 
@@ -159,16 +159,16 @@ export function LandingPage() {
                         max="20" 
                         defaultValue="6" 
                         aria-label="Adjust inflation rate"
-                        className="w-full accent-accent-cyan"
+                        className="w-full accent-accent-cyan cursor-pointer"
                        />
-                       <div className="flex justify-between text-[10px] text-text-muted">
+                       <div className="flex justify-between text-[10px] text-text-secondary font-mono">
                           <span>1% (Stable)</span>
-                          <span>20% (Elite Crisis)</span>
+                          <span className="font-bold text-accent-cyan">20% (Crisis)</span>
                        </div>
                     </div>
                     <button 
                       onClick={() => window.location.hash = "#dashboard"} 
-                      className="w-full py-3 bg-linear-to-r from-accent-cyan to-accent-blue text-white font-bold text-xs uppercase tracking-widest rounded-xl hover:opacity-90 transition-all flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(14,165,233,0.25)]"
+                      className="w-full py-3 bg-linear-to-r from-accent-cyan to-accent-blue text-white font-bold text-xs uppercase tracking-widest rounded-xl hover:opacity-90 transition-all flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(14,165,233,0.25)] cursor-pointer"
                       aria-label="Unlock the full MacroPulse simulator"
                     >
                       Unlock Full Simulator <ChevronRight className="w-4 h-4" />
@@ -178,7 +178,7 @@ export function LandingPage() {
                </div>
 
                {/* Right: Visual */}
-               <div className="lg:col-span-8 p-8 flex flex-col gap-6">
+               <div className="lg:col-span-7 p-6 sm:p-8 flex flex-col gap-6">
                   <div className="flex justify-between items-start">
                      <div>
                         <div className="text-[10px] font-bold text-accent-cyan uppercase tracking-widest mb-1">Impact Analysis</div>

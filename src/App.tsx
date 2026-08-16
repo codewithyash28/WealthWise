@@ -103,7 +103,7 @@ import { CurrencySelector, NameInput } from "./components/Modals";
 import { Onboarding } from "./components/Onboarding";
 import { JudgeTour } from "./components/JudgeTour";
 import { GoalCelebrationOverlay } from "./components/GoalCelebration";
-import { SessionExpiryAlert } from "./components/SessionExpiryAlert";
+import { EvidenceEngineModal } from "./components/EvidenceEngineModal";
 import { logAuditAction } from "./lib/auditLogger";
 import { StartupLogoAnimation } from "./components/StartupLogoAnimation";
 import { Logo } from "./components/Logo";
@@ -1615,7 +1615,6 @@ function AppContent() {
       />
 
       <GoalCelebrationOverlay />
-      <SessionExpiryAlert />
     </div>
   );
 }

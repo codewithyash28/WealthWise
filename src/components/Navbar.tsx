@@ -85,17 +85,17 @@ export function Navbar({
   const mainTabs = [
     { name: "Market Weather 🌤️", hash: "#macropulse", icon: TrendingUp },
     { name: "TrendMarket 📈", hash: "#trendmarket", icon: Zap },
-    { name: "Money Games & Stocks 📈", hash: "#stocks", icon: BarChart2 },
-    { name: "💎 Pro / Pricing", hash: "#pricing", icon: Crown, highlight: true },
+    { name: "Evidence Engine 📊", hash: "#evidence-engine", icon: BarChart2, highlight: true },
+    { name: "💎 Pro / Pricing", hash: "#pricing", icon: Crown },
     { name: "Platform Transparency Hub 🛡️", hash: "#hackathon-hub", icon: ShieldCheck },
   ];
 
-  // Drawer grouped into 4 simple sections
+  // Drawer grouped into simple sections
   const drawerSections = [
     {
       title: "💎 PLANS & UPGRADES",
       items: [
-        { name: "Wexa AI Pro ($9/mo) 💎", hash: "#pricing", icon: Crown, desc: "Instamojo payments, unlimited OCR & autonomous AI rebalancing" },
+        { name: "Wexa AI Pro ($19/mo) 💎", hash: "#pricing", icon: Crown, desc: "Global Stripe/Razorpay payments, unlimited OCR & autonomous AI rebalancing" },
       ]
     },
     {
@@ -122,8 +122,9 @@ export function Navbar({
       ]
     },
     {
-      title: "🛡️ COMPANY & AUDITS",
+      title: "🛡️ COMPANY, AUDITS & XPRIZE",
       items: [
+        { name: "Evidence Engine & Revenue Proof 📊", hash: "#evidence-engine", icon: TrendingUp, desc: "XPRIZE Monthly Revenue & Business Viability Engine (May–Aug 2026)" },
         { name: "Platform Transparency Hub 🛡️", hash: "#hackathon-hub", icon: Building2, desc: "Real P&L Manager & Investor Portal" },
         { name: "Executive Report Exporter 📄", hash: "#monthly-report", icon: FileText, desc: "Export audited monthly financial statements" },
       ]
@@ -132,6 +133,10 @@ export function Navbar({
 
   const handleNavClick = (hash: string) => {
     setIsDrawerOpen(false);
+    if (hash === "#evidence-engine") {
+      window.dispatchEvent(new CustomEvent("ww-open-evidence-engine"));
+      return;
+    }
     window.location.hash = hash;
   };
 
@@ -168,8 +173,14 @@ export function Navbar({
                 <a
                   key={tab.name}
                   href={tab.hash}
+                  onClick={(e) => {
+                    if (tab.hash === "#evidence-engine") {
+                      e.preventDefault();
+                      window.dispatchEvent(new CustomEvent("ww-open-evidence-engine"));
+                    }
+                  }}
                   className={cn(
-                    "px-3 py-1.5 rounded-xl text-xs font-mono font-bold transition-all flex items-center gap-1.5 whitespace-nowrap",
+                    "px-3 py-1.5 rounded-xl text-xs font-mono font-bold transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer",
                     isActive
                       ? "bg-accent-gold text-slate-950 shadow-md font-black"
                       : tab.highlight
