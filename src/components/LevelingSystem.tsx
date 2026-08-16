@@ -44,15 +44,13 @@ interface LevelingSystemProps {
 }
 
 export const LevelingSystem: React.FC<LevelingSystemProps> = ({ user }) => {
-  // Bonus XP from completed interactive tasks saved in localStorage
-  const [completedQuestXP, setCompletedQuestXP] = useState<number>(() => {
-    try {
-      const saved = localStorage.getItem("ww_completed_quest_xp_v2");
-      return saved ? Number(saved) : 350; // Initial default bonus XP
-    } catch (e) {
-      return 350;
-    }
-  });
+  const tasksList = useMemo(() => [
+    { id: "task_streak", name: "Maintain 3-Day Active Streak", xp: 150, hash: "#dashboard" },
+    { id: "task_budget", name: "Configure Monthly Budget Plan", xp: 150, hash: "#dashboard" },
+    { id: "task_receipt", name: "Scan Paper Receipt in Wexa", xp: 100, hash: "#wexa-companion" },
+    { id: "task_scenario", name: "Run Inflation Stress Test", xp: 150, hash: "#dashboard" },
+    { id: "task_rebalance", name: "Calculate Portfolio Rebalance Delta", xp: 200, hash: "#rebalancer" },
+  ], []);
 
   const [completedTasks, setCompletedTasks] = useState<string[]>(() => {
     try {
@@ -62,12 +60,20 @@ export const LevelingSystem: React.FC<LevelingSystemProps> = ({ user }) => {
     return ["task_streak", "task_budget"];
   });
 
+  // Calculate Quest XP dynamically from completed tasks
+  const completedQuestXP = useMemo(() => {
+    return completedTasks.reduce((sum, tid) => {
+      const t = tasksList.find(item => item.id === tid);
+      return sum + (t ? t.xp : 0);
+    }, 0);
+  }, [completedTasks, tasksList]);
+
   // Calculate Base System XP from real user telemetry & activity
   const baseXP = useMemo(() => {
     let xp = 0;
     
-    // Streak XP: 50 XP per active streak day
-    const streakDays = user?.visitDates?.length || 3;
+    // Streak XP: 50 XP per active streak day (e.g. 2 days = 100 XP)
+    const streakDays = Math.max(1, user?.visitDates?.length || 2);
     xp += streakDays * 50;
 
     // Scanned Receipts XP: 100 XP per receipt scanned in session
@@ -118,13 +124,8 @@ export const LevelingSystem: React.FC<LevelingSystemProps> = ({ user }) => {
     if (completedTasks.includes(taskId)) return;
 
     const newTasks = [...completedTasks, taskId];
-    const newBonusXP = completedQuestXP + rewardXP;
-
     setCompletedTasks(newTasks);
-    setCompletedQuestXP(newBonusXP);
-
     localStorage.setItem("ww_completed_xp_tasks_v2", JSON.stringify(newTasks));
-    localStorage.setItem("ww_completed_quest_xp_v2", String(newBonusXP));
 
     window.dispatchEvent(new CustomEvent("ww-trigger-alert", {
       detail: {
@@ -134,14 +135,6 @@ export const LevelingSystem: React.FC<LevelingSystemProps> = ({ user }) => {
       }
     }));
   };
-
-  const tasksList = [
-    { id: "task_streak", name: "Maintain 3-Day Active Streak", xp: 150, hash: "#dashboard" },
-    { id: "task_budget", name: "Configure Monthly Budget Plan", xp: 150, hash: "#dashboard" },
-    { id: "task_receipt", name: "Scan Paper Receipt in Wexa", xp: 100, hash: "#wexa-companion" },
-    { id: "task_scenario", name: "Run Inflation Stress Test", xp: 150, hash: "#dashboard" },
-    { id: "task_rebalance", name: "Calculate Portfolio Rebalance Delta", xp: 200, hash: "#rebalancer" },
-  ];
 
   const [isShareOpen, setIsShareOpen] = useState(false);
 

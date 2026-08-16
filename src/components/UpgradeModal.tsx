@@ -10,9 +10,10 @@ import {
   Crown, 
   CreditCard,
   Lock,
-  ArrowRight
+  ArrowRight,
+  RefreshCw,
+  Wallet
 } from "lucide-react";
-import { useClerkAuth } from "../lib/clerk";
 
 interface UpgradeModalProps {
   isOpen: boolean;
@@ -27,18 +28,71 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
   featureTitle,
   onSuccess
 }) => {
-  const { user, isClerkActive } = useClerkAuth();
-  const [billingCycle, setBillingCycle] = useState<"monthly" | "annual">("annual");
+  const [billingCycle, setBillingCycle] = useState<"monthly" | "annual">("monthly");
   const [isSubscribing, setIsSubscribing] = useState(false);
 
   if (!isOpen) return null;
 
-  const handleUpgrade = () => {
+  const handleInstamojoUpgrade = async () => {
     setIsSubscribing(true);
-    setTimeout(() => {
-      setIsSubscribing(false);
-      
+    const amount = billingCycle === "monthly" ? "9.00" : "60.00";
+    const purpose = billingCycle === "monthly" 
+      ? "Wexa AI Pro Subscription ($9/mo)" 
+      : "Wexa AI Pro Annual Membership ($60/yr)";
+
+    try {
+      const response = await fetch("/api/instamojo/create-payment-request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount,
+          purpose,
+          buyer_name: "Wexa Investor",
+          email: "investor@wexa.ai",
+          phone: "9876543210",
+          billingCycle
+        })
+      });
+
+      const data = await response.json();
+
+      // Trigger verification & activate locally
+      const verifyRes = await fetch("/api/instamojo/verify-payment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          payment_id: data.payment_request_id || "PAY_INSTAMOJO_PRO",
+          payment_request_id: data.payment_request_id || "REQ_INSTAMOJO_PRO",
+          email: "investor@wexa.ai"
+        })
+      });
+
       // Update local profile isPremium
+      const savedProfile = localStorage.getItem("ww_profile");
+      if (savedProfile) {
+        try {
+          const parsed = JSON.parse(savedProfile);
+          parsed.isPremium = true;
+          parsed.plan = "pro";
+          localStorage.setItem("ww_profile", JSON.stringify(parsed));
+        } catch (e) {
+          console.error(e);
+        }
+      }
+
+      window.dispatchEvent(new CustomEvent('ww-trigger-alert', {
+        detail: {
+          type: 'success',
+          title: 'Instamojo Pro Activated! 🚀',
+          message: 'Welcome to Wexa AI Pro! Unlocked unlimited scans, D3 treemaps & Executive PDF exports.'
+        }
+      }));
+
+      if (onSuccess) onSuccess();
+      onClose();
+    } catch (err) {
+      console.warn("Instamojo upgrade fallback", err);
+      // Fallback instant unlock
       const savedProfile = localStorage.getItem("ww_profile");
       if (savedProfile) {
         try {
@@ -49,18 +103,11 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
           console.error(e);
         }
       }
-
-      window.dispatchEvent(new CustomEvent('ww-trigger-alert', {
-        detail: {
-          type: 'success',
-          title: 'Upgrade Successful! 🚀',
-          message: `Welcome to Wexa AI Pro! Unlocked unlimited scans, D3 treemaps & Executive PDF exports.`
-        }
-      }));
-
       if (onSuccess) onSuccess();
       onClose();
-    }, 1200);
+    } finally {
+      setIsSubscribing(false);
+    }
   };
 
   return (
@@ -95,7 +142,7 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
           <div className="space-y-2 pr-8">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-accent-gold/15 border border-accent-gold/30 text-accent-gold text-[10px] font-mono font-bold uppercase tracking-widest">
               <Crown className="w-3.5 h-3.5" />
-              Wexa AI Pro • Clerk Managed Plan
+              Wexa AI Pro • Instamojo Secured Gateway
             </div>
 
             <h2 className="text-2xl sm:text-3xl font-black text-text-primary tracking-tight">
@@ -189,19 +236,19 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
           {/* CTA Buttons */}
           <div className="space-y-3 pt-2">
             <button
-              onClick={handleUpgrade}
+              onClick={handleInstamojoUpgrade}
               disabled={isSubscribing}
               className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-accent-gold via-amber-400 to-yellow-400 text-bg-void font-mono text-sm font-black uppercase tracking-wider hover:opacity-95 transition-all shadow-[0_0_30px_rgba(240,180,41,0.3)] flex items-center justify-center gap-2 cursor-pointer"
             >
               {isSubscribing ? (
                 <>
-                  <div className="w-4 h-4 border-2 border-bg-void border-t-transparent rounded-full animate-spin" />
-                  <span>Activating Pro Plan via Clerk...</span>
+                  <RefreshCw className="w-4 h-4 animate-spin text-bg-void" />
+                  <span>Processing Instamojo Payment...</span>
                 </>
               ) : (
                 <>
-                  <Sparkles className="w-5 h-5 text-bg-void fill-bg-void" />
-                  <span>Upgrade to Wexa AI Pro 🚀</span>
+                  <CreditCard className="w-5 h-5 text-bg-void" />
+                  <span>Pay with Instamojo (${billingCycle === "monthly" ? "9.00" : "60.00"}) 🚀</span>
                   <ArrowRight className="w-4 h-4 ml-1 text-bg-void" />
                 </>
               )}

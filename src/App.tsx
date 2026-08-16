@@ -103,6 +103,8 @@ import { CurrencySelector, NameInput } from "./components/Modals";
 import { Onboarding } from "./components/Onboarding";
 import { JudgeTour } from "./components/JudgeTour";
 import { GoalCelebrationOverlay } from "./components/GoalCelebration";
+import { SessionExpiryAlert } from "./components/SessionExpiryAlert";
+import { logAuditAction } from "./lib/auditLogger";
 import { StartupLogoAnimation } from "./components/StartupLogoAnimation";
 import { Logo } from "./components/Logo";
 import { UserProfile, BudgetPlan, FinancialGoal, Achievement, Portfolio } from "./types";
@@ -338,8 +340,23 @@ function AppContent() {
         });
       }
     };
+    const handleOpenCurrency = () => setShowCurrencySelector(true);
+    const handleOpenUpgrade = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      if (customEvent.detail?.feature) {
+        setUpgradeFeatureTitle(customEvent.detail.feature);
+      }
+      setIsUpgradeModalOpen(true);
+    };
+
     window.addEventListener('ww-trigger-alert', handleTriggerAlert);
-    return () => window.removeEventListener('ww-trigger-alert', handleTriggerAlert);
+    window.addEventListener('ww-open-currency-selector', handleOpenCurrency);
+    window.addEventListener('ww-open-upgrade-modal', handleOpenUpgrade);
+    return () => {
+      window.removeEventListener('ww-trigger-alert', handleTriggerAlert);
+      window.removeEventListener('ww-open-currency-selector', handleOpenCurrency);
+      window.removeEventListener('ww-open-upgrade-modal', handleOpenUpgrade);
+    };
   }, []);
 
   useEffect(() => {
@@ -585,7 +602,20 @@ function AppContent() {
   const handleCurrencySelect = (currency: string) => {
     setTempCurrency(currency);
     setShowCurrencySelector(false);
-    setShowNameInput(true);
+    if (profile) {
+      const updated = { ...profile, currency };
+      setProfile(updated);
+      localStorage.setItem("ww_profile", JSON.stringify(updated));
+      window.dispatchEvent(new CustomEvent('ww-trigger-alert', {
+        detail: {
+          type: 'success',
+          title: 'Currency Updated',
+          message: `Active currency set to ${currency}. All conversion matrices recalculated.`
+        }
+      }));
+    } else {
+      setShowNameInput(true);
+    }
   };
 
   const handleOnboardingComplete = (name: string, age: string, learningGoal: string, onboardingGitProvider: "gitlab" | "github" | "bitbucket" = "github", selectedCurrency?: string) => {
@@ -665,6 +695,15 @@ function AppContent() {
     setBudget(plan);
     localStorage.setItem("ww_budget", JSON.stringify(plan));
     unlockAchievement('first_budget');
+
+    logAuditAction({
+      action: "BUDGET_UPDATED",
+      category: "budget",
+      description: `Monthly budget updated: Income set to ${plan.income}, allocated across ${Object.keys(plan.expenses || {}).length} expense categories.`,
+      initiator: "User",
+      status: "SUCCESS",
+      details: { income: plan.income, expensesCount: Object.keys(plan.expenses || {}).length }
+    });
   };
 
   const handleUpdateNetWorth = (assets: number, liabilities: number) => {
@@ -676,6 +715,15 @@ function AppContent() {
     setProfile(updatedProfile);
     localStorage.setItem("ww_profile", JSON.stringify(updatedProfile));
     if (assets > liabilities) unlockAchievement('networth_positive');
+
+    logAuditAction({
+      action: "NET_WORTH_ADJUSTED",
+      category: "portfolio",
+      description: `Net worth recalibrated: Assets ${assets}, Liabilities ${liabilities} (Surplus: ${assets - liabilities}).`,
+      initiator: "User",
+      status: "SUCCESS",
+      details: { assets, liabilities, net: assets - liabilities }
+    });
   };
 
   const handleUpdatePortfolio = (portfolio: Portfolio) => {
@@ -686,6 +734,15 @@ function AppContent() {
     };
     setProfile(updatedProfile);
     localStorage.setItem("ww_profile", JSON.stringify(updatedProfile));
+
+    logAuditAction({
+      action: "PORTFOLIO_REBALANCED",
+      category: "portfolio",
+      description: `Asset portfolio rebalanced across stocks, bonds, crypto, and cash positions.`,
+      initiator: "System",
+      status: "SUCCESS",
+      details: { assetsCount: Object.keys(portfolio || {}).length }
+    });
   };
 
   const handleQuizComplete = (score: number) => {
@@ -714,6 +771,14 @@ function AppContent() {
   };
 
   const handleSignOut = () => {
+    logAuditAction({
+      action: "USER_LOGOUT",
+      category: "auth",
+      description: `User signed out of session safely.`,
+      initiator: "User",
+      status: "SUCCESS"
+    });
+
     setUser(null);
     setProfile(null);
     setBudget(null);
@@ -731,6 +796,15 @@ function AppContent() {
     setProfile(updatedProfile);
     localStorage.setItem("ww_profile", JSON.stringify(updatedProfile));
     if (goals.length > 0) unlockAchievement('goal_setter');
+
+    logAuditAction({
+      action: "GOALS_UPDATED",
+      category: "agent",
+      description: `Financial milestone goals updated. Total active goals: ${goals.length}.`,
+      initiator: "User",
+      status: "SUCCESS",
+      details: { goalCount: goals.length, goals: goals.map(g => g.title) }
+    });
   };
 
   const getWelcomeMessage = () => {
@@ -1311,9 +1385,18 @@ function AppContent() {
               );
             case "#pricing":
               return (
-                <ModuleErrorBoundary moduleName="Clerk Pricing & Subscription Center">
+                <ModuleErrorBoundary moduleName="Instamojo Pro Pricing & Subscription Center">
                   <div className="container mx-auto px-6 py-12">
-                    <PricingPage userProfile={profile} />
+                    <PricingPage 
+                      userProfile={profile} 
+                      onUpgradeSuccess={() => {
+                        if (profile) {
+                          const updated = { ...profile, isPremium: true, plan: "pro" as const };
+                          setProfile(updated);
+                          localStorage.setItem("ww_profile", JSON.stringify(updated));
+                        }
+                      }} 
+                    />
                   </div>
                 </ModuleErrorBoundary>
               );
@@ -1532,6 +1615,7 @@ function AppContent() {
       />
 
       <GoalCelebrationOverlay />
+      <SessionExpiryAlert />
     </div>
   );
 }

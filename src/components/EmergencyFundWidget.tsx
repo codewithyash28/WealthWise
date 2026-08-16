@@ -218,6 +218,28 @@ export const EmergencyFundWidget: React.FC<EmergencyFundWidgetProps> = ({ user, 
                 </span>
               </div>
 
+              {/* Total Asset Composition Trace */}
+              <div className="pt-2 border-t border-border/40 space-y-1.5">
+                <div className="flex justify-between items-center text-[10px] text-text-muted uppercase font-mono">
+                  <span>Asset Composition Breakdown</span>
+                  <span className="text-accent-gold font-bold">Total: {formatCurrency(user.netWorth.assets, user.currency, currency.locale)}</span>
+                </div>
+                <div className="grid grid-cols-3 gap-1.5 text-[10px] font-mono">
+                  <div className="bg-bg-primary/80 p-1.5 rounded-lg border border-emerald-500/20 text-center">
+                    <span className="text-emerald-400 font-bold block">35% Liquid</span>
+                    <span className="text-text-muted truncate">{formatCurrency(liquidCash, user.currency, currency.locale)}</span>
+                  </div>
+                  <div className="bg-bg-primary/80 p-1.5 rounded-lg border border-accent-gold/20 text-center">
+                    <span className="text-accent-gold font-bold block">45% Equities</span>
+                    <span className="text-text-muted truncate">{formatCurrency(Math.round(user.netWorth.assets * 0.45), user.currency, currency.locale)}</span>
+                  </div>
+                  <div className="bg-bg-primary/80 p-1.5 rounded-lg border border-purple-500/20 text-center">
+                    <span className="text-purple-400 font-bold block">20% Bonds/Gold</span>
+                    <span className="text-text-muted truncate">{formatCurrency(Math.round(user.netWorth.assets * 0.20), user.currency, currency.locale)}</span>
+                  </div>
+                </div>
+              </div>
+
               <div className="pt-2 border-t border-border/40 text-[11px] leading-relaxed">
                 {isOptimal ? (
                   <div className="text-emerald-400 font-medium flex items-start gap-1.5">

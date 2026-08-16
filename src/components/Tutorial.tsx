@@ -65,11 +65,15 @@ export function Tutorial({ onClose }: TutorialProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/80 backdrop-blur-sm">
+    <div 
+      onClick={onClose}
+      className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/80 backdrop-blur-sm cursor-pointer"
+    >
       <motion.div
+        onClick={(e) => e.stopPropagation()}
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        className="card max-w-lg w-full p-8 relative overflow-hidden"
+        className="card max-w-lg w-full p-8 relative overflow-hidden cursor-default"
       >
         <div className="absolute top-0 left-0 w-full h-1 bg-bg-secondary">
           <motion.div 

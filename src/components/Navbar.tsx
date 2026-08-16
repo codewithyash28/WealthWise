@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { 
   Menu, X, Sun, Moon, Flame, Sparkles, Cloud, Check, Trophy, 
   Bot, TrendingUp, BarChart2, PieChart, Globe, ShieldCheck, Target, 
-  DollarSign, Award, FileText, Building2, Zap, User, ArrowRight, Palette, Monitor, LogOut, ChevronDown
+  DollarSign, Award, FileText, Building2, Zap, User, ArrowRight, Palette, Monitor, LogOut, ChevronDown, Crown
 } from "lucide-react";
 import { NotificationCenter } from "./NotificationCenter";
 import { Logo } from "./Logo";
@@ -86,11 +86,18 @@ export function Navbar({
     { name: "Market Weather 🌤️", hash: "#macropulse", icon: TrendingUp },
     { name: "TrendMarket 📈", hash: "#trendmarket", icon: Zap },
     { name: "Money Games & Stocks 📈", hash: "#stocks", icon: BarChart2 },
-    { name: "Platform Transparency Hub 🛡️", hash: "#hackathon-hub", icon: ShieldCheck, highlight: true },
+    { name: "💎 Pro / Pricing", hash: "#pricing", icon: Crown, highlight: true },
+    { name: "Platform Transparency Hub 🛡️", hash: "#hackathon-hub", icon: ShieldCheck },
   ];
 
   // Drawer grouped into 4 simple sections
   const drawerSections = [
+    {
+      title: "💎 PLANS & UPGRADES",
+      items: [
+        { name: "Wexa AI Pro ($9/mo) 💎", hash: "#pricing", icon: Crown, desc: "Instamojo payments, unlimited OCR & autonomous AI rebalancing" },
+      ]
+    },
     {
       title: "📸 MAGIC TOOLS",
       items: [

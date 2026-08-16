@@ -1,5 +1,5 @@
 import { motion } from "motion/react";
-import { TrendingUp, ShieldCheck, Target, BrainCircuit, ChevronRight, Sparkles, Wallet, PieChart, ArrowUpRight, ArrowDownRight, CheckCircle2, Info, Trophy, Settings, ChevronDown, Check, GitBranch, Download, Share2, FileJson, Copy, X, Calendar, Lock, Flame, Sliders, BookOpen, Coins, Star, ShoppingBag, Image as ImageIcon, Zap, Pencil, Edit3, Save, RefreshCw, BarChart2, Layers, PiggyBank, Bell, Command } from "lucide-react";
+import { TrendingUp, ShieldCheck, Target, BrainCircuit, ChevronRight, Sparkles, Wallet, PieChart, ArrowUpRight, ArrowDownRight, CheckCircle2, Info, Trophy, Settings, ChevronDown, Check, GitBranch, Download, Share2, FileJson, FileSpreadsheet, Copy, X, Calendar, Lock, Flame, Sliders, BookOpen, Coins, Star, ShoppingBag, Image as ImageIcon, Zap, Pencil, Edit3, Save, RefreshCw, BarChart2, Layers, PiggyBank, Bell, Command } from "lucide-react";
 import confetti from "canvas-confetti";
 import { UserProfile, BudgetPlan } from "../types";
 import { formatCurrency, cn } from "../lib/utils";
@@ -30,6 +30,8 @@ import { GrowthTelemetryWidget } from "./GrowthTelemetryWidget";
 import { CommandPalette } from "./CommandPalette";
 import { FinancialGoalsWidget } from "./FinancialGoalsWidget";
 import { EnginePerformanceMonitor } from "./EnginePerformanceMonitor";
+import { AuditLogModal } from "./AuditLogModal";
+import { getAuditLogs, logAuditAction } from "../lib/auditLogger";
 import { useEffect } from "react";
 
 interface WealthDashboardProps {
@@ -52,6 +54,16 @@ export const WealthDashboard = memo(function WealthDashboard({ user, budget, onU
   const [isEasyMode, setIsEasyMode] = useState<boolean>(true);
   const [activeSpecializedTab, setActiveSpecializedTab] = useState<"macropulse" | "trendmarket" | "liveorlease" | "mockyield">("macropulse");
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState<boolean>(false);
+  const [isAuditLogModalOpen, setIsAuditLogModalOpen] = useState<boolean>(false);
+  const [auditCount, setAuditCount] = useState<number>(() => getAuditLogs().length);
+
+  useEffect(() => {
+    const handleLogUpdate = () => {
+      setAuditCount(getAuditLogs().length);
+    };
+    window.addEventListener("ww-audit-logged", handleLogUpdate);
+    return () => window.removeEventListener("ww-audit-logged", handleLogUpdate);
+  }, []);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -83,6 +95,22 @@ export const WealthDashboard = memo(function WealthDashboard({ user, budget, onU
     };
     onUpdateProfile?.(updated);
     setShowQuickEditModal(false);
+
+    logAuditAction({
+      action: "NET_WORTH_ADJUSTED",
+      category: "portfolio",
+      description: `User adjusted balance sheet: Assets set to ${formatCurrency(updatedAssets, user.currency, currency.locale)}, Liabilities set to ${formatCurrency(updatedLiabilities, user.currency, currency.locale)}.`,
+      initiator: "User",
+      status: "SUCCESS",
+      details: {
+        previousAssets: user.netWorth.assets,
+        newAssets: updatedAssets,
+        previousLiabilities: user.netWorth.liabilities,
+        newLiabilities: updatedLiabilities,
+        netSurplus: updatedAssets - updatedLiabilities
+      }
+    });
+
     window.dispatchEvent(new CustomEvent('ww-trigger-alert', {
       detail: {
         type: 'success',
@@ -100,6 +128,16 @@ export const WealthDashboard = memo(function WealthDashboard({ user, budget, onU
   const handleUpdateAdvisorPersona = (persona: "conservative" | "aggressive") => {
     setAdvisorPersona(persona);
     localStorage.setItem("ww_advisor_persona", persona);
+
+    logAuditAction({
+      action: "ADVISOR_PERSONA_MODIFIED",
+      category: "agent",
+      description: `AI Advisor personality switched to ${persona === "aggressive" ? "Aggressive / Growth-Focused" : "Conservative / Risk-Averse"}.`,
+      initiator: "User",
+      status: "INFO",
+      details: { targetPersona: persona }
+    });
+
     window.dispatchEvent(new CustomEvent("ww-advisor-persona-changed", { detail: { persona } }));
     window.dispatchEvent(new CustomEvent("ww-trigger-alert", {
       detail: {
@@ -198,9 +236,30 @@ export const WealthDashboard = memo(function WealthDashboard({ user, budget, onU
   };
 
   // Retirement Readiness Calculations (ScenarioSimulator logic)
-  const [targetRetirementGoal, setTargetRetirementGoal] = useState<number>(1000000);
+  const defaultCalculatedGoal = useMemo(() => {
+    const monthlyExp = budget ? Object.values(budget.expenses).reduce((a, b) => a + b, 0) : 2500;
+    // Trinity 4% rule: 300x monthly expenses = 25 years of living expenses
+    return Math.max(100000, monthlyExp * 300);
+  }, [budget]);
+
+  const [targetRetirementGoal, setTargetRetirementGoal] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem("ww_target_retirement_goal");
+      return saved ? Number(saved) : 1000000;
+    } catch {
+      return 1000000;
+    }
+  });
   const [targetRetirementAge, setTargetRetirementAge] = useState<number>(60);
   const userCurrentAge = Number(user.age) || 30;
+
+  // Sync default target if not customized
+  useEffect(() => {
+    const saved = localStorage.getItem("ww_target_retirement_goal");
+    if (!saved && defaultCalculatedGoal > 0) {
+      setTargetRetirementGoal(defaultCalculatedGoal);
+    }
+  }, [defaultCalculatedGoal]);
 
   const retirementReadiness = useMemo(() => {
     const currentWealth = Math.max(0, user.netWorth.assets - user.netWorth.liabilities);
@@ -216,13 +275,13 @@ export const WealthDashboard = memo(function WealthDashboard({ user, budget, onU
       annualSavings * ((Math.pow(1 + annualReturnRate, horizonYears) - 1) / annualReturnRate)
     );
 
-    // Safe Withdrawal Rate (4% rule)
+    // Safe Withdrawal Rate (Trinity 4% rule)
     const annualSafeWithdrawal = Math.round(projectedNestEgg * 0.04);
     const monthlySafeWithdrawal = Math.round(annualSafeWithdrawal / 12);
 
     // Progress percentage to target goal
-    const progressPct = Math.min(100, Math.round((currentWealth / targetRetirementGoal) * 100));
-    const projectedProgressPct = Math.min(100, Math.round((projectedNestEgg / targetRetirementGoal) * 100));
+    const progressPct = targetRetirementGoal > 0 ? Math.min(100, Math.round((currentWealth / targetRetirementGoal) * 100)) : 0;
+    const projectedProgressPct = targetRetirementGoal > 0 ? Math.min(100, Math.round((projectedNestEgg / targetRetirementGoal) * 100)) : 0;
 
     // Time to reach target nest egg
     let yearsNeeded = 0;
@@ -368,6 +427,9 @@ export const WealthDashboard = memo(function WealthDashboard({ user, budget, onU
 
   const handleDownloadPDF = () => {
     const doc = new jsPDF();
+    const currentNetWorth = user.netWorth.assets - user.netWorth.liabilities;
+    const monthlyExpensesTotal = budget ? Object.values(budget.expenses).reduce((a, b) => a + b, 0) : 0;
+    const monthlySurplus = budget ? Math.max(0, budget.income - monthlyExpensesTotal) : 0;
     
     // Core document theme & header band
     doc.setFillColor(17, 24, 39); // Deep space dark
@@ -386,63 +448,89 @@ export const WealthDashboard = memo(function WealthDashboard({ user, budget, onU
     
     // Section 1: Client Metadata & Portfolio Scores
     doc.setFont("Helvetica", "bold");
-    doc.setFontSize(13);
+    doc.setFontSize(12);
     doc.setTextColor(17, 24, 39);
-    doc.text("1. EXECUTIVE SUMMARY PROFILE", 20, 56);
-    doc.line(20, 59, 190, 59);
+    doc.text("1. EXECUTIVE CLIENT PROFILE & BALANCE SHEET", 20, 54);
+    doc.setDrawColor(200, 200, 200);
+    doc.line(20, 57, 190, 57);
     
     // Text rows
     doc.setFont("Helvetica", "normal");
-    doc.setFontSize(9.5);
+    doc.setFontSize(9);
     doc.setTextColor(55, 65, 81);
     
-    doc.text(`Client Full Name: ${user.name}`, 20, 68);
-    doc.text(`Recorded Age: ${user.age} Years Old`, 20, 75);
-    doc.text(`Reporting Currency: ${user.currency} (${currency.name})`, 20, 82);
-    doc.text(`Risk Strategy Profile: ${calculatedRiskProfile}`, 20, 89);
-    doc.text(`Net Worth: ${currency.symbol} ${(user.netWorth.assets - user.netWorth.liabilities).toLocaleString()}`, 20, 96);
+    doc.text(`Client Full Name: ${user.name}`, 20, 65);
+    doc.text(`Recorded Age: ${user.age} Years Old`, 20, 72);
+    doc.text(`Reporting Currency: ${user.currency} (${currency.name})`, 20, 79);
+    doc.text(`Risk Strategy Profile: ${calculatedRiskProfile}`, 20, 86);
+    doc.text(`Net Worth: ${currency.symbol} ${currentNetWorth.toLocaleString()}`, 20, 93);
     
-    doc.text(`Financial Score: ${healthScore} / 100`, 110, 68);
-    doc.text(`Verified Tier Rank: ${masteryTier.label} Status`, 110, 75);
-    doc.text(`Total Assets: ${currency.symbol} ${user.netWorth.assets.toLocaleString()}`, 110, 82);
-    doc.text(`Total Liabilities: ${currency.symbol} ${user.netWorth.liabilities.toLocaleString()}`, 110, 89);
-    doc.text(`Unlocked Achievements: ${(user.achievements || []).length} Badges`, 110, 96);
+    doc.text(`Financial Score: ${healthScore} / 100`, 110, 65);
+    doc.text(`Mastery Status: ${masteryTier.label} Tier`, 110, 72);
+    doc.text(`Total Assets: ${currency.symbol} ${user.netWorth.assets.toLocaleString()}`, 110, 79);
+    doc.text(`Total Liabilities: ${currency.symbol} ${user.netWorth.liabilities.toLocaleString()}`, 110, 86);
+    doc.text(`Unlocked Badges: ${(user.achievements || []).length} / 6`, 110, 93);
     
     // Section 2: Budget Policies
     if (budget) {
       doc.setFont("Helvetica", "bold");
-      doc.setFontSize(13);
-      doc.text("2. ACTIVE MONTHLY BUDGET CONFIGURATION", 20, 105);
-      doc.line(20, 108, 190, 108);
+      doc.setFontSize(12);
+      doc.setTextColor(17, 24, 39);
+      doc.text("2. MONTHLY CASH FLOW & BUDGET MATRIX", 20, 104);
+      doc.line(20, 107, 190, 107);
       
       doc.setFont("Helvetica", "normal");
-      doc.setFontSize(9.5);
-      doc.text(`Allocated Monthly Income: ${currency.symbol} ${budget.income.toLocaleString()}`, 20, 118);
+      doc.setFontSize(9);
+      doc.setTextColor(55, 65, 81);
+      doc.text(`Allocated Monthly Income: ${currency.symbol} ${budget.income.toLocaleString()} | Monthly Expenditures: ${currency.symbol} ${monthlyExpensesTotal.toLocaleString()}`, 20, 115);
+      doc.text(`Monthly Savings Surplus: ${currency.symbol} ${monthlySurplus.toLocaleString()} (Savings Rate: ${budget.income > 0 ? Math.round((monthlySurplus / budget.income) * 100) : 0}%)`, 20, 122);
       
-      let y = 125;
+      let y = 129;
       Object.entries(budget.expenses).forEach(([category, val]) => {
         if (typeof val === 'number') {
           doc.text(`- ${category.toUpperCase()}: ${currency.symbol} ${val.toLocaleString()}`, 25, y);
-          y += 7;
+          y += 6;
         }
       });
     }
 
-    // Section 3: Registered Financial Goals
+    // Section 3: 5-Year & 10-Year Projected Growth Performance
+    const r = 0.075 / 12; // 7.5% annual return
+    const n5 = 5 * 12;
+    const n10 = 10 * 12;
+    const fv5 = Math.round(currentNetWorth * Math.pow(1 + r, n5) + (monthlySurplus * (Math.pow(1 + r, n5) - 1)) / r);
+    const fv10 = Math.round(currentNetWorth * Math.pow(1 + r, n10) + (monthlySurplus * (Math.pow(1 + r, n10) - 1)) / r);
+
+    doc.setFont("Helvetica", "bold");
+    doc.setFontSize(12);
+    doc.setTextColor(17, 24, 39);
+    doc.text("3. PROJECTED WEALTH GROWTH & COMPOUNDING (7.5% APY)", 20, 168);
+    doc.line(20, 171, 190, 171);
+
+    doc.setFont("Helvetica", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(55, 65, 81);
+    doc.text(`- Baseline Net Worth: ${currency.symbol} ${currentNetWorth.toLocaleString()}`, 25, 179);
+    doc.text(`- 5-Year Estimated Compounded Trajectory: ${currency.symbol} ${fv5.toLocaleString()} (+${currency.symbol} ${(fv5 - currentNetWorth).toLocaleString()})`, 25, 186);
+    doc.text(`- 10-Year Estimated Compounded Trajectory: ${currency.symbol} ${fv10.toLocaleString()} (+${currency.symbol} ${(fv10 - currentNetWorth).toLocaleString()})`, 25, 193);
+    doc.text(`- Safe Annual Retirement Withdrawal (4% Rule at 10-Yr): ${currency.symbol} ${Math.round(fv10 * 0.04).toLocaleString()}/year (${currency.symbol} ${Math.round((fv10 * 0.04) / 12).toLocaleString()}/month)`, 25, 200);
+
+    // Section 4: Registered Financial Goals
     const userGoals = user.goals || [];
     if (userGoals.length > 0) {
       doc.setFont("Helvetica", "bold");
-      doc.setFontSize(13);
-      doc.text("3. ACTIVE SAVINGS & COMPOUND GOALS", 20, 185);
-      doc.line(20, 188, 190, 188);
+      doc.setFontSize(12);
+      doc.setTextColor(17, 24, 39);
+      doc.text("4. ACTIVE SAVINGS & COMPOUND GOALS", 20, 214);
+      doc.line(20, 217, 190, 217);
 
       doc.setFont("Helvetica", "normal");
-      doc.setFontSize(9.5);
-      let gY = 196;
-      userGoals.slice(0, 5).forEach((goal, idx) => {
-        doc.text(`${idx + 1}. ${goal.title} (${goal.category})`, 20, gY);
-        doc.text(`Target: ${currency.symbol} ${goal.targetAmount.toLocaleString()} | Deadline: ${new Date(goal.deadline).toLocaleDateString()}`, 25, gY + 5);
-        gY += 13;
+      doc.setFontSize(9);
+      doc.setTextColor(55, 65, 81);
+      let gY = 225;
+      userGoals.slice(0, 4).forEach((goal, idx) => {
+        doc.text(`${idx + 1}. ${goal.title} (${goal.category || 'General'}) — Target: ${currency.symbol} ${goal.targetAmount.toLocaleString()} | Deadline: ${new Date(goal.deadline).toLocaleDateString()}`, 25, gY);
+        gY += 7;
       });
     }
     
@@ -459,13 +547,13 @@ export const WealthDashboard = memo(function WealthDashboard({ user, budget, onU
       doc.setTextColor(234, 179, 8);
       doc.text("WEXA AI - COMPREHENSIVE FINANCIAL AUDIT REPORT", 20, 13);
       
-      doc.setFontSize(13);
+      doc.setFontSize(12);
       doc.setTextColor(17, 24, 39);
-      doc.text("4. DEEP GENERATIVE ARTIFICIAL AUDIT", 20, 32);
+      doc.text("5. DEEP GENERATIVE ARTIFICIAL WEALTH AUDIT", 20, 32);
       doc.line(20, 35, 190, 35);
       
       doc.setFont("Helvetica", "normal");
-      doc.setFontSize(9.5);
+      doc.setFontSize(9);
       doc.setTextColor(55, 65, 81);
       
       // Clean up audit text and split to sizes
@@ -485,7 +573,7 @@ export const WealthDashboard = memo(function WealthDashboard({ user, budget, onU
           doc.text("WEXA AI - COMPREHENSIVE FINANCIAL AUDIT REPORT", 20, 13);
           
           doc.setFont("Helvetica", "normal");
-          doc.setFontSize(9.5);
+          doc.setFontSize(9);
           doc.setTextColor(55, 65, 81);
           lineY = 32;
         }
@@ -497,8 +585,111 @@ export const WealthDashboard = memo(function WealthDashboard({ user, budget, onU
     // Save generated PDF
     doc.save(`${user.name.replace(/\s+/g, "_")}_Wexa_Executive_Audit.pdf`);
     
+    // Log to immutable audit
+    logAuditAction({
+      action: "PDF_EXECUTIVE_REPORT_DOWNLOADED",
+      category: "portfolio",
+      description: "User downloaded formal PDF Executive Report with 5/10-year compounding projections and balance sheet breakdown.",
+      initiator: "User",
+      status: "SUCCESS",
+      details: { format: "PDF", pageCount: auditResult ? 2 : 1 }
+    });
+
     // Trigger success achievement check
     onUnlockAchievement('pdf_downloaded');
+  };
+
+  const handleDownloadCSV = () => {
+    const totalNetWorth = user.netWorth.assets - user.netWorth.liabilities;
+    const monthlyExpensesTotal = budget ? Object.values(budget.expenses).reduce((a, b) => a + b, 0) : 0;
+    const monthlyNetSurplus = budget ? budget.income - monthlyExpensesTotal : 0;
+
+    const r = 0.075 / 12;
+    const n5 = 5 * 12;
+    const n10 = 10 * 12;
+    const fv5 = Math.round(totalNetWorth * Math.pow(1 + r, n5) + (Math.max(0, monthlyNetSurplus) * (Math.pow(1 + r, n5) - 1)) / r);
+    const fv10 = Math.round(totalNetWorth * Math.pow(1 + r, n10) + (Math.max(0, monthlyNetSurplus) * (Math.pow(1 + r, n10) - 1)) / r);
+
+    const csvRows: string[][] = [
+      ["=== WEXA AI FINANCIAL SUMMARY & INVESTMENT AUDIT REPORT ==="],
+      ["Generated At (UTC)", new Date().toISOString()],
+      ["Account Holder", user.name],
+      ["Current Age", String(user.age)],
+      ["Currency", `${user.currency} (${currency.name})`],
+      ["Financial Health Score", `${healthScore} / 100`],
+      ["Mastery Status Tier", masteryTier.label],
+      ["Risk Strategy Profile", calculatedRiskProfile],
+      [],
+      ["=== 1. BALANCE SHEET & NET WORTH ==="],
+      ["Metric", "Amount"],
+      ["Total Liquid & Growth Assets", `${currency.symbol} ${user.netWorth.assets.toLocaleString()}`],
+      ["Total Debt Liabilities", `${currency.symbol} ${user.netWorth.liabilities.toLocaleString()}`],
+      ["Net Worth Surplus", `${currency.symbol} ${totalNetWorth.toLocaleString()}`],
+      [],
+      ["=== 2. MONTHLY CASH FLOW & BUDGET ==="],
+      ["Category", "Allocated Amount"],
+      ["Monthly Gross/Net Income", `${currency.symbol} ${(budget?.income || 0).toLocaleString()}`],
+      ...Object.entries(budget?.expenses || {}).map(([cat, val]) => [
+        `Expense: ${cat.toUpperCase()}`,
+        `${currency.symbol} ${Number(val).toLocaleString()}`
+      ]),
+      ["Total Monthly Expenditures", `${currency.symbol} ${monthlyExpensesTotal.toLocaleString()}`],
+      ["Monthly Net Savings Surplus", `${currency.symbol} ${monthlyNetSurplus.toLocaleString()}`],
+      ["Savings Rate Percentage", `${budget && budget.income > 0 ? Math.round((monthlyNetSurplus / budget.income) * 100) : 0}%`],
+      [],
+      ["=== 3. PROJECTED GROWTH (7.5% APY) ==="],
+      ["Projection Horizon", "Estimated Compounded Net Worth"],
+      ["Current Net Worth", `${currency.symbol} ${totalNetWorth.toLocaleString()}`],
+      ["5-Year Projected Growth", `${currency.symbol} ${fv5.toLocaleString()}`],
+      ["10-Year Projected Growth", `${currency.symbol} ${fv10.toLocaleString()}`],
+      ["Safe 4% Annual Withdrawal (at 10-Yr)", `${currency.symbol} ${Math.round(fv10 * 0.04).toLocaleString()}`],
+      [],
+      ["=== 4. ACTIVE FINANCIAL GOALS ==="],
+      ["Goal Title", "Category", "Target Amount", "Current Savings", "Target Deadline"],
+      ...(user.goals || []).map((g) => [
+        g.title,
+        g.category || "General",
+        `${currency.symbol} ${g.targetAmount.toLocaleString()}`,
+        `${currency.symbol} ${(g.currentAmount || 0).toLocaleString()}`,
+        new Date(g.deadline).toLocaleDateString()
+      ]),
+      [],
+      ["=== 5. RECENT IMMUTABLE AUDIT TRAIL ==="],
+      ["Timestamp", "Action", "Initiator", "Status", "Description"],
+      ...getAuditLogs().slice(0, 15).map((l) => [
+        l.timestamp,
+        l.action,
+        l.initiator,
+        l.status,
+        (l.description || "").replace(/"/g, '""')
+      ])
+    ];
+
+    const csvContent = "data:text/csv;charset=utf-8," + csvRows.map(row => row.map(cell => `"${String(cell || '').replace(/"/g, '""')}"`).join(",")).join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `${user.name.replace(/\s+/g, "_")}_Wexa_Financial_Summary_${new Date().toISOString().split("T")[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    logAuditAction({
+      action: "CSV_FINANCIAL_SUMMARY_EXPORTED",
+      category: "portfolio",
+      description: "User exported comprehensive financial summary, budget matrix, and asset projections as CSV.",
+      initiator: "User",
+      status: "SUCCESS",
+      details: { exportFormat: "CSV", recordCount: csvRows.length }
+    });
+
+    window.dispatchEvent(new CustomEvent("ww-trigger-alert", {
+      detail: {
+        type: "success",
+        title: "CSV Export Complete! 📊",
+        message: "Your financial summary, assets, liabilities, and budget ledger have been downloaded as a CSV spreadsheet."
+      }
+    }));
   };
 
   const handleExportChartPNG = () => {
@@ -1157,6 +1348,19 @@ export const WealthDashboard = memo(function WealthDashboard({ user, budget, onU
             <span className="hidden sm:inline">⌘K Command Palette</span>
           </motion.button>
 
+          {/* Export Summary CSV button */}
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={handleDownloadCSV}
+            type="button"
+            title="Export Financial Summary & Ledger as CSV Spreadsheet"
+            className="flex items-center justify-center gap-2 px-4 py-3 border border-border/80 hover:border-accent-emerald/50 text-text-secondary hover:text-accent-emerald transition-all cursor-pointer rounded-xl bg-bg-secondary/20 text-xs font-bold h-12"
+          >
+            <FileSpreadsheet className="w-4 h-4 text-accent-emerald" />
+            <span className="hidden sm:inline">Export CSV</span>
+          </motion.button>
+
           {/* New Offline JSON Download button */}
           <motion.button
             whileHover={{ scale: 1.05 }}
@@ -1181,6 +1385,22 @@ export const WealthDashboard = memo(function WealthDashboard({ user, budget, onU
             <span>Export Summary</span>
           </motion.button>
 
+          {/* Financial Action Audit Log Button */}
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setIsAuditLogModalOpen(true)}
+            type="button"
+            title="View Immutable Financial Audit & Compliance Trail"
+            className="flex items-center justify-center gap-2 px-4 py-3 border border-border/80 hover:border-accent-gold/50 text-text-secondary hover:text-accent-gold transition-all cursor-pointer rounded-xl bg-bg-secondary/20 text-xs font-mono font-bold h-12"
+          >
+            <ShieldCheck className="w-4 h-4 text-accent-gold" />
+            <span className="hidden sm:inline">Audit Log</span>
+            <span className="px-1.5 py-0.5 rounded-full bg-accent-gold/15 text-accent-gold text-[10px]">
+              {auditCount}
+            </span>
+          </motion.button>
+
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -1199,7 +1419,7 @@ export const WealthDashboard = memo(function WealthDashboard({ user, budget, onU
       </div>
 
       {/* Elite Status Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         {[
           { label: "Overall Mastery", value: `${healthScore}%`, color: "text-accent-gold" },
           { label: "Savings Rate", value: budget ? `${Math.round(((budget.income - Object.values(budget.expenses).reduce((a, b) => a + b, 0)) / budget.income) * 100)}%` : "0%", color: "text-accent-emerald" },
@@ -1747,16 +1967,6 @@ export const WealthDashboard = memo(function WealthDashboard({ user, budget, onU
             );
           })}
         </div>
-      </motion.div>
-
-      {/* Live Daily Market Pulse Module */}
-      <motion.div
-        initial={{ opacity: 0, y: 15 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-80px" }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
-      >
-        <DailyMarketPulse />
       </motion.div>
 
       {/* 3D Wealth Galaxy Spatial Representation */}
@@ -2391,13 +2601,17 @@ export const WealthDashboard = memo(function WealthDashboard({ user, budget, onU
               <span className="text-text-muted">Target Nest Egg:</span>
               <select
                 value={targetRetirementGoal}
-                onChange={(e) => setTargetRetirementGoal(Number(e.target.value))}
+                onChange={(e) => {
+                  const val = Number(e.target.value);
+                  setTargetRetirementGoal(val);
+                  localStorage.setItem("ww_target_retirement_goal", String(val));
+                }}
                 className="bg-bg-void border border-border rounded-lg px-2 py-1 font-bold text-accent-gold outline-none cursor-pointer"
               >
-                <option value={500000}>$500,000</option>
-                <option value={1000000}>$1,000,000</option>
-                <option value={2000000}>$2,000,000</option>
-                <option value={5000000}>$5,000,000</option>
+                <option value={defaultCalculatedGoal}>Trinity Target ({formatCurrency(defaultCalculatedGoal, user.currency, currency.locale)})</option>
+                <option value={defaultCalculatedGoal * 0.5}>{formatCurrency(defaultCalculatedGoal * 0.5, user.currency, currency.locale)} (Lean)</option>
+                <option value={defaultCalculatedGoal * 1.5}>{formatCurrency(defaultCalculatedGoal * 1.5, user.currency, currency.locale)} (Comfort)</option>
+                <option value={defaultCalculatedGoal * 2.5}>{formatCurrency(defaultCalculatedGoal * 2.5, user.currency, currency.locale)} (Fat FIRE)</option>
               </select>
             </div>
           </div>
@@ -3050,6 +3264,12 @@ export const WealthDashboard = memo(function WealthDashboard({ user, budget, onU
         isOpen={isCommandPaletteOpen}
         onClose={() => setIsCommandPaletteOpen(false)}
         onOpenEditNetWorthModal={() => setShowQuickEditModal(true)}
+      />
+
+      {/* Financial Action Audit Log Modal */}
+      <AuditLogModal
+        isOpen={isAuditLogModalOpen}
+        onClose={() => setIsAuditLogModalOpen(false)}
       />
     </div>
   );

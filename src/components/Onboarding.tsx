@@ -52,11 +52,15 @@ export function Onboarding({ onComplete, onClose }: OnboardingProps) {
   const [step, setStep] = useState(0);
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-bg-primary/80 backdrop-blur-md">
+    <div 
+      onClick={onClose}
+      className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-bg-primary/80 backdrop-blur-md cursor-pointer"
+    >
       <motion.div 
+        onClick={(e) => e.stopPropagation()}
         initial={{ opacity: 0, scale: 0.9, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        className="w-full max-w-2xl bg-bg-card border border-border shadow-2xl rounded-3xl overflow-hidden relative"
+        className="w-full max-w-2xl bg-bg-card border border-border shadow-2xl rounded-3xl overflow-hidden relative cursor-default"
       >
         <button 
           onClick={onClose}
