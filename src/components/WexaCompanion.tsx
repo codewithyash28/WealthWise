@@ -120,6 +120,7 @@ export const WexaCompanion: React.FC<WexaCompanionProps> = ({ user, budget, onRe
   // Receipt Scanner State
   const [receiptImage, setReceiptImage] = useState<string | null>(null);
   const [isProcessingReceipt, setIsProcessingReceipt] = useState(false);
+  const [receiptError, setReceiptError] = useState<string | null>(null);
   const [latestReceiptResult, setLatestReceiptResult] = useState<ProcessedReceipt | null>(null);
   
   // Device Live Camera Viewfinder State
@@ -399,6 +400,7 @@ export const WexaCompanion: React.FC<WexaCompanionProps> = ({ user, budget, onRe
 
   const processReceiptData = async (base64: string, mimeType: string) => {
     setIsProcessingReceipt(true);
+    setReceiptError(null);
     setLatestReceiptResult(null);
     window.dispatchEvent(new CustomEvent("ww-cloud-sync-start"));
 
@@ -1067,11 +1069,37 @@ export const WexaCompanion: React.FC<WexaCompanionProps> = ({ user, budget, onRe
                   </div>
                 </div>
 
-                {/* Processing State or Result Display */}
+                {/* Processing State with Skeleton Screen, Error State, or Result Display */}
                 {isProcessingReceipt ? (
-                  <div className="p-4 bg-teal-950/40 border border-teal-800/40 rounded-xl flex items-center justify-center gap-3 text-xs text-teal-300">
-                    <Loader2 className="w-5 h-5 animate-spin text-teal-400" />
-                    <span className="font-mono">Gemini Vision parsing optical receipt layout...</span>
+                  <div className="p-5 bg-bg-void border border-teal-500/40 rounded-2xl space-y-4 shadow-xl animate-pulse">
+                    <div className="flex items-center justify-between border-b border-border/40 pb-3">
+                      <div className="flex items-center gap-2">
+                        <Loader2 className="w-5 h-5 animate-spin text-teal-400 shrink-0" />
+                        <span className="font-mono text-xs font-bold text-teal-300">Gemini Vision OCR Parsing...</span>
+                      </div>
+                      <div className="h-4 w-16 bg-teal-500/20 rounded-lg" />
+                    </div>
+                    {/* Receipt Skeleton Preview Cards */}
+                    <div className="space-y-2">
+                      <div className="h-4 w-3/4 bg-border/60 rounded" />
+                      <div className="h-8 w-full bg-bg-secondary rounded-xl border border-border/50" />
+                      <div className="h-3 w-1/2 bg-border/40 rounded" />
+                    </div>
+                  </div>
+                ) : receiptError ? (
+                  <div className="p-4 bg-rose-950/40 border border-rose-800/50 rounded-2xl text-xs font-mono space-y-2 text-rose-300">
+                    <div className="font-bold flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4 text-rose-400" />
+                      <span>Receipt Processing Issue</span>
+                    </div>
+                    <p className="text-[11px] text-text-secondary">{receiptError}</p>
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="px-3 py-1.5 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 rounded-lg font-bold border border-rose-500/40 cursor-pointer"
+                    >
+                      Try Another Receipt Image
+                    </button>
                   </div>
                 ) : latestReceiptResult ? (
                   <div className="p-4 bg-bg-void border border-accent-gold/40 rounded-xl space-y-3 shadow-lg">

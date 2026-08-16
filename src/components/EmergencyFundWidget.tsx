@@ -11,7 +11,8 @@ import {
   RefreshCw, 
   Sparkles,
   Zap,
-  ArrowRight
+  ArrowRight,
+  Download
 } from "lucide-react";
 import { formatCurrency, cn } from "../lib/utils";
 import { UserProfile, BudgetPlan } from "../types";
@@ -97,18 +98,19 @@ export const EmergencyFundWidget: React.FC<EmergencyFundWidgetProps> = ({ user, 
               {isOptimal ? <ShieldCheck className="w-6 h-6 text-emerald-400" /> : <ShieldAlert className="w-6 h-6 text-amber-400" />}
             </div>
             <div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <h3 className="text-xl font-bold font-display text-text-primary">
                   Emergency Fund Buffer
                 </h3>
                 <span className={cn(
                   "px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider border flex items-center gap-1",
-                  isOptimal
-                    ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-300 animate-pulse"
-                    : "bg-amber-500/20 border-amber-500/40 text-amber-300"
+                  isSurplus || isOptimal
+                    ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-300"
+                    : monthsOfRunway >= 1.0
+                    ? "bg-amber-500/20 border-amber-500/40 text-amber-300"
+                    : "bg-rose-500/20 border-rose-500/40 text-rose-300 animate-pulse"
                 )}>
-                  {isOptimal ? <CheckCircle2 className="w-3 h-3 text-emerald-400" /> : <AlertCircle className="w-3 h-3 text-amber-400" />}
-                  {isSurplus ? "Surplus Buffer (>6 Mo)" : isOptimal ? "3-6 Month Buffer Achieved 🎉" : "Needs Attention (<3 Mo)"}
+                  {isSurplus ? "🟢 SURPLUS BUFFER (>6 Mo)" : isOptimal ? "🟢 SAFE BUFFER (3-6 Mo) 🎉" : monthsOfRunway >= 1.0 ? "🟡 NEEDS ATTENTION (1-3 Mo)" : "🔴 CRITICAL DEFICIT (<1 Mo)"}
                 </span>
               </div>
               <p className="text-xs text-text-secondary mt-0.5">
@@ -117,14 +119,54 @@ export const EmergencyFundWidget: React.FC<EmergencyFundWidgetProps> = ({ user, 
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={() => setIsEditing(!isEditing)}
-            className="px-3 py-1.5 rounded-xl bg-bg-void hover:bg-bg-primary border border-border text-xs font-mono font-bold text-accent-gold transition-all cursor-pointer flex items-center gap-1.5 self-start sm:self-auto"
-          >
-            <Sliders className="w-3.5 h-3.5" />
-            <span>{isEditing ? "Close Calculator" : "Adjust Runway"}</span>
-          </button>
+          <div className="flex items-center gap-2 self-start sm:self-auto">
+            <button
+              type="button"
+              onClick={() => {
+                let csv = "=== WEXA AI EMERGENCY FUND RUNWAY AUDIT ===\n";
+                csv += `Generated At,${new Date().toISOString()}\n`;
+                csv += `User,${user.name}\n`;
+                csv += `Currency,${user.currency}\n\n`;
+                csv += "Metric,Amount\n";
+                csv += `Liquid Cash Assets,${liquidCash}\n`;
+                csv += `Monthly Living Expenses,${monthlyExpense}\n`;
+                csv += `Runway Buffer (Months),${monthsOfRunway}\n`;
+                csv += `3-Month Safety Floor,${target3Month}\n`;
+                csv += `6-Month Optimal Ceiling,${target6Month}\n`;
+                csv += `Buffer Status,${isSurplus ? "Surplus (>6 Mo)" : isOptimal ? "Optimal (3-6 Mo)" : "Deficit (<3 Mo)"}\n`;
+
+                const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `emergency_fund_audit_${new Date().toISOString().split("T")[0]}.csv`;
+                a.click();
+                URL.revokeObjectURL(url);
+
+                window.dispatchEvent(new CustomEvent('ww-trigger-alert', {
+                  detail: {
+                    type: 'success',
+                    title: 'Fund Audit CSV Downloaded! 📊',
+                    message: 'Emergency fund buffer and liquid asset audit exported.'
+                  }
+                }));
+              }}
+              className="px-3 py-1.5 rounded-xl bg-accent-gold/10 hover:bg-accent-gold/20 border border-accent-gold/30 text-xs font-mono font-bold text-accent-gold transition-all cursor-pointer flex items-center gap-1.5"
+              title="Export Emergency Fund Runway Audit CSV"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>Export CSV</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setIsEditing(!isEditing)}
+              className="px-3 py-1.5 rounded-xl bg-bg-void hover:bg-bg-primary border border-border text-xs font-mono font-bold text-accent-gold transition-all cursor-pointer flex items-center gap-1.5"
+            >
+              <Sliders className="w-3.5 h-3.5" />
+              <span>{isEditing ? "Close Calculator" : "Adjust Runway"}</span>
+            </button>
+          </div>
         </div>
 
         {/* Primary Metric Gauge */}

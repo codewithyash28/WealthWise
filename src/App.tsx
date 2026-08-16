@@ -83,7 +83,6 @@ class ModuleErrorBoundary extends Component<{ children: ReactNode, moduleName: s
   }
 }
 import { Navbar } from "./components/Navbar";
-import { useClerkAuth, ClerkStatusBanner, ClerkSignInWidget } from "./lib/clerk";
 import { StripeBillingCenter } from "./components/StripeBillingCenter";
 import { UpgradeModal } from "./components/UpgradeModal";
 import { Footer } from "./components/Footer";
@@ -187,7 +186,6 @@ export default function App() {
 }
 
 function AppContent() {
-  const clerkAuth = useClerkAuth();
   const [user, setUser] = useState<LocalUser | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [budget, setBudget] = useState<BudgetPlan | null>(null);
@@ -516,32 +514,10 @@ function AppContent() {
     setIsAuthReady(true);
   }, []);
 
-  // Synchronize Clerk auth state into AppContent user/profile state
-  useEffect(() => {
-    if (clerkAuth.isLoaded) {
-      if (clerkAuth.isSignedIn && clerkAuth.user) {
-        const clerkUserObj = {
-          uid: clerkAuth.user.uid,
-          displayName: clerkAuth.user.displayName,
-          email: clerkAuth.user.email,
-          photoURL: clerkAuth.user.photoURL
-        };
-        setUser(clerkUserObj);
-        clerkAuth.syncWithAppProfile(setProfile, setBudget);
-      } else {
-        if (user && (user.uid.startsWith("clerk_") || user.uid.startsWith("clerk-"))) {
-          setUser(null);
-          setProfile(null);
-          setBudget(null);
-        }
-      }
-    }
-  }, [clerkAuth.isLoaded, clerkAuth.isSignedIn, clerkAuth.user]);
-
   // Sync state tracking variables
   const [authEmail, setAuthEmail] = useState("");
   const [authPassword, setAuthPassword] = useState("");
-  const [authMode, setAuthMode] = useState<"guest" | "mongodb_register" | "mongodb_login" | "clerk">("clerk");
+  const [authMode, setAuthMode] = useState<"guest" | "mongodb_register" | "mongodb_login">("mongodb_login");
   const [dbHealth, setDbHealth] = useState<{ status: string, database: string, connectionString?: string } | null>(null);
   const [authError, setAuthError] = useState<string | null>(null);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
@@ -786,7 +762,6 @@ function AppContent() {
     localStorage.removeItem("ww_profile");
     localStorage.removeItem("ww_budget");
     localStorage.removeItem("ww_sync_enabled");
-    clerkAuth.signOut();
     window.location.hash = "#home";
   };
 
@@ -900,12 +875,6 @@ function AppContent() {
                 {/* Visual tabs to choose auth mechanism */}
                 <div className="flex border-b border-border/50">
                   <button
-                    onClick={() => { setAuthMode("clerk"); setAuthError(null); }}
-                    className={`flex-1 pb-3 text-xs uppercase tracking-wider font-extrabold transition-all border-b-2 ${authMode === "clerk" ? "border-accent-gold text-accent-gold" : "border-transparent text-text-muted hover:text-text-primary"}`}
-                  >
-                    Clerk SSO
-                  </button>
-                  <button
                     onClick={() => { setAuthMode("mongodb_login"); setAuthError(null); }}
                     className={`flex-1 pb-3 text-xs uppercase tracking-wider font-extrabold transition-all border-b-2 ${authMode === "mongodb_login" ? "border-accent-gold text-accent-gold" : "border-transparent text-text-muted hover:text-text-primary"}`}
                   >
@@ -961,18 +930,7 @@ function AppContent() {
                 )}
 
                 <AnimatePresence mode="wait">
-                  {authMode === "clerk" ? (
-                    <motion.div
-                      key="clerk-auth-card"
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0 }}
-                      className="space-y-6 text-left py-2"
-                    >
-                      <ClerkStatusBanner />
-                      <ClerkSignInWidget />
-                    </motion.div>
-                  ) : authMode === "guest" ? (
+                  {authMode === "guest" ? (
                     <motion.div
                       key="guest-card"
                       initial={{ opacity: 0, scale: 0.95 }}

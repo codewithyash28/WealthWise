@@ -1,0 +1,66 @@
+[
+  {
+    "id": "log_1786863806963_05tb2",
+    "timestamp": "2026-08-16T07:03:26.963Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786863806941_s1ugj",
+    "timestamp": "2026-08-16T07:03:26.941Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786863761677_49510",
+    "timestamp": "2026-08-16T07:02:41.677Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786863761660_yxgjs",
+    "timestamp": "2026-08-16T07:02:41.660Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  }
+]
