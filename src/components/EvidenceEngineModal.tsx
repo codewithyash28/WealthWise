@@ -815,14 +815,15 @@ export function EvidenceEngineModal({ isOpen, onClose, userProfile, onUpdateProf
                 ))}
               </div>
 
+              {/* Primary 'Export Data' Button (CSV) */}
               <button
                 type="button"
                 onClick={handleDownloadCsv}
-                className="px-3 py-2 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/40 text-emerald-400 text-xs font-mono font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm"
-                title="Download CSV"
+                className="px-3.5 py-2 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/40 text-emerald-400 text-xs font-mono font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm"
+                title="Export current revenue history array as CSV"
               >
                 <FileSpreadsheet className="w-4 h-4" />
-                <span className="hidden sm:inline">Download CSV</span>
+                <span>Export Data</span>
               </button>
 
               <button
@@ -947,6 +948,137 @@ export function EvidenceEngineModal({ isOpen, onClose, userProfile, onUpdateProf
                   </motion.div>
                 </div>
 
+                {/* PERSISTENT QUICK INTAKE & LOGGING FORM (Source, Frequency, Amount + Presets) */}
+                <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-bg-void via-bg-secondary/70 to-bg-void border border-accent-gold/40 shadow-lg space-y-3.5 font-mono text-xs">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-border/60 pb-2.5">
+                    <div className="flex items-center gap-2">
+                      <Briefcase className="w-4 h-4 text-accent-gold" />
+                      <span className="font-bold text-text-primary">
+                        Persistent Revenue Intake & Live Profile Sync
+                      </span>
+                      <span className="text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                        Profile: {displayUserName}
+                      </span>
+                    </div>
+                    
+                    {/* Quick Presets for 5,000k Budget & 9k Profit */}
+                    <div className="flex flex-wrap items-center gap-1.5 text-[10px]">
+                      <span className="text-text-muted font-bold">Quick Presets:</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setUserRevAmount("5000000"); // 5,000k (50 Lakh)
+                          setUserRevSource("B2B RIA Enterprise Suite");
+                          setUserRevFrequency("monthly");
+                          setUserRevNotes("Budget scale 5,000k target portfolio & RIA distribution");
+                        }}
+                        className="px-2 py-1 rounded-lg bg-accent-gold/15 hover:bg-accent-gold/25 border border-accent-gold/40 text-accent-gold font-bold transition-all cursor-pointer"
+                        title="Load 5,000k (50L) Budget Scale"
+                      >
+                        ⚡ Budget: 5,000k (50L)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setUserRevAmount("900000"); // 9k (900k / 9 Lakh)
+                          setUserRevSource("Pro Subscriptions");
+                          setUserRevFrequency("monthly");
+                          setUserRevNotes("Optimized 9k Monthly Profit / Run-Rate Model");
+                        }}
+                        className="px-2 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/40 text-emerald-400 font-bold transition-all cursor-pointer"
+                        title="Load 9k Monthly Profit / Run-rate"
+                      >
+                        ⚡ Profit: 9k (900k)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setUserRevAmount("863460");
+                          setUserRevSource("Pro Subscriptions");
+                          setUserRevFrequency("monthly");
+                        }}
+                        className="px-2 py-1 rounded-lg bg-bg-tertiary hover:bg-border border border-border text-text-muted hover:text-text-primary transition-all cursor-pointer"
+                      >
+                        Default Cohort
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* 3 Inline Fields: Source, Frequency, Amount */}
+                  <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
+                    {/* 1. Source */}
+                    <div className="sm:col-span-4 space-y-1">
+                      <label className="text-[10px] text-text-muted font-bold uppercase tracking-wider block">
+                        Monetization Source:
+                      </label>
+                      <select
+                        value={userRevSource}
+                        onChange={(e) => setUserRevSource(e.target.value)}
+                        className="w-full bg-bg-secondary border border-border focus:border-accent-gold rounded-xl px-3 py-2 text-text-primary text-xs font-bold outline-hidden cursor-pointer"
+                      >
+                        <option value="Pro Subscriptions">Pro Subscriptions (Retail)</option>
+                        <option value="Elite Wealth Tier">Elite Wealth Tier (HNW)</option>
+                        <option value="B2B RIA Enterprise Suite">B2B RIA Enterprise Suite</option>
+                        <option value="OCR Receipt Execution Fees">OCR Receipt Execution Fees</option>
+                        <option value="Multi-Stream Aggregate">Multi-Stream Aggregate</option>
+                      </select>
+                    </div>
+
+                    {/* 2. Frequency */}
+                    <div className="sm:col-span-3 space-y-1">
+                      <label className="text-[10px] text-text-muted font-bold uppercase tracking-wider block">
+                        Billing Frequency:
+                      </label>
+                      <select
+                        value={userRevFrequency}
+                        onChange={(e) => setUserRevFrequency(e.target.value as any)}
+                        className="w-full bg-bg-secondary border border-border focus:border-accent-gold rounded-xl px-3 py-2 text-text-primary text-xs font-bold outline-hidden cursor-pointer"
+                      >
+                        <option value="monthly">Monthly (MRR)</option>
+                        <option value="annual">Annual (ARR)</option>
+                        <option value="weekly">Weekly</option>
+                        <option value="one_time">One-Time</option>
+                      </select>
+                    </div>
+
+                    {/* 3. Amount */}
+                    <div className="sm:col-span-3 space-y-1">
+                      <label className="text-[10px] text-text-muted font-bold uppercase tracking-wider block flex justify-between">
+                        <span>Amount (INR Base):</span>
+                        <span className="text-accent-gold font-bold">{formatVal(parseFloat(userRevAmount) || 0)}</span>
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="1000"
+                        value={userRevAmount}
+                        onChange={(e) => setUserRevAmount(e.target.value)}
+                        placeholder="e.g. 863460"
+                        className="w-full bg-bg-secondary border border-border focus:border-accent-gold rounded-xl px-3 py-2 text-text-primary font-bold text-xs outline-hidden"
+                      />
+                    </div>
+
+                    {/* Action Save Button */}
+                    <div className="sm:col-span-2">
+                      <button
+                        type="button"
+                        onClick={handleSaveRevenueToProfile}
+                        className="w-full py-2.5 px-3 rounded-xl bg-accent-gold hover:bg-amber-400 text-slate-950 font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-md cursor-pointer"
+                      >
+                        <Save className="w-3.5 h-3.5" />
+                        <span>Log to Profile</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {isProfileSavedNotice && (
+                    <div className="text-[11px] text-emerald-400 font-bold flex items-center gap-1.5 animate-pulse bg-emerald-500/10 p-2 rounded-lg border border-emerald-500/20">
+                      <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                      <span>Data saved to user profile & 6-month linear regression growth forecast recalibrated!</span>
+                    </div>
+                  )}
+                </div>
+
                 {/* MONTHLY REVENUE TARGETS & ACTUAL VS TARGET PROGRESS SECTION */}
                 <div className="p-4 sm:p-5 rounded-2xl bg-bg-void border border-border/80 space-y-3 font-mono text-xs shadow-md">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-border/50 pb-2">
@@ -1015,7 +1147,7 @@ export function EvidenceEngineModal({ isOpen, onClose, userProfile, onUpdateProf
                     </div>
 
                     <div className="flex flex-wrap items-center gap-3">
-                      <label className="flex items-center gap-2 text-xs font-mono text-text-secondary cursor-pointer bg-bg-secondary px-3 py-1.5 rounded-xl border border-border">
+                      <label className="flex items-center gap-2 text-xs font-mono text-text-secondary cursor-pointer bg-bg-secondary px-3 py-1.5 rounded-xl border border-border hover:border-accent-gold/50 transition-colors">
                         <input
                           type="checkbox"
                           checked={includeForwardProjections}
@@ -1025,12 +1157,15 @@ export function EvidenceEngineModal({ isOpen, onClose, userProfile, onUpdateProf
                         <span>Show 6-Month Forecast (Sept 2026 – Feb 2027)</span>
                       </label>
 
+                      {/* Export Data Button */}
                       <button
                         type="button"
                         onClick={handleDownloadCsv}
-                        className="text-xs font-mono font-bold text-accent-gold hover:text-accent-gold/80 flex items-center gap-1 underline underline-offset-4 cursor-pointer"
+                        className="px-3 py-1.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/40 text-emerald-400 text-xs font-mono font-bold flex items-center gap-1.5 cursor-pointer shadow-xs transition-all"
+                        title="Export current revenue history array as CSV"
                       >
-                        <FileSpreadsheet className="w-3.5 h-3.5" /> Download CSV
+                        <FileSpreadsheet className="w-3.5 h-3.5" />
+                        <span>Export Data (CSV)</span>
                       </button>
                     </div>
                   </div>
@@ -1054,10 +1189,10 @@ export function EvidenceEngineModal({ isOpen, onClose, userProfile, onUpdateProf
                   </div>
 
                   {/* Responsive Container for Animated Recharts Chart */}
-                  <div className="h-[360px] w-full pt-2">
+                  <div className="h-[340px] sm:h-[380px] md:h-[420px] w-full pt-2">
                     <ResponsiveContainer width="100%" height="100%">
                       <ComposedChart data={computedSummary.dataWithTotals} margin={{ top: 15, right: 20, left: 10, bottom: 25 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.08)" vertical={false} />
+                        <CartesianGrid strokeDasharray="4 4" stroke="rgba(255, 255, 255, 0.08)" vertical={false} />
                         <XAxis 
                           dataKey="month" 
                           tick={{ fill: "#94a3b8", fontSize: 10, fontFamily: "JetBrains Mono" }}
@@ -1313,6 +1448,30 @@ export function EvidenceEngineModal({ isOpen, onClose, userProfile, onUpdateProf
                         className="w-full bg-bg-secondary border border-border focus:border-accent-gold rounded-xl px-4 py-3 text-text-primary font-bold text-sm outline-hidden"
                       />
                       <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setUserRevAmount("5000000");
+                            setUserRevSource("B2B RIA Enterprise Suite");
+                            setUserRevFrequency("monthly");
+                            setUserRevNotes("Budget: 5,000k portfolio allocation model");
+                          }}
+                          className="px-2 py-0.5 rounded bg-accent-gold/20 border border-accent-gold/40 text-[10px] text-accent-gold font-bold hover:bg-accent-gold/30 cursor-pointer"
+                        >
+                          ⚡ Budget: 5,000k
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setUserRevAmount("900000");
+                            setUserRevSource("Pro Subscriptions");
+                            setUserRevFrequency("monthly");
+                            setUserRevNotes("Profit: 9k / MRR optimization model");
+                          }}
+                          className="px-2 py-0.5 rounded bg-emerald-500/20 border border-emerald-500/40 text-[10px] text-emerald-400 font-bold hover:bg-emerald-500/30 cursor-pointer"
+                        >
+                          ⚡ Profit: 9k
+                        </button>
                         {["250000", "500000", "863460", "2053560"].map((preset) => (
                           <button
                             key={preset}
@@ -1853,8 +2012,9 @@ export function EvidenceEngineModal({ isOpen, onClose, userProfile, onUpdateProf
                 type="button"
                 onClick={handleDownloadCsv}
                 className="px-4 py-2 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/40 text-emerald-400 font-bold flex items-center justify-center gap-1.5 cursor-pointer text-xs transition-all"
+                title="Export current revenue history array as CSV"
               >
-                <FileSpreadsheet className="w-3.5 h-3.5" /> Download CSV
+                <FileSpreadsheet className="w-3.5 h-3.5" /> Export Data (CSV)
               </button>
 
               <button
