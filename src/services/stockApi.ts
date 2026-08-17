@@ -2,7 +2,7 @@
 // Supports US Stocks, Indian Stocks (NSE/BSE), Forex, and Crypto
 // Twelve Data API Key: 83ef983ad1e1433485c05957a560aa5c
 
-const TWELVE_DATA_API_KEY = "83ef983ad1e1433485c05957a560aa5c";
+const TWELVE_DATA_API_KEY = (import.meta as any).env?.VITE_TWELVE_DATA_API_KEY || "83ef983ad1e1433485c05957a560aa5c";
 const BASE_URL = "https://api.twelvedata.com";
 const CACHE_TTL_MS = 60000; // 60-second client-side cache layer
 

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { CreditCard, CheckCircle2, ShieldCheck, Sparkles, RefreshCw, Zap, Receipt, HelpCircle, FileSpreadsheet } from "lucide-react";
+import { CreditCard, CheckCircle2, ShieldCheck, Sparkles, RefreshCw, Zap, Receipt, HelpCircle, FileSpreadsheet, Download } from "lucide-react";
 import { cn } from "../lib/utils";
 
 interface InstamojoBillingCenterProps {
@@ -356,6 +356,7 @@ export function InstamojoBillingCenter({ user, onUpdateProfile }: InstamojoBilli
               onClick={handleExportPnLCSV}
               className="w-full btn btn-secondary text-xs py-2 px-3 hover:bg-accent-emerald/5 hover:text-accent-emerald border-border/60 hover:border-accent-emerald/30 cursor-pointer flex items-center justify-center gap-2"
             >
+              <Download className="w-3.5 h-3.5 text-accent-emerald" />
               Download Instamojo CSV Statement
             </button>
           </div>

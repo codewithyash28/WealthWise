@@ -761,6 +761,12 @@ function AppContent() {
     setUser(null);
     setProfile(null);
     setBudget(null);
+    setAuthEmail("");
+    setAuthPassword("");
+    setStytchOtpCode("");
+    setStytchStep("email");
+    setStytchMethodId("");
+    setAuthError(null);
     localStorage.removeItem("ww_user");
     localStorage.removeItem("ww_profile");
     localStorage.removeItem("ww_budget");
@@ -983,13 +989,21 @@ function AppContent() {
                             if (!res.ok) throw new Error(data.error || "Invalid Stytch code.");
 
                             setUser(data.user);
-                            if (data.profile) setProfile(data.profile);
+                            if (data.profile) {
+                              setProfile(data.profile);
+                            } else {
+                              setShowCurrencySelector(true);
+                            }
                             if (data.budget) setBudget(data.budget);
 
                             localStorage.setItem("ww_user", JSON.stringify(data.user));
                             if (data.profile) localStorage.setItem("ww_profile", JSON.stringify(data.profile));
                             if (data.budget) localStorage.setItem("ww_budget", JSON.stringify(data.budget));
                             localStorage.setItem("ww_sync_enabled", "true");
+
+                            // Clear sensitivity state
+                            setAuthPassword("");
+                            setStytchOtpCode("");
 
                             window.dispatchEvent(new CustomEvent('ww-trigger-alert', {
                               detail: {
@@ -1212,13 +1226,20 @@ function AppContent() {
                             const recoveredUser = data.user;
 
                             setUser(recoveredUser);
-                            setProfile(data.profile);
+                            if (data.profile) {
+                              setProfile(data.profile);
+                            } else {
+                              setShowCurrencySelector(true);
+                            }
                             setBudget(data.budget);
 
                             localStorage.setItem("ww_user", JSON.stringify(recoveredUser));
                             if (data.profile) localStorage.setItem("ww_profile", JSON.stringify(data.profile));
                             if (data.budget) localStorage.setItem("ww_budget", JSON.stringify(data.budget));
                             localStorage.setItem("ww_sync_enabled", "true");
+
+                            // Clear password field
+                            setAuthPassword("");
 
                             window.dispatchEvent(new CustomEvent('ww-trigger-alert', {
                               detail: {

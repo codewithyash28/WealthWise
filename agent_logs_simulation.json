@@ -1,5 +1,2149 @@
 [
   {
+    "id": "log_1786970615979_asi5f",
+    "timestamp": "2026-08-17T12:43:35.979Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970615965_6j6vf",
+    "timestamp": "2026-08-17T12:43:35.965Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970615395_s8oeh",
+    "timestamp": "2026-08-17T12:43:35.395Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970615385_n57e2",
+    "timestamp": "2026-08-17T12:43:35.385Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970614811_p1424",
+    "timestamp": "2026-08-17T12:43:34.811Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970614797_n007b",
+    "timestamp": "2026-08-17T12:43:34.797Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970614187_pefqn",
+    "timestamp": "2026-08-17T12:43:34.188Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970614160_w80rs",
+    "timestamp": "2026-08-17T12:43:34.160Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970613232_oqk4p",
+    "timestamp": "2026-08-17T12:43:33.232Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970613215_me7bv",
+    "timestamp": "2026-08-17T12:43:33.215Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970575170_k1dp4",
+    "timestamp": "2026-08-17T12:42:55.170Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970575156_4871k",
+    "timestamp": "2026-08-17T12:42:55.156Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970574603_v4nxe",
+    "timestamp": "2026-08-17T12:42:54.603Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970574589_qg4sx",
+    "timestamp": "2026-08-17T12:42:54.589Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970574044_vzb90",
+    "timestamp": "2026-08-17T12:42:54.044Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970574038_k9sue",
+    "timestamp": "2026-08-17T12:42:54.038Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970573512_y7068",
+    "timestamp": "2026-08-17T12:42:53.512Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970573497_c4x5s",
+    "timestamp": "2026-08-17T12:42:53.497Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970572908_w31jk",
+    "timestamp": "2026-08-17T12:42:52.908Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 1,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970572892_6p68q",
+    "timestamp": "2026-08-17T12:42:52.893Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970572323_u342i",
+    "timestamp": "2026-08-17T12:42:52.323Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970572309_z1085",
+    "timestamp": "2026-08-17T12:42:52.309Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970571722_a16bl",
+    "timestamp": "2026-08-17T12:42:51.722Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970571711_8hs1n",
+    "timestamp": "2026-08-17T12:42:51.711Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970571136_9a8wa",
+    "timestamp": "2026-08-17T12:42:51.136Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970571133_3s9ev",
+    "timestamp": "2026-08-17T12:42:51.133Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970570515_v9zdo",
+    "timestamp": "2026-08-17T12:42:50.515Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970570505_as70m",
+    "timestamp": "2026-08-17T12:42:50.505Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970569871_eg7jl",
+    "timestamp": "2026-08-17T12:42:49.871Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970569858_thntk",
+    "timestamp": "2026-08-17T12:42:49.858Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970569191_cqke0",
+    "timestamp": "2026-08-17T12:42:49.191Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 2,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970569175_0rd7v",
+    "timestamp": "2026-08-17T12:42:49.175Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970568514_zx6c9",
+    "timestamp": "2026-08-17T12:42:48.514Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970568509_mti0e",
+    "timestamp": "2026-08-17T12:42:48.509Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970567882_p38zl",
+    "timestamp": "2026-08-17T12:42:47.882Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970567870_wbkeo",
+    "timestamp": "2026-08-17T12:42:47.870Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970567203_fnyrq",
+    "timestamp": "2026-08-17T12:42:47.203Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970567194_2nvss",
+    "timestamp": "2026-08-17T12:42:47.194Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970566564_mvm7j",
+    "timestamp": "2026-08-17T12:42:46.564Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970566550_jq9bn",
+    "timestamp": "2026-08-17T12:42:46.550Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970565840_40k6f",
+    "timestamp": "2026-08-17T12:42:45.840Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970565834_v4hnf",
+    "timestamp": "2026-08-17T12:42:45.834Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970565134_d94r8",
+    "timestamp": "2026-08-17T12:42:45.134Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970565110_f51v4",
+    "timestamp": "2026-08-17T12:42:45.110Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970564454_8fcwy",
+    "timestamp": "2026-08-17T12:42:44.454Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970564445_cxm5o",
+    "timestamp": "2026-08-17T12:42:44.445Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970563795_sm4za",
+    "timestamp": "2026-08-17T12:42:43.795Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970563786_yy9jr",
+    "timestamp": "2026-08-17T12:42:43.786Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970562816_nnzvd",
+    "timestamp": "2026-08-17T12:42:42.816Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970562788_vea3f",
+    "timestamp": "2026-08-17T12:42:42.788Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970561797_kfx3w",
+    "timestamp": "2026-08-17T12:42:41.797Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970561775_2bai3",
+    "timestamp": "2026-08-17T12:42:41.775Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970560585_hpsys",
+    "timestamp": "2026-08-17T12:42:40.585Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970560552_umcnj",
+    "timestamp": "2026-08-17T12:42:40.552Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970559767_5fyev",
+    "timestamp": "2026-08-17T12:42:39.767Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970559755_zaw7d",
+    "timestamp": "2026-08-17T12:42:39.755Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970559140_z6yw8",
+    "timestamp": "2026-08-17T12:42:39.140Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970559129_e7w1m",
+    "timestamp": "2026-08-17T12:42:39.129Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970558566_yyu5k",
+    "timestamp": "2026-08-17T12:42:38.566Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970558553_gxvba",
+    "timestamp": "2026-08-17T12:42:38.553Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970557955_03h8n",
+    "timestamp": "2026-08-17T12:42:37.955Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970557945_dyot4",
+    "timestamp": "2026-08-17T12:42:37.945Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970557306_ps6lu",
+    "timestamp": "2026-08-17T12:42:37.306Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970557296_h5o2x",
+    "timestamp": "2026-08-17T12:42:37.296Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970556745_q6ri5",
+    "timestamp": "2026-08-17T12:42:36.745Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970556733_kr93c",
+    "timestamp": "2026-08-17T12:42:36.733Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970556137_asm28",
+    "timestamp": "2026-08-17T12:42:36.137Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970556129_ll1zc",
+    "timestamp": "2026-08-17T12:42:36.129Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970555515_657ff",
+    "timestamp": "2026-08-17T12:42:35.515Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970555504_r8gai",
+    "timestamp": "2026-08-17T12:42:35.504Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970554944_kix64",
+    "timestamp": "2026-08-17T12:42:34.944Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970554929_ka9zi",
+    "timestamp": "2026-08-17T12:42:34.929Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970554291_30yf4",
+    "timestamp": "2026-08-17T12:42:34.291Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970554280_rsofx",
+    "timestamp": "2026-08-17T12:42:34.280Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970553717_m6i00",
+    "timestamp": "2026-08-17T12:42:33.717Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970553710_9pi92",
+    "timestamp": "2026-08-17T12:42:33.710Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970553087_tuti8",
+    "timestamp": "2026-08-17T12:42:33.087Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970553078_hyccw",
+    "timestamp": "2026-08-17T12:42:33.078Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970552515_06o8a",
+    "timestamp": "2026-08-17T12:42:32.515Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970552499_v24nu",
+    "timestamp": "2026-08-17T12:42:32.499Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970551897_hyoz0",
+    "timestamp": "2026-08-17T12:42:31.897Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970551889_mcsgg",
+    "timestamp": "2026-08-17T12:42:31.889Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970551285_9jl6x",
+    "timestamp": "2026-08-17T12:42:31.285Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970551270_k1rey",
+    "timestamp": "2026-08-17T12:42:31.270Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970550681_9wm4m",
+    "timestamp": "2026-08-17T12:42:30.681Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970550673_1ffri",
+    "timestamp": "2026-08-17T12:42:30.673Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 1,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970550071_yhbaw",
+    "timestamp": "2026-08-17T12:42:30.071Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970550061_dp5x9",
+    "timestamp": "2026-08-17T12:42:30.061Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970549390_qyfia",
+    "timestamp": "2026-08-17T12:42:29.390Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970549376_7m4jw",
+    "timestamp": "2026-08-17T12:42:29.376Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970548810_c4wk1",
+    "timestamp": "2026-08-17T12:42:28.810Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970548801_ghfkv",
+    "timestamp": "2026-08-17T12:42:28.801Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970548205_ttupi",
+    "timestamp": "2026-08-17T12:42:28.205Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970548197_k45c0",
+    "timestamp": "2026-08-17T12:42:28.197Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970547623_gf6xg",
+    "timestamp": "2026-08-17T12:42:27.623Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970547614_fbrdv",
+    "timestamp": "2026-08-17T12:42:27.614Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970546915_drepo",
+    "timestamp": "2026-08-17T12:42:26.915Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970546896_qdi5a",
+    "timestamp": "2026-08-17T12:42:26.896Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970546303_aq95z",
+    "timestamp": "2026-08-17T12:42:26.303Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970546293_2qlxt",
+    "timestamp": "2026-08-17T12:42:26.293Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970545699_on04t",
+    "timestamp": "2026-08-17T12:42:25.699Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970545689_tc1vz",
+    "timestamp": "2026-08-17T12:42:25.689Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970545117_6a7t5",
+    "timestamp": "2026-08-17T12:42:25.117Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970545110_ddk7y",
+    "timestamp": "2026-08-17T12:42:25.110Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970544498_0t1fi",
+    "timestamp": "2026-08-17T12:42:24.498Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970544484_g9ylw",
+    "timestamp": "2026-08-17T12:42:24.484Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970543108_4l2q9",
+    "timestamp": "2026-08-17T12:42:23.108Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970543062_paxzu",
+    "timestamp": "2026-08-17T12:42:23.063Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970263003_gspaj",
+    "timestamp": "2026-08-17T12:37:43.003Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970262997_nw0fn",
+    "timestamp": "2026-08-17T12:37:42.997Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970262403_wg0c9",
+    "timestamp": "2026-08-17T12:37:42.403Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970262394_y3r1t",
+    "timestamp": "2026-08-17T12:37:42.394Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970261774_thtiv",
+    "timestamp": "2026-08-17T12:37:41.774Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970261765_u4ohg",
+    "timestamp": "2026-08-17T12:37:41.765Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970261091_uvuzz",
+    "timestamp": "2026-08-17T12:37:41.091Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970261082_r0ycv",
+    "timestamp": "2026-08-17T12:37:41.082Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970260405_uwh8e",
+    "timestamp": "2026-08-17T12:37:40.405Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970260390_fwwwe",
+    "timestamp": "2026-08-17T12:37:40.390Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970259716_zjp08",
+    "timestamp": "2026-08-17T12:37:39.716Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970259688_bxfhy",
+    "timestamp": "2026-08-17T12:37:39.688Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970258305_vk91e",
+    "timestamp": "2026-08-17T12:37:38.305Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970258278_yccjc",
+    "timestamp": "2026-08-17T12:37:38.278Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970178216_i03ls",
+    "timestamp": "2026-08-17T12:36:18.216Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970178193_t4c7y",
+    "timestamp": "2026-08-17T12:36:18.193Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970177225_hbewl",
+    "timestamp": "2026-08-17T12:36:17.225Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970177210_etonl",
+    "timestamp": "2026-08-17T12:36:17.210Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970176447_q47da",
+    "timestamp": "2026-08-17T12:36:16.447Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970176432_mlyzg",
+    "timestamp": "2026-08-17T12:36:16.432Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970175768_tzse7",
+    "timestamp": "2026-08-17T12:36:15.768Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970175760_8xqfb",
+    "timestamp": "2026-08-17T12:36:15.760Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970175006_u9lc5",
+    "timestamp": "2026-08-17T12:36:15.006Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970174993_tdwp4",
+    "timestamp": "2026-08-17T12:36:14.993Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970173387_btir9",
+    "timestamp": "2026-08-17T12:36:13.387Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
+    "id": "log_1786970173328_a1i26",
+    "timestamp": "2026-08-17T12:36:13.328Z",
+    "agentName": "Autonomous Macro Pulse Alert Agent",
+    "action": "autonomous_alert_generation_simulated",
+    "inputContext": "Request for 3 search-grounded global financial news items",
+    "decision": "Served 3 fallback/cached simulation alerts.",
+    "tokenUsage": {
+      "promptTokens": 40,
+      "candidatesTokens": 60,
+      "totalTokens": 100
+    },
+    "latencyMs": 0,
+    "cloudProvider": "Google Cloud (Vertex AI / Google AI Studio)",
+    "status": "SUCCESS"
+  },
+  {
     "id": "log_1786965912068_c5gtf",
     "timestamp": "2026-08-17T11:25:12.068Z",
     "agentName": "Autonomous Macro Pulse Alert Agent",
