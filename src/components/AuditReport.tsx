@@ -81,7 +81,7 @@ export function AuditReport({ user }: AuditReportProps) {
         "Sovereign Wire Ingress"
       ];
       const mockUsers = [
-        { name: "Yash Choubey", email: "yash.choubey@wexa.ai" },
+        { name: user?.name || "Guest Investor", email: "investor@wexa.ai" },
         { name: "Technical Judge Alpha", email: "judge.alpha@hackathon.org" },
         { name: "Strict Metrics Evaluator", email: "metrics.eval@benchmark.io" },
         { name: "Sovereign Systems", email: "ops@sovereign-systems.com" },

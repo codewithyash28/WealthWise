@@ -8,22 +8,11 @@ import {
   User, 
   CheckCircle2, 
   RefreshCw, 
-  AlertCircle,
-  Database,
-  Lock
+  AlertCircle 
 } from "lucide-react";
 
 export function FirebaseAuthBanner() {
-  const { user, loading, error, clearError } = useFirebaseAuth();
-
-  if (loading) {
-    return (
-      <div className="p-3 rounded-2xl bg-bg-void/80 border border-border flex items-center gap-2 text-xs font-mono text-text-muted">
-        <RefreshCw className="w-3.5 h-3.5 animate-spin text-accent-gold" />
-        <span>Authenticating with Firebase Auth & Cloud Firestore...</span>
-      </div>
-    );
-  }
+  const { user, loading, error } = useFirebaseAuth();
 
   return (
     <div className="p-4 rounded-2xl bg-bg-void/90 border border-accent-gold/30 shadow-lg space-y-2 font-mono text-xs">
@@ -31,30 +20,22 @@ export function FirebaseAuthBanner() {
         <div className="flex items-center gap-2">
           <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
           <span className="font-bold text-text-primary uppercase tracking-wider text-[11px]">
-            Firebase Cloud Security Engine
+            Security & Identity Status
           </span>
         </div>
         <span className="text-[10px] text-accent-gold px-2 py-0.5 rounded-full bg-accent-gold/10 border border-accent-gold/30">
-          Firestore Active
+          Firebase Sync Active
         </span>
       </div>
 
       <p className="text-text-muted font-sans text-xs">
-        Secure OAuth2 Google Authentication with real-time multi-device cloud synchronization powered by Google Firebase.
+        Firebase Authentication and Firestore live synchronization enabled.
       </p>
 
       {error && (
-        <div className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs flex items-center justify-between gap-2">
-          <div className="flex items-center gap-1.5">
-            <AlertCircle className="w-4 h-4 shrink-0" />
-            <span>{error}</span>
-          </div>
-          <button 
-            onClick={clearError}
-            className="text-[10px] uppercase font-bold text-rose-300 hover:underline cursor-pointer"
-          >
-            Dismiss
-          </button>
+        <div className="p-2 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs flex items-center gap-2">
+          <AlertCircle className="w-4 h-4 shrink-0" />
+          <span>{error}</span>
         </div>
       )}
     </div>
@@ -62,72 +43,77 @@ export function FirebaseAuthBanner() {
 }
 
 export function FirebaseAuthSignInWidget({ onGuestSuccess }: { onGuestSuccess?: (userObj: any) => void }) {
-  const { user, signInWithGoogle, signInAsGuest, signOut, loading, error } = useFirebaseAuth();
+  const { user, signInWithGoogle, signInAsGuest, signOut, loading } = useFirebaseAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (user) {
     return (
-      <div className="p-5 rounded-2xl bg-bg-void border border-emerald-500/40 space-y-4 font-mono text-xs shadow-md">
+      <div className="p-5 rounded-2xl bg-bg-void border border-accent-gold/40 space-y-4 font-mono text-xs shadow-md">
         <div className="flex items-center gap-3">
           {user.photoURL ? (
             <img 
               src={user.photoURL} 
               alt="Avatar" 
-              className="w-12 h-12 rounded-xl object-cover border border-emerald-500/40 shadow-sm" 
+              className="w-12 h-12 rounded-xl object-cover border border-accent-gold/40 shadow-sm" 
               referrerPolicy="no-referrer"
             />
           ) : (
-            <div className="w-12 h-12 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-lg">
-              {user.displayName ? user.displayName.charAt(0).toUpperCase() : "U"}
+            <div className="w-12 h-12 rounded-xl bg-accent-gold/15 border border-accent-gold/30 flex items-center justify-center text-accent-gold font-bold text-lg">
+              {user.displayName ? user.displayName.charAt(0).toUpperCase() : "G"}
             </div>
           )}
           <div className="space-y-0.5 overflow-hidden">
-            <div className="flex items-center gap-1.5 text-emerald-400 font-bold">
+            <div className="flex items-center gap-1.5 text-accent-gold font-bold">
               <CheckCircle2 className="w-3.5 h-3.5" />
-              <span>Firebase Authenticated</span>
+              <span>Authenticated Profile</span>
             </div>
             <div className="font-bold text-sm text-text-primary truncate">
-              {user.displayName || "Yash Choubey"}
+              {user.displayName || "Guest Investor"}
             </div>
             <div className="text-[11px] text-text-muted truncate">
-              {user.email || (user.isAnonymous ? "Anonymous Cloud Guest" : "Authorized User")}
+              {user.email || "Offline Sandbox Session"}
             </div>
           </div>
         </div>
 
-        <div className="p-3 rounded-xl bg-bg-secondary border border-border/80 text-[11px] text-text-secondary space-y-1">
-          <div className="flex items-center justify-between text-text-muted">
-            <span>Firebase UID:</span>
-            <span className="font-mono text-text-primary select-all text-[10px]">{user.uid.substring(0, 16)}...</span>
+        <div className="grid grid-cols-2 gap-2 pt-2 border-t border-border/60">
+          <div className="p-2.5 rounded-xl bg-bg-secondary border border-border/80">
+            <div className="text-[10px] text-text-muted">Account Tier</div>
+            <div className="font-mono font-bold text-accent-gold text-[11px]">
+              Institutional Pro
+            </div>
           </div>
-          <div className="flex items-center justify-between text-text-muted">
-            <span>Persistence:</span>
-            <span className="text-emerald-400 font-bold">Google Cloud Firestore</span>
+          <div className="p-2.5 rounded-xl bg-bg-secondary border border-border/80">
+            <div className="text-[10px] text-text-muted">Persistence</div>
+            <div className="font-mono font-bold text-emerald-400 text-[11px] flex items-center gap-1">
+              <ShieldCheck className="w-3 h-3" /> Secure Sync
+            </div>
           </div>
         </div>
 
         <button
           type="button"
-          onClick={() => signOut()}
-          disabled={loading}
-          className="w-full py-2.5 rounded-xl border border-rose-500/30 hover:border-rose-500 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+          onClick={async () => {
+            await signOut();
+          }}
+          className="w-full py-2 px-3 rounded-xl bg-bg-tertiary hover:bg-rose-500/10 hover:text-rose-400 border border-border text-text-muted transition-colors flex items-center justify-center gap-2 cursor-pointer font-mono text-xs"
         >
           <LogOut className="w-3.5 h-3.5" />
-          <span>Sign Out from Firebase</span>
+          <span>Sign Out / Switch Session</span>
         </button>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4 font-mono text-xs">
-      <div className="text-center space-y-1">
-        <h4 className="font-display text-base font-bold text-text-primary flex items-center justify-center gap-2">
-          <ShieldCheck className="w-5 h-5 text-accent-gold" />
-          <span>One-Click Cloud Sign-In</span>
+    <div className="p-5 rounded-2xl bg-bg-void/95 border border-accent-gold/40 shadow-xl space-y-4 font-mono text-xs">
+      <div className="space-y-1">
+        <h4 className="font-bold text-sm text-text-primary flex items-center gap-2">
+          <LogIn className="w-4 h-4 text-accent-gold" />
+          <span>Quick Authentication & Guest Access</span>
         </h4>
         <p className="text-xs text-text-muted font-sans">
-          Sign in with your Google account to automatically synchronize your balance sheet and AI wealth models.
+          Sign in to save your asset rebalancing models and wealth audit reports across sessions.
         </p>
       </div>
 
@@ -138,15 +124,15 @@ export function FirebaseAuthSignInWidget({ onGuestSuccess }: { onGuestSuccess?: 
             setIsSubmitting(true);
             await signInWithGoogle();
           } catch (e) {
-            console.error("Google sign in trigger failed", e);
+            console.error("Google sign in failed", e);
           } finally {
             setIsSubmitting(false);
           }
         }}
         disabled={loading || isSubmitting}
-        className="w-full py-3.5 px-4 rounded-xl bg-white hover:bg-slate-100 text-slate-900 font-sans font-bold text-sm flex items-center justify-center gap-3 transition-all shadow-lg hover:shadow-xl active:scale-95 cursor-pointer disabled:opacity-50"
+        className="w-full py-3 px-4 rounded-xl bg-bg-secondary hover:bg-bg-tertiary border border-border hover:border-accent-gold text-text-primary font-sans font-bold text-xs flex items-center justify-center gap-3 transition-all shadow-sm cursor-pointer"
       >
-        <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
+        <svg className="w-4 h-4" viewBox="0 0 24 24">
           <path
             fill="#4285F4"
             d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -178,11 +164,11 @@ export function FirebaseAuthSignInWidget({ onGuestSuccess }: { onGuestSuccess?: 
         onClick={async () => {
           try {
             setIsSubmitting(true);
-            await signInAsGuest("Yash Choubey");
+            await signInAsGuest("Guest Investor");
             if (onGuestSuccess) {
               onGuestSuccess({
                 uid: "firebase_guest_" + Math.random().toString(36).substring(2, 9),
-                displayName: "Yash Choubey",
+                displayName: "Guest Investor",
                 email: null,
                 photoURL: null
               });
@@ -197,7 +183,7 @@ export function FirebaseAuthSignInWidget({ onGuestSuccess }: { onGuestSuccess?: 
         className="w-full py-2.5 px-4 rounded-xl bg-bg-secondary hover:bg-bg-tertiary border border-border hover:border-accent-gold/40 text-text-primary text-xs font-mono font-bold flex items-center justify-center gap-2 transition-all cursor-pointer"
       >
         <User className="w-3.5 h-3.5 text-accent-gold" />
-        <span>Instant Guest / Demo Session (Yash Choubey)</span>
+        <span>Instant Guest / Demo Session</span>
       </button>
     </div>
   );

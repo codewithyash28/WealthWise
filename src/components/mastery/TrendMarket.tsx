@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { TrendingUp, TrendingDown, ShoppingCart, Wallet, Info, Sparkles, RefreshCw } from "lucide-react";
 import { cn } from "../../lib/utils";
@@ -21,24 +21,26 @@ const INITIAL_STOCKS: Stock[] = [
 ];
 
 export function TrendMarket() {
-  const [stocks, setStocks] = useState<Stock[]>(INITIAL_STOCKS);
-  const [balance, setBalance] = useState(10000);
-  const [portfolio, setPortfolio] = useState<{ [key: string]: number }>({});
-  const [selectedStock, setSelectedStock] = useState<Stock | null>(stocks[0]);
-  const [isSimulating, setIsSimulating] = useState(true);
+  const [stocks, setStocks] = useState<Stock[]>(() => INITIAL_STOCKS);
+  const [balance, setBalance] = useState<number>(() => 10000);
+  const [portfolio, setPortfolio] = useState<{ [key: string]: number }>(() => ({}));
+  const [selectedStock, setSelectedStock] = useState<Stock | null>(() => INITIAL_STOCKS[0]);
+  const [isSimulating, setIsSimulating] = useState<boolean>(true);
 
   useEffect(() => {
     if (!isSimulating) return;
     const interval = setInterval(() => {
-      setStocks(current => current.map(stock => {
+      setStocks(current => (current || INITIAL_STOCKS).map(stock => {
         const volatility = 0.02;
         const change = (Math.random() - 0.5) * 2 * volatility;
         const newPrice = stock.price * (1 + change);
-        const newHistory = [...stock.history.slice(-9), newPrice];
+        const historyArr = Array.isArray(stock.history) && stock.history.length > 0 ? stock.history : [stock.price];
+        const newHistory = [...historyArr.slice(-9), newPrice];
+        const basePrice = historyArr[0] || stock.price || 1;
         return {
           ...stock,
           price: parseFloat(newPrice.toFixed(2)),
-          change: parseFloat(((newPrice / stock.history[0] - 1) * 100).toFixed(2)),
+          change: parseFloat(((newPrice / basePrice - 1) * 100).toFixed(2)),
           history: newHistory
         };
       }));
@@ -47,6 +49,7 @@ export function TrendMarket() {
   }, [isSimulating]);
 
   const handleBuy = (stock: Stock) => {
+    if (!stock) return;
     if (balance >= stock.price) {
       setBalance(prev => prev - stock.price);
       setPortfolio(prev => ({
@@ -57,6 +60,7 @@ export function TrendMarket() {
   };
 
   const handleSell = (stock: Stock) => {
+    if (!stock) return;
     if (portfolio[stock.symbol] && portfolio[stock.symbol] > 0) {
       setBalance(prev => prev + stock.price);
       setPortfolio(prev => ({
@@ -66,14 +70,16 @@ export function TrendMarket() {
     }
   };
 
-  const totalWealth = balance + stocks.reduce((acc, s) => acc + (portfolio[s.symbol] || 0) * s.price, 0);
+  const safeStocks = stocks || INITIAL_STOCKS;
+  const safePortfolio = portfolio || {};
+  const totalWealth = balance + safeStocks.reduce((acc, s) => acc + (safePortfolio[s.symbol] || 0) * s.price, 0);
 
   return (
     <div className="space-y-8">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h2 className="text-3xl font-display font-bold">TrendMarket</h2>
-          <p className="text-text-secondary">Gamified Pop-Culture Trading. Master market psychology with zero risk.</p>
+          <h2 className="text-3xl font-display font-bold">TrendMarket Signal Engine</h2>
+          <p className="text-text-secondary">Gamified Pop-Culture Trading & Trend Signals. Master market psychology with zero risk.</p>
         </div>
         <div className="flex items-center gap-4">
           <div className="card px-6 py-3 bg-accent-gold/10 border-accent-gold/20 flex flex-col items-end">
@@ -82,7 +88,8 @@ export function TrendMarket() {
           </div>
           <button 
             onClick={() => setIsSimulating(!isSimulating)}
-            className={cn("p-4 rounded-xl border transition-all", isSimulating ? "bg-accent-emerald/10 text-accent-emerald border-accent-emerald/20" : "bg-bg-secondary text-text-muted border-border")}
+            className={cn("p-4 rounded-xl border transition-all cursor-pointer", isSimulating ? "bg-accent-emerald/10 text-accent-emerald border-accent-emerald/20" : "bg-bg-secondary text-text-muted border-border")}
+            title={isSimulating ? "Pause real-time simulation" : "Resume real-time simulation"}
           >
             <RefreshCw className={cn("w-6 h-6", isSimulating && "animate-spin-slow")} />
           </button>
@@ -92,7 +99,7 @@ export function TrendMarket() {
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
         <div className="xl:col-span-2 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {stocks.map((stock) => (
+            {safeStocks.map((stock) => (
               <motion.div 
                 key={stock.symbol}
                 onClick={() => setSelectedStock(stock)}
@@ -121,13 +128,18 @@ export function TrendMarket() {
 
                 {/* Sparkchart Preview */}
                 <div className="mt-4 h-12 flex items-end gap-1 opacity-50">
-                  {stock.history.map((h, i) => (
-                    <div 
-                      key={i} 
-                      className={cn("flex-1 rounded-t-sm", stock.change >= 0 ? "bg-accent-emerald" : "bg-accent-red")}
-                      style={{ height: `${((h - Math.min(...stock.history)) / (Math.max(...stock.history) - Math.min(...stock.history)) * 100) + 10}%` }}
-                    />
-                  ))}
+                  {stock.history && stock.history.map((h, i) => {
+                    const minVal = Math.min(...stock.history);
+                    const maxVal = Math.max(...stock.history);
+                    const range = maxVal - minVal || 1;
+                    return (
+                      <div 
+                        key={i} 
+                        className={cn("flex-1 rounded-t-sm", stock.change >= 0 ? "bg-accent-emerald" : "bg-accent-red")}
+                        style={{ height: `${((h - minVal) / range * 100) + 10}%` }}
+                      />
+                    );
+                  })}
                 </div>
               </motion.div>
             ))}
@@ -158,14 +170,14 @@ export function TrendMarket() {
                 <button 
                   onClick={() => handleBuy(selectedStock)}
                   disabled={balance < selectedStock.price}
-                  className="flex-1 py-4 bg-accent-emerald text-bg-void font-bold rounded-xl hover:opacity-90 disabled:opacity-50 disabled:grayscale transition-all flex items-center justify-center gap-2"
+                  className="flex-1 py-4 bg-accent-emerald text-bg-void font-bold rounded-xl hover:opacity-90 disabled:opacity-50 disabled:grayscale transition-all flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <ShoppingCart className="w-5 h-5" /> Buy Share
                 </button>
                 <button 
                   onClick={() => handleSell(selectedStock)}
                   disabled={!portfolio[selectedStock.symbol] || portfolio[selectedStock.symbol] <= 0}
-                  className="flex-1 py-4 bg-accent-red text-bg-void font-bold rounded-xl hover:opacity-90 disabled:opacity-50 disabled:grayscale transition-all flex items-center justify-center gap-2"
+                  className="flex-1 py-4 bg-accent-red text-bg-void font-bold rounded-xl hover:opacity-90 disabled:opacity-50 disabled:grayscale transition-all flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <TrendingDown className="w-5 h-5" /> Sell Share
                 </button>
@@ -187,7 +199,7 @@ export function TrendMarket() {
                 <div className="h-1.5 w-full bg-bg-secondary rounded-full overflow-hidden">
                    <motion.div 
                      initial={{ width: 0 }}
-                     animate={{ width: `${(totalWealth / 10000) * 100}%` }}
+                     animate={{ width: `${Math.min(100, Math.max(0, (totalWealth / 10000) * 100))}%` }}
                      className="h-full bg-accent-gold"
                    />
                 </div>
@@ -195,9 +207,9 @@ export function TrendMarket() {
              </div>
 
              <div className="space-y-3 pt-4">
-               {Object.entries(portfolio).map(([symbol, count]) => {
+               {Object.entries(safePortfolio).map(([symbol, count]) => {
                  if (count === 0) return null;
-                 const stock = stocks.find(s => s.symbol === symbol);
+                 const stock = safeStocks.find(s => s.symbol === symbol);
                  if (!stock) return null;
                  return (
                    <div key={symbol} className="flex items-center justify-between p-3 bg-bg-secondary/50 rounded-xl border border-border">
@@ -217,7 +229,7 @@ export function TrendMarket() {
                    </div>
                  );
                })}
-               {Object.values(portfolio).every(v => v === 0) && (
+               {Object.values(safePortfolio).every(v => v === 0) && (
                  <div className="text-center py-8 text-text-muted text-sm space-y-2">
                    <Sparkles className="w-8 h-8 mx-auto opacity-20" />
                    <p>No investments yet.<br/>Start by buying your first share!</p>
@@ -245,3 +257,5 @@ export function TrendMarket() {
     </div>
   );
 }
+
+export default TrendMarket;

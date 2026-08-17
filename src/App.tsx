@@ -83,8 +83,8 @@ class ModuleErrorBoundary extends Component<{ children: ReactNode, moduleName: s
   }
 }
 import { Navbar } from "./components/Navbar";
-import { useFirebaseAuth } from "./lib/firebaseAuthContext";
-import { FirebaseAuthBanner, FirebaseAuthSignInWidget } from "./components/FirebaseAuthWidgets";
+import { useStytchAuth } from "./lib/stytchAuthContext";
+import { StytchAuthBanner, StytchAuthSignInWidget } from "./components/StytchAuthWidgets";
 import { StripeBillingCenter } from "./components/StripeBillingCenter";
 import { UpgradeModal } from "./components/UpgradeModal";
 import { Footer } from "./components/Footer";
@@ -188,7 +188,7 @@ export default function App() {
 }
 
 function AppContent() {
-  const firebaseAuth = useFirebaseAuth();
+  const stytchAuth = useStytchAuth();
   const [user, setUser] = useState<LocalUser | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [budget, setBudget] = useState<BudgetPlan | null>(null);
@@ -523,22 +523,22 @@ function AppContent() {
     setIsAuthReady(true);
   }, []);
 
-  // Synchronize Firebase auth state into AppContent user/profile state
+  // Synchronize Stytch auth state into AppContent user/profile state
   useEffect(() => {
-    if (!firebaseAuth.loading) {
-      if (firebaseAuth.user) {
-        const firebaseUserObj = {
-          uid: firebaseAuth.user.uid,
-          displayName: firebaseAuth.user.displayName || "Yash Choubey",
-          email: firebaseAuth.user.email,
-          photoURL: firebaseAuth.user.photoURL
+    if (!stytchAuth.loading) {
+      if (stytchAuth.user) {
+        const stytchUserObj = {
+          uid: stytchAuth.user.userId,
+          displayName: stytchAuth.user.name || "Yash Choubey",
+          email: stytchAuth.user.email,
+          photoURL: stytchAuth.user.avatarUrl || null
         };
-        setUser(firebaseUserObj);
-        localStorage.setItem("ww_user", JSON.stringify(firebaseUserObj));
+        setUser(stytchUserObj);
+        localStorage.setItem("ww_user", JSON.stringify(stytchUserObj));
         localStorage.setItem("ww_sync_enabled", "true");
 
-        // Load profile from Firestore or local storage
-        firebaseAuth.loadUserDataFromFirestore(firebaseAuth.user.uid).then((cloudData) => {
+        // Load profile from database or local storage
+        stytchAuth.loadUserData(stytchAuth.user.userId).then((cloudData) => {
           if (cloudData?.profile) {
             setProfile(cloudData.profile);
             localStorage.setItem("ww_profile", JSON.stringify(cloudData.profile));
@@ -551,27 +551,26 @@ function AppContent() {
             if (savedProfile) {
               try {
                 const parsed = JSON.parse(savedProfile);
-                if (firebaseAuth.user?.displayName) parsed.name = firebaseAuth.user.displayName;
+                if (stytchAuth.user?.name) parsed.name = stytchAuth.user.name;
                 setProfile(parsed);
               } catch {}
             }
           }
         });
       } else {
-        // If user logged out of Firebase and was using Firebase auth
-        if (user && (user.uid.startsWith("firebase_") || user.email)) {
+        if (user && (user.uid.startsWith("stytch_") || user.email)) {
           setUser(null);
           setProfile(null);
           setBudget(null);
         }
       }
     }
-  }, [firebaseAuth.loading, firebaseAuth.user]);
+  }, [stytchAuth.loading, stytchAuth.user]);
 
   // Sync state tracking variables
   const [authEmail, setAuthEmail] = useState("");
   const [authPassword, setAuthPassword] = useState("");
-  const [authMode, setAuthMode] = useState<"guest" | "mongodb_register" | "mongodb_login" | "firebase">("firebase");
+  const [authMode, setAuthMode] = useState<"guest" | "mongodb_register" | "mongodb_login" | "stytch">("stytch");
   const [dbHealth, setDbHealth] = useState<{ status: string, database: string, connectionString?: string } | null>(null);
   const [authError, setAuthError] = useState<string | null>(null);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
@@ -816,7 +815,7 @@ function AppContent() {
     localStorage.removeItem("ww_profile");
     localStorage.removeItem("ww_budget");
     localStorage.removeItem("ww_sync_enabled");
-    firebaseAuth.signOut();
+    stytchAuth.signOut();
     window.location.hash = "#home";
   };
 
@@ -928,12 +927,13 @@ function AppContent() {
             <div className="md:col-span-7">
               <div className="card p-8 border-border relative overflow-hidden space-y-6">
                 {/* Visual tabs to choose auth mechanism */}
+                {/* Visual tabs to choose auth mechanism */}
                 <div className="flex border-b border-border/50">
                   <button
-                    onClick={() => { setAuthMode("firebase"); setAuthError(null); }}
-                    className={`flex-1 pb-3 text-xs uppercase tracking-wider font-extrabold transition-all border-b-2 ${authMode === "firebase" ? "border-accent-gold text-accent-gold" : "border-transparent text-text-muted hover:text-text-primary"}`}
+                    onClick={() => { setAuthMode("stytch"); setAuthError(null); }}
+                    className={`flex-1 pb-3 text-xs uppercase tracking-wider font-extrabold transition-all border-b-2 ${authMode === "stytch" ? "border-accent-gold text-accent-gold" : "border-transparent text-text-muted hover:text-text-primary"}`}
                   >
-                    Google / Firebase
+                    Stytch Passkey & OTP
                   </button>
                   <button
                     onClick={() => { setAuthMode("mongodb_login"); setAuthError(null); }}
@@ -991,16 +991,16 @@ function AppContent() {
                 )}
 
                 <AnimatePresence mode="wait">
-                  {authMode === "firebase" ? (
+                  {authMode === "stytch" ? (
                     <motion.div
-                      key="firebase-auth-card"
+                      key="stytch-auth-card"
                       initial={{ opacity: 0, scale: 0.95 }}
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0 }}
                       className="space-y-6 text-left py-2"
                     >
-                      <FirebaseAuthBanner />
-                      <FirebaseAuthSignInWidget 
+                      <StytchAuthBanner />
+                      <StytchAuthSignInWidget 
                         onGuestSuccess={(guestUser) => {
                           setUser(guestUser);
                           localStorage.setItem("ww_user", JSON.stringify(guestUser));
@@ -1016,28 +1016,60 @@ function AppContent() {
                   ) : authMode === "guest" ? (
                     <motion.div
                       key="guest-card"
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0 }}
-                      className="space-y-4 text-left py-4"
+                      initial={{ opacity: 0, scale: 0.95, y: 15 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                      transition={{ duration: 0.35, ease: "easeOut" }}
+                      className="space-y-4 text-left py-2 [perspective:1000px]"
                     >
-                      <h4 className="text-md font-bold text-text-primary flex items-center gap-2">
-                        <Globe className="w-5 h-5 text-accent-gold" />
-                        Deploy Guest Sandbox Session
-                      </h4>
-                      <p className="text-xs text-text-muted leading-relaxed">
-                        No email authentication required. You can test historical charts, run compound simulations, and formulate a mock budget plan instantly right inside your browser window. 
-                      </p>
-                      <div className="bg-bg-secondary/40 p-3 rounded-lg border border-border/40 text-[10px] text-text-muted font-mono">
-                        💡 NOTE: If you switch browser instances, devices, or purge your cookies, local milestones are deleted. You can register anytime to tether your items to permanent cloud hosting.
+                      {/* 3D-Styled Animated Showcase Card */}
+                      <motion.div
+                        whileHover={{ rotateX: 3, rotateY: -3, scale: 1.01 }}
+                        transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                        className="p-4 rounded-2xl bg-gradient-to-br from-bg-secondary via-bg-secondary/90 to-bg-void border-2 border-accent-gold/40 shadow-[0_10px_30px_rgba(240,180,41,0.15)] space-y-3 relative overflow-hidden [transform-style:preserve-3d]"
+                      >
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-accent-gold/10 rounded-full blur-2xl pointer-events-none" />
+                        
+                        <div className="flex items-center justify-between">
+                          <h4 className="text-sm font-bold text-text-primary flex items-center gap-2">
+                            <span className="p-2 rounded-xl bg-accent-gold/15 text-accent-gold border border-accent-gold/30">
+                              <Globe className="w-4 h-4" />
+                            </span>
+                            <span>Deploy Instant Guest Sandbox</span>
+                          </h4>
+                          <span className="text-[10px] font-mono font-bold text-accent-gold px-2.5 py-0.5 rounded-full bg-accent-gold/15 border border-accent-gold/30">
+                            3D Zero-Latency
+                          </span>
+                        </div>
+
+                        <p className="text-xs text-text-secondary leading-relaxed font-sans">
+                          Instant access to AI portfolio rebalancers, live D3 treemaps, and XPRIZE financial stress-testing models without credentials.
+                        </p>
+
+                        <div className="grid grid-cols-2 gap-2 pt-1 font-mono text-[11px]">
+                          <div className="p-2 rounded-xl bg-bg-void/80 border border-border/80 text-text-muted flex items-center gap-1.5">
+                            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                            <span>100% Offline State</span>
+                          </div>
+                          <div className="p-2 rounded-xl bg-bg-void/80 border border-border/80 text-text-muted flex items-center gap-1.5">
+                            <span className="w-2 h-2 rounded-full bg-accent-gold" />
+                            <span>Full Pro Simulators</span>
+                          </div>
+                        </div>
+                      </motion.div>
+
+                      <div className="bg-bg-secondary/40 p-3 rounded-xl border border-border/40 text-[10px] text-text-muted font-mono">
+                        💡 NOTE: If you purge your cookies, local sandbox data is reset. You can link your cloud database credentials at any time.
                       </div>
                       
-                      <button
+                      <motion.button
+                        whileHover={{ scale: 1.02, y: -2 }}
+                        whileTap={{ scale: 0.98 }}
                         onClick={() => {
                           const tempUid = "guest_" + Math.random().toString(36).substring(2, 11);
                           const guestUser = {
                             uid: tempUid,
-                            displayName: "Guest User",
+                            displayName: "Guest Investor",
                             email: null,
                             photoURL: null
                           };
@@ -1045,19 +1077,44 @@ function AppContent() {
                           localStorage.setItem("ww_user", JSON.stringify(guestUser));
                           localStorage.setItem("ww_sync_enabled", "false");
                           
-                          // Check if local storage already contains profile, otherwise launch onboard modals
+                          // Check if local storage already contains profile, otherwise create and launch onboard modals
                           const savedProfile = localStorage.getItem("ww_profile");
                           if (savedProfile) {
-                            setProfile(JSON.parse(savedProfile));
+                            try {
+                              const parsed = JSON.parse(savedProfile);
+                              if (!parsed.name || parsed.name === "Yash Choubey") {
+                                parsed.name = "Guest Investor";
+                              }
+                              setProfile(parsed);
+                              localStorage.setItem("ww_profile", JSON.stringify(parsed));
+                            } catch {
+                              setShowExpertOnboarding(true);
+                            }
                           } else {
+                            const newGuestProfile: UserProfile = {
+                              uid: tempUid,
+                              name: "Guest Investor",
+                              age: "28",
+                              learningGoal: "Elite Wealth & XPRIZE Monetization",
+                              currency: "INR",
+                              joinDate: new Date().toISOString(),
+                              lastVisit: new Date().toISOString(),
+                              visitDates: [new Date().toISOString().split("T")[0]],
+                              highScore: 100,
+                              netWorth: { assets: 1000000, liabilities: 0 },
+                              gitProvider: "github"
+                            };
+                            setProfile(newGuestProfile);
+                            localStorage.setItem("ww_profile", JSON.stringify(newGuestProfile));
                             setShowExpertOnboarding(true);
                           }
                         }}
-                        className="btn-primary w-full flex items-center justify-center gap-2.5 py-4 text-sm font-bold uppercase tracking-widest text-bg-void cursor-pointer mt-6"
+                        className="btn-primary w-full flex items-center justify-center gap-2.5 py-3.5 text-xs font-mono font-bold uppercase tracking-widest text-bg-void cursor-pointer shadow-lg mt-3"
                       >
+                        <Globe className="w-4 h-4 text-bg-void" />
                         <span>Boot Sandbox Guest Session</span>
                         <ArrowRight className="w-4 h-4 text-bg-void" />
-                      </button>
+                      </motion.button>
                     </motion.div>
                   ) : (
                     <motion.form
