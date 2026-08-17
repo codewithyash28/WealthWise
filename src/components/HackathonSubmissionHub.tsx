@@ -132,7 +132,7 @@ export function HackathonSubmissionHub({ onClose }: HackathonSubmissionHubProps)
     doc.setTextColor(51, 65, 85);
     
     const plRows = [
-      ["Gross Subscription Revenue (Stripe)", `$${financials.mrrRevenue.toLocaleString()}`],
+      ["Gross Subscription Revenue (Instamojo)", `₹${(financials.mrrRevenue * 83).toLocaleString()}`],
       ["Enterprise AI Advisory Licenses", `$${financials.advisoryRevenue.toLocaleString()}`],
       ["Total Gross Revenue", `$${totalGrossRevenue.toLocaleString()}`],
       ["Google Cloud Run Hosting", `-$${financials.cloudHostingCost.toFixed(2)}`],
@@ -451,7 +451,7 @@ export function HackathonSubmissionHub({ onClose }: HackathonSubmissionHubProps)
                   </span>
                 </div>
                 <p className="text-xs text-text-secondary">
-                  Includes full Stripe MRR statement, audited expense ledger, and disclosed marketing CAC spend ($0 organic growth).
+                  Includes full Instamojo MRR statement, audited expense ledger, and disclosed marketing CAC spend ($0 organic growth).
                 </p>
                 <div className="grid grid-cols-2 gap-2 pt-1 font-mono text-xs">
                   <div className="bg-bg-primary p-2.5 rounded-xl border border-border">
@@ -626,7 +626,7 @@ export function HackathonSubmissionHub({ onClose }: HackathonSubmissionHubProps)
                     <td className="py-3.5 px-4 font-bold text-text-primary">Wealth Elite Subscription MRR</td>
                     <td className="py-3.5 px-4 text-emerald-400">Gross Revenue</td>
                     <td className="py-3.5 px-4 text-right font-bold text-emerald-400">${financials.mrrRevenue.toLocaleString()}</td>
-                    <td className="py-3.5 px-4 text-text-muted">{financials.activeClients} Active Subscribers via Stripe</td>
+                    <td className="py-3.5 px-4 text-text-muted">{financials.activeClients} Active Subscribers via Instamojo</td>
                   </tr>
                   <tr className="bg-emerald-500/5">
                     <td className="py-3.5 px-4 font-bold text-text-primary">Enterprise RIA Licensing Fees</td>
@@ -638,7 +638,7 @@ export function HackathonSubmissionHub({ onClose }: HackathonSubmissionHubProps)
                     <td className="py-3.5 px-4">TOTAL GROSS REVENUE</td>
                     <td className="py-3.5 px-4 text-amber-400">Total Top Line</td>
                     <td className="py-3.5 px-4 text-right text-amber-400">${totalGrossRevenue.toLocaleString()}</td>
-                    <td className="py-3.5 px-4 text-text-muted">Stripe / Merchant Dashboard Export</td>
+                    <td className="py-3.5 px-4 text-text-muted">Instamojo Merchant Dashboard Export</td>
                   </tr>
 
                   {/* Expenses */}
@@ -885,7 +885,7 @@ export function HackathonSubmissionHub({ onClose }: HackathonSubmissionHubProps)
                 },
                 {
                   time: "2:00 - 2:45",
-                  title: "Revenue Evidence, Stripe P&L & Customer Proof",
+                  title: "Revenue Evidence, Instamojo P&L & Customer Proof",
                   text: "Switch to Billing (#billing) and Audit Report (#audit-report). Highlight the $17,280 gross revenue, 98.6% net margin, $0 marketing CAC spend, and 416 active subscribers."
                 },
                 {

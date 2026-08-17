@@ -79,7 +79,7 @@ export function VoiceNavigationController({ onNavigate }: VoiceNavigationProps) 
     { keywords: ["open companion", "chat with wexa", "companion", "chat", "socratic", "advisor", "ai"], hash: "#wexa-companion", name: "Wexa Companion" },
     { keywords: ["launch vision agent", "wexa agent", "vision", "receipt", "agent", "execution", "wexa core"], hash: "#wexa-agent", name: "Wexa Execution Agent" },
     { keywords: ["rent vs buy", "lease modeler", "rent", "buy", "lease", "property", "real estate"], hash: "#rent-vs-buy", name: "Rent vs. Buy Modeler" },
-    { keywords: ["launch billing", "open billing", "monetization", "billing", "stripe", "plan", "subscription", "upgrade"], hash: "#billing", name: "Monetization & Billing" }
+    { keywords: ["launch billing", "open billing", "monetization", "billing", "instamojo", "plan", "subscription", "upgrade"], hash: "#billing", name: "Monetization & Billing" }
   ];
 
   // TTS Speech Output function

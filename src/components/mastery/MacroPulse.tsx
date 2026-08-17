@@ -25,7 +25,7 @@ export const MacroPulse = memo(function MacroPulse({ user, onUpdateProfile }: Ma
   const [activeStreamType, setActiveStreamType] = useState<"scenario" | "chat" | null>(null);
   const [streamError, setStreamError] = useState("");
 
-  // Stripe & Premium Gating States
+  // Instamojo & Premium Gating States
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [showSandboxModal, setShowSandboxModal] = useState(false);
   const [sandboxCard, setSandboxCard] = useState("");
@@ -34,7 +34,7 @@ export const MacroPulse = memo(function MacroPulse({ user, onUpdateProfile }: Ma
   const [sandboxCvc, setSandboxCvc] = useState("");
   const [paymentSuccess, setPaymentSuccess] = useState(false);
 
-  // Hook to capture successful return redirects from real Stripe Checkout
+  // Hook to capture successful return redirects from real Instamojo Checkout
   useMemo(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get("payment_success") === "true") {
@@ -49,34 +49,31 @@ export const MacroPulse = memo(function MacroPulse({ user, onUpdateProfile }: Ma
     }
   }, [user, onUpdateProfile]);
 
-  const handlePremiumUpgrade = async () => {
+  const handleTriggerInstamojoCheckout = async () => {
     if (isCheckingOut) return;
     setIsCheckingOut(true);
     setStreamError("");
 
     try {
-      const response = await fetch("/api/stripe/create-checkout-session", {
+      const response = await fetch("/api/instamojo/create-payment", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: user?.name ? `${user.name.toLowerCase().replace(/\s+/g, "")}@example.com` : "mastery@wexa.ai",
-          uid: user?.uid,
+          buyer_name: user?.name || "Wexa User",
+          amount: "799.00",
+          purpose: "Wexa Pro Subscription",
         }),
       });
 
       const data = await response.json();
-      if (data.url) {
-        // Redirect to real Stripe Checkout Session
-        window.location.href = data.url;
-      } else if (data.sandbox) {
-        // Toggle the in-app high-fidelity checkout sandbox simulator
+      if (data.payment_request?.longurl) {
+        window.location.href = data.payment_request.longurl;
+      } else {
         setShowSandboxModal(true);
-      } else if (data.error) {
-        setStreamError(data.error);
       }
     } catch (err: any) {
-      console.error("[Stripe Local Trigger Error]:", err);
-      // Failover safely directly to the Sandbox simulation page
+      console.error("[Instamojo Local Trigger Error]:", err);
       setShowSandboxModal(true);
     } finally {
       setIsCheckingOut(false);
@@ -520,7 +517,7 @@ Keep the analysis concise, structured with bullet points, and elegant. Always en
 
                 <button
                   type="button"
-                  onClick={handlePremiumUpgrade}
+                  onClick={handleTriggerInstamojoCheckout}
                   disabled={isCheckingOut}
                   className="w-full max-w-sm btn-primary py-3 bg-accent-gold hover:bg-accent-gold/90 text-bg-void text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-accent-gold/15"
                 >
@@ -569,7 +566,7 @@ Keep the analysis concise, structured with bullet points, and elegant. Always en
       {/* D3 Interactive Global Inflation Map */}
       <D3GlobalInflationMap activeInflation={inflation} />
 
-      {/* High-Fidelity Stripe Checkout Sandbox Simulator Modal */}
+      {/* High-Fidelity Instamojo Checkout Sandbox Simulator Modal */}
       {showSandboxModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-bg-void/85 backdrop-blur-md p-4">
           <motion.div

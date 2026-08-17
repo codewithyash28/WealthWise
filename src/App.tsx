@@ -83,7 +83,7 @@ class ModuleErrorBoundary extends Component<{ children: ReactNode, moduleName: s
   }
 }
 import { Navbar } from "./components/Navbar";
-import { StripeBillingCenter } from "./components/StripeBillingCenter";
+import { InstamojoBillingCenter } from "./components/InstamojoBillingCenter";
 import { UpgradeModal } from "./components/UpgradeModal";
 import { Footer } from "./components/Footer";
 import { LandingPage } from "./components/LandingPage";
@@ -514,10 +514,13 @@ function AppContent() {
     setIsAuthReady(true);
   }, []);
 
-  // Sync state tracking variables
+  // Sync & Stytch state tracking variables
   const [authEmail, setAuthEmail] = useState("");
   const [authPassword, setAuthPassword] = useState("");
-  const [authMode, setAuthMode] = useState<"guest" | "mongodb_register" | "mongodb_login">("mongodb_login");
+  const [stytchOtpCode, setStytchOtpCode] = useState("");
+  const [stytchStep, setStytchStep] = useState<"email" | "verify">("email");
+  const [stytchMethodId, setStytchMethodId] = useState("");
+  const [authMode, setAuthMode] = useState<"guest" | "mongodb_register" | "mongodb_login" | "stytch">("stytch");
   const [dbHealth, setDbHealth] = useState<{ status: string, database: string, connectionString?: string } | null>(null);
   const [authError, setAuthError] = useState<string | null>(null);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
@@ -875,10 +878,16 @@ function AppContent() {
                 {/* Visual tabs to choose auth mechanism */}
                 <div className="flex border-b border-border/50">
                   <button
+                    onClick={() => { setAuthMode("stytch"); setAuthError(null); }}
+                    className={`flex-1 pb-3 text-xs uppercase tracking-wider font-extrabold transition-all border-b-2 ${authMode === "stytch" ? "border-accent-emerald text-accent-emerald" : "border-transparent text-text-muted hover:text-text-primary"}`}
+                  >
+                    Stytch Auth
+                  </button>
+                  <button
                     onClick={() => { setAuthMode("mongodb_login"); setAuthError(null); }}
                     className={`flex-1 pb-3 text-xs uppercase tracking-wider font-extrabold transition-all border-b-2 ${authMode === "mongodb_login" ? "border-accent-gold text-accent-gold" : "border-transparent text-text-muted hover:text-text-primary"}`}
                   >
-                    Sign In / Restore
+                    Password PIN
                   </button>
                   <button
                     onClick={() => { setAuthMode("guest"); setAuthError(null); }}
@@ -930,7 +939,131 @@ function AppContent() {
                 )}
 
                 <AnimatePresence mode="wait">
-                  {authMode === "guest" ? (
+                  {authMode === "stytch" ? (
+                    <motion.form
+                      key="stytch_form"
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 10 }}
+                      onSubmit={async (e) => {
+                        e.preventDefault();
+                        setIsAuthenticating(true);
+                        setAuthError(null);
+
+                        try {
+                          if (stytchStep === "email") {
+                            const res = await fetch("/api/auth/stytch/otp/send", {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({ email: authEmail })
+                            });
+                            const data = await res.json();
+                            if (!res.ok) throw new Error(data.error || "Failed to send Stytch passcode.");
+
+                            setStytchMethodId(data.method_id);
+                            setStytchStep("verify");
+                            window.dispatchEvent(new CustomEvent('ww-trigger-alert', {
+                              detail: {
+                                type: 'info',
+                                title: 'Stytch Passcode Sent 📩',
+                                message: `Passcode / Magic Link sent to ${authEmail}. Enter passcode below.`
+                              }
+                            }));
+                          } else {
+                            const res = await fetch("/api/auth/stytch/otp/authenticate", {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({
+                                email: authEmail,
+                                code: stytchOtpCode,
+                                method_id: stytchMethodId
+                              })
+                            });
+                            const data = await res.json();
+                            if (!res.ok) throw new Error(data.error || "Invalid Stytch code.");
+
+                            setUser(data.user);
+                            if (data.profile) setProfile(data.profile);
+                            if (data.budget) setBudget(data.budget);
+
+                            localStorage.setItem("ww_user", JSON.stringify(data.user));
+                            if (data.profile) localStorage.setItem("ww_profile", JSON.stringify(data.profile));
+                            if (data.budget) localStorage.setItem("ww_budget", JSON.stringify(data.budget));
+                            localStorage.setItem("ww_sync_enabled", "true");
+
+                            window.dispatchEvent(new CustomEvent('ww-trigger-alert', {
+                              detail: {
+                                type: 'success',
+                                title: 'Stytch Authenticated! 🔒',
+                                message: `Successfully logged in as ${authEmail} via Stytch.`
+                              }
+                            }));
+                          }
+                        } catch (err: any) {
+                          setAuthError(err.message || "Stytch authentication error.");
+                        } finally {
+                          setIsAuthenticating(false);
+                        }
+                      }}
+                      className="space-y-4 text-left"
+                    >
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-bold uppercase tracking-widest text-text-muted flex items-center gap-1.5">
+                          <Mail className="w-3.5 h-3.5 text-accent-emerald" /> Email Address
+                        </label>
+                        <input
+                          type="email"
+                          required
+                          disabled={stytchStep === "verify"}
+                          value={authEmail}
+                          onChange={(e) => setAuthEmail(e.target.value)}
+                          placeholder="e.g. investor@wexa.ai"
+                          className="w-full bg-bg-secondary border border-border/80 focus:border-accent-emerald/40 px-4 py-3 rounded-xl text-text-primary text-sm focus:outline-none transition-colors"
+                        />
+                      </div>
+
+                      {stytchStep === "verify" && (
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] font-bold uppercase tracking-widest text-text-muted flex items-center gap-1.5">
+                            <KeyRound className="w-3.5 h-3.5 text-accent-emerald" /> Stytch Passcode / OTP
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            value={stytchOtpCode}
+                            onChange={(e) => setStytchOtpCode(e.target.value)}
+                            placeholder="Enter 6-digit passcode"
+                            className="w-full bg-bg-secondary border border-border/80 focus:border-accent-emerald/40 px-4 py-3 rounded-xl text-text-primary text-sm focus:outline-none transition-colors font-mono tracking-widest"
+                          />
+                        </div>
+                      )}
+
+                      <button
+                        type="submit"
+                        disabled={isAuthenticating}
+                        className="btn-primary w-full flex items-center justify-center gap-2.5 py-4 text-sm font-bold uppercase tracking-widest text-bg-void cursor-pointer mt-6"
+                      >
+                        {isAuthenticating ? (
+                          <RefreshCw className="w-5 h-5 animate-spin text-bg-void" />
+                        ) : (
+                          <ShieldCheck className="w-5 h-5 text-bg-void" />
+                        )}
+                        <span>
+                          {isAuthenticating ? "Authenticating..." : stytchStep === "email" ? "Send Stytch Passcode" : "Verify & Sign In"}
+                        </span>
+                      </button>
+
+                      {stytchStep === "verify" && (
+                        <button
+                          type="button"
+                          onClick={() => setStytchStep("email")}
+                          className="w-full text-xs text-text-muted hover:text-text-primary underline text-center"
+                        >
+                          Change Email
+                        </button>
+                      )}
+                    </motion.form>
+                  ) : authMode === "guest" ? (
                     <motion.div
                       key="guest-card"
                       initial={{ opacity: 0, scale: 0.95 }}
@@ -1449,7 +1582,7 @@ function AppContent() {
               return (
                 <ModuleErrorBoundary moduleName="Secure Premium Subscription & Billing">
                   <div className="container mx-auto px-6 py-12">
-                    <StripeBillingCenter user={profile} onUpdateProfile={(updated) => {
+                    <InstamojoBillingCenter user={profile} onUpdateProfile={(updated) => {
                       setProfile(updated);
                       localStorage.setItem("ww_profile", JSON.stringify(updated));
                     }} />
