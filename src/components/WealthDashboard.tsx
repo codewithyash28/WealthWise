@@ -32,8 +32,11 @@ import { GrowthTelemetryWidget } from "./GrowthTelemetryWidget";
 import { CommandPalette } from "./CommandPalette";
 import { FinancialGoalsWidget } from "./FinancialGoalsWidget";
 import { EnginePerformanceMonitor } from "./EnginePerformanceMonitor";
+import { AIFinancialHealthScorecard } from "./AIFinancialHealthScorecard";
+import { MacroScenarioStressTester } from "./MacroScenarioStressTester";
 import { AuditLogModal } from "./AuditLogModal";
 import { getAuditLogs, logAuditAction } from "../lib/auditLogger";
+import { SupportedCurrency, formatStandardCurrency } from "../lib/revenueUtils";
 import { useEffect } from "react";
 
 interface WealthDashboardProps {
@@ -1015,6 +1018,16 @@ export const WealthDashboard = memo(function WealthDashboard({ user, budget, onU
 
       {/* Growth Telemetry Widget - Real-time metrics reinforcing autonomous agent value */}
       <GrowthTelemetryWidget />
+
+      {/* AI Financial Health Scorecard (0-100 Score + Real-Time Risk Diagnostics) */}
+      <AIFinancialHealthScorecard 
+        user={user} 
+        budget={budget} 
+        onNavigateToModule={(hash) => { window.location.hash = hash; }}
+      />
+
+      {/* Automated Real-Time Portfolio Stress Testing & Macro-Scenario Simulator */}
+      <MacroScenarioStressTester user={user} />
 
       {/* Autonomous Midnight Auditor - Daily budget drift & portfolio volatility scanner */}
       <MidnightAuditor user={user} budget={budget} />

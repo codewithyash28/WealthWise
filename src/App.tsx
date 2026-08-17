@@ -108,6 +108,8 @@ import { EvidenceEngineModal } from "./components/EvidenceEngineModal";
 import { logAuditAction } from "./lib/auditLogger";
 import { StartupLogoAnimation } from "./components/StartupLogoAnimation";
 import { Logo } from "./components/Logo";
+import { InvestorPitchModeBanner } from "./components/InvestorPitchModeBanner";
+import { SupportedCurrency } from "./lib/revenueUtils";
 import { UserProfile, BudgetPlan, FinancialGoal, Achievement, Portfolio } from "./types";
 import { CURRENCIES, ACHIEVEMENTS } from "./constants";
 import { Tutorial } from "./components/Tutorial";
@@ -200,6 +202,26 @@ function AppContent() {
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
   const [upgradeFeatureTitle, setUpgradeFeatureTitle] = useState("");
   const [isEvidenceEngineOpen, setIsEvidenceEngineOpen] = useState(false);
+  const [isPitchMode, setIsPitchMode] = useState<boolean>(() => {
+    return localStorage.getItem("ww_pitch_mode") === "true";
+  });
+
+  const handleTogglePitchMode = () => {
+    setIsPitchMode(prev => {
+      const next = !prev;
+      localStorage.setItem("ww_pitch_mode", String(next));
+      window.dispatchEvent(new CustomEvent('ww-trigger-alert', {
+        detail: {
+          type: 'success',
+          title: next ? 'Pitch & Demo Mode Activated 🚀' : 'Standard Mode Restored',
+          message: next 
+            ? 'Displaying verified MRR, ARR, and XPRIZE compliance metrics for judges & investors.' 
+            : 'Standard view restored.'
+        }
+      }));
+      return next;
+    });
+  };
 
   useEffect(() => {
     const handleOpenUpgrade = (e: any) => {
@@ -373,151 +395,197 @@ function AppContent() {
   }, []);
 
   useEffect(() => {
-    // Load local user and profile
-    const savedUser = localStorage.getItem("ww_user");
-    const savedProfile = localStorage.getItem("ww_profile");
-    const savedBudget = localStorage.getItem("ww_budget");
+    // Safely load local user, profile, and budget with error recovery
+    try {
+      const savedUser = localStorage.getItem("ww_user");
+      const savedProfile = localStorage.getItem("ww_profile");
+      const savedBudget = localStorage.getItem("ww_budget");
 
-    let parsedProfile: UserProfile | null = null;
+      let parsedProfile: UserProfile | null = null;
 
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
-    }
-    if (savedProfile) {
-      parsedProfile = JSON.parse(savedProfile);
-      if (parsedProfile?.gitProvider) {
-        setGitProvider(parsedProfile.gitProvider);
-      }
-    }
-    if (savedBudget) {
-      setBudget(JSON.parse(savedBudget));
-    }
-
-    // Process daily engagement streak
-    if (parsedProfile) {
-      const todayStr = new Date().toISOString().split('T')[0];
-      const lastVisitStr = parsedProfile.lastVisit;
-      
-      let currentStreak = parsedProfile.streak || 1;
-      let maxStreak = parsedProfile.maxStreak || 1;
-      let achievements = parsedProfile.achievements || [];
-      let streakUpdated = false;
-      let alertToDispatch: { type: string, title: string, message: string } | null = null;
-      let badgeUnlockedName = "";
-
-      if (lastVisitStr) {
-        const lastVisitDate = new Date(lastVisitStr);
-        const todayDate = new Date();
-        
-        // Normalize dates to midnight to compare calendar days
-        const d1 = new Date(lastVisitDate.getFullYear(), lastVisitDate.getMonth(), lastVisitDate.getDate());
-        const d2 = new Date(todayDate.getFullYear(), todayDate.getMonth(), todayDate.getDate());
-        const diffTime = d2.getTime() - d1.getTime();
-        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-
-        if (diffDays === 1) {
-          // Consecutive daily visit
-          currentStreak += 1;
-          maxStreak = Math.max(maxStreak, currentStreak);
-          parsedProfile.streak = currentStreak;
-          parsedProfile.maxStreak = maxStreak;
-          parsedProfile.lastVisit = new Date().toISOString();
-          
-          if (!parsedProfile.visitDates) parsedProfile.visitDates = [];
-          if (!parsedProfile.visitDates.includes(todayStr)) {
-            parsedProfile.visitDates.push(todayStr);
-          }
-          streakUpdated = true;
-          alertToDispatch = {
-            type: "success",
-            title: "Daily Streak Extended! 🔥",
-            message: `Your login streak is now ${currentStreak} days. Keep up the great financial focus!`
-          };
-        } else if (diffDays > 1) {
-          // Broken streak
-          currentStreak = 1;
-          parsedProfile.streak = currentStreak;
-          parsedProfile.lastVisit = new Date().toISOString();
-          
-          if (!parsedProfile.visitDates) parsedProfile.visitDates = [];
-          if (!parsedProfile.visitDates.includes(todayStr)) {
-            parsedProfile.visitDates.push(todayStr);
-          }
-          streakUpdated = true;
-          alertToDispatch = {
-            type: "info",
-            title: "Streak Reset",
-            message: "Your consecutive login streak has reset. Keep visiting daily to earn premium rewards!"
-          };
-        } else {
-          // Same day visit
-          if (parsedProfile.streak === undefined) {
-            parsedProfile.streak = 1;
-            parsedProfile.maxStreak = 1;
-            streakUpdated = true;
-          }
+      if (savedUser) {
+        try {
+          setUser(JSON.parse(savedUser));
+        } catch (e) {
+          console.warn("Could not parse saved user, resetting safely", e);
         }
       } else {
-        // Initial fallback
-        parsedProfile.streak = 1;
-        parsedProfile.maxStreak = 1;
-        parsedProfile.lastVisit = new Date().toISOString();
-        if (!parsedProfile.visitDates) parsedProfile.visitDates = [];
-        if (!parsedProfile.visitDates.includes(todayStr)) {
-          parsedProfile.visitDates.push(todayStr);
-        }
-        streakUpdated = true;
+        // Auto-provision guest session on first run so app loads without stalling
+        const initialGuestUser = {
+          uid: "guest_" + Math.random().toString(36).substring(2, 11),
+          displayName: "Guest Investor",
+          email: null,
+          photoURL: null
+        };
+        setUser(initialGuestUser);
+        localStorage.setItem("ww_user", JSON.stringify(initialGuestUser));
       }
 
-      // Check milestones for streak-based badges
-      const checkAndUnlockBadge = (id: string) => {
-        if (!achievements.some(a => a.id === id)) {
-          const achDef = ACHIEVEMENTS.find(a => a.id === id);
-          if (achDef) {
-            achievements.push({
-              ...achDef,
-              unlockedAt: new Date().toISOString()
-            });
-            streakUpdated = true;
-            badgeUnlockedName = achDef.title;
+      if (savedProfile) {
+        try {
+          parsedProfile = JSON.parse(savedProfile);
+          if (parsedProfile?.gitProvider) {
+            setGitProvider(parsedProfile.gitProvider);
           }
+        } catch (e) {
+          console.warn("Could not parse saved profile", e);
         }
-      };
-
-      if (currentStreak >= 3) {
-        checkAndUnlockBadge('streak_3');
-      }
-      if (currentStreak >= 7) {
-        checkAndUnlockBadge('streak_7');
-      }
-      if (parsedProfile.completedQuests && parsedProfile.completedQuests.length >= 4) {
-        checkAndUnlockBadge('completion_all');
-      }
-
-      if (streakUpdated) {
-        parsedProfile.achievements = achievements;
+      } else {
+        // Default guest investor profile
+        parsedProfile = {
+          uid: "guest_default",
+          name: "Guest Investor",
+          age: "28",
+          learningGoal: "Elite Wealth & XPRIZE Monetization",
+          currency: "INR",
+          joinDate: new Date().toISOString(),
+          lastVisit: new Date().toISOString(),
+          visitDates: [new Date().toISOString().split("T")[0]],
+          streak: 1,
+          maxStreak: 1,
+          highScore: 100,
+          netWorth: { assets: 1000000, liabilities: 0 }
+        };
         setProfile(parsedProfile);
         localStorage.setItem("ww_profile", JSON.stringify(parsedProfile));
-
-        if (alertToDispatch) {
-          const alertCopy = alertToDispatch;
-          const badgeCopy = badgeUnlockedName;
-          setTimeout(() => {
-            window.dispatchEvent(new CustomEvent('ww-trigger-alert', { detail: alertCopy }));
-            if (badgeCopy) {
-              window.dispatchEvent(new CustomEvent('ww-trigger-alert', { 
-                detail: {
-                  type: "success",
-                  title: "New Badge Unlocked! 🏆",
-                  message: `You earned the '${badgeCopy}' achievement badge!`
-                }
-              }));
-            }
-          }, 1500);
-        }
-      } else {
-        setProfile(parsedProfile);
       }
+
+      if (savedBudget) {
+        try {
+          setBudget(JSON.parse(savedBudget));
+        } catch (e) {
+          console.warn("Could not parse saved budget", e);
+        }
+      }
+
+      // Process daily engagement streak
+      if (parsedProfile) {
+        const todayStr = new Date().toISOString().split('T')[0];
+        const lastVisitStr = parsedProfile.lastVisit;
+        
+        let currentStreak = parsedProfile.streak || 1;
+        let maxStreak = parsedProfile.maxStreak || 1;
+        let achievements = parsedProfile.achievements || [];
+        let streakUpdated = false;
+        let alertToDispatch: { type: string, title: string, message: string } | null = null;
+        let badgeUnlockedName = "";
+
+        if (lastVisitStr) {
+          const lastVisitDate = new Date(lastVisitStr);
+          const todayDate = new Date();
+          
+          // Normalize dates to midnight to compare calendar days
+          const d1 = new Date(lastVisitDate.getFullYear(), lastVisitDate.getMonth(), lastVisitDate.getDate());
+          const d2 = new Date(todayDate.getFullYear(), todayDate.getMonth(), todayDate.getDate());
+          const diffTime = d2.getTime() - d1.getTime();
+          const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+          if (diffDays === 1) {
+            // Consecutive daily visit
+            currentStreak += 1;
+            maxStreak = Math.max(maxStreak, currentStreak);
+            parsedProfile.streak = currentStreak;
+            parsedProfile.maxStreak = maxStreak;
+            parsedProfile.lastVisit = new Date().toISOString();
+            
+            if (!parsedProfile.visitDates) parsedProfile.visitDates = [];
+            if (!parsedProfile.visitDates.includes(todayStr)) {
+              parsedProfile.visitDates.push(todayStr);
+            }
+            streakUpdated = true;
+            alertToDispatch = {
+              type: "success",
+              title: "Daily Streak Extended! 🔥",
+              message: `Your login streak is now ${currentStreak} days. Keep up the great financial focus!`
+            };
+          } else if (diffDays > 1) {
+            // Broken streak
+            currentStreak = 1;
+            parsedProfile.streak = currentStreak;
+            parsedProfile.lastVisit = new Date().toISOString();
+            
+            if (!parsedProfile.visitDates) parsedProfile.visitDates = [];
+            if (!parsedProfile.visitDates.includes(todayStr)) {
+              parsedProfile.visitDates.push(todayStr);
+            }
+            streakUpdated = true;
+            alertToDispatch = {
+              type: "info",
+              title: "Streak Reset",
+              message: "Your consecutive login streak has reset. Keep visiting daily to earn premium rewards!"
+            };
+          } else {
+            // Same day visit
+            if (parsedProfile.streak === undefined) {
+              parsedProfile.streak = 1;
+              parsedProfile.maxStreak = 1;
+              streakUpdated = true;
+            }
+          }
+        } else {
+          // Initial fallback
+          parsedProfile.streak = 1;
+          parsedProfile.maxStreak = 1;
+          parsedProfile.lastVisit = new Date().toISOString();
+          if (!parsedProfile.visitDates) parsedProfile.visitDates = [];
+          if (!parsedProfile.visitDates.includes(todayStr)) {
+            parsedProfile.visitDates.push(todayStr);
+          }
+          streakUpdated = true;
+        }
+
+        // Check milestones for streak-based badges
+        const checkAndUnlockBadge = (id: string) => {
+          if (!achievements.some(a => a.id === id)) {
+            const achDef = ACHIEVEMENTS.find(a => a.id === id);
+            if (achDef) {
+              achievements.push({
+                ...achDef,
+                unlockedAt: new Date().toISOString()
+              });
+              streakUpdated = true;
+              badgeUnlockedName = achDef.title;
+            }
+          }
+        };
+
+        if (currentStreak >= 3) {
+          checkAndUnlockBadge('streak_3');
+        }
+        if (currentStreak >= 7) {
+          checkAndUnlockBadge('streak_7');
+        }
+        if (parsedProfile.completedQuests && parsedProfile.completedQuests.length >= 4) {
+          checkAndUnlockBadge('completion_all');
+        }
+
+        if (streakUpdated) {
+          parsedProfile.achievements = achievements;
+          setProfile(parsedProfile);
+          localStorage.setItem("ww_profile", JSON.stringify(parsedProfile));
+
+          if (alertToDispatch) {
+            const alertCopy = alertToDispatch;
+            const badgeCopy = badgeUnlockedName;
+            setTimeout(() => {
+              window.dispatchEvent(new CustomEvent('ww-trigger-alert', { detail: alertCopy }));
+              if (badgeCopy) {
+                window.dispatchEvent(new CustomEvent('ww-trigger-alert', { 
+                  detail: {
+                    type: "success",
+                    title: "New Badge Unlocked! 🏆",
+                    message: `You earned the '${badgeCopy}' achievement badge!`
+                  }
+                }));
+              }
+            }, 1500);
+          }
+        } else {
+          setProfile(parsedProfile);
+        }
+      }
+    } catch (err) {
+      console.warn("Storage recovery applied successfully:", err);
     }
     
     setIsAuthReady(true);
@@ -529,7 +597,7 @@ function AppContent() {
       if (stytchAuth.user) {
         const stytchUserObj = {
           uid: stytchAuth.user.userId,
-          displayName: stytchAuth.user.name || "Yash Choubey",
+          displayName: stytchAuth.user.name || "Guest Investor",
           email: stytchAuth.user.email,
           photoURL: stytchAuth.user.avatarUrl || null
         };
@@ -558,10 +626,16 @@ function AppContent() {
           }
         });
       } else {
-        if (user && (user.uid.startsWith("stytch_") || user.email)) {
-          setUser(null);
-          setProfile(null);
-          setBudget(null);
+        // Only reset if active session was specifically Stytch, never wipe local guest sessions
+        if (user && user.uid.startsWith("stytch_")) {
+          const fallbackGuest = {
+            uid: "guest_" + Math.random().toString(36).substring(2, 11),
+            displayName: "Guest Investor",
+            email: null,
+            photoURL: null
+          };
+          setUser(fallbackGuest);
+          localStorage.setItem("ww_user", JSON.stringify(fallbackGuest));
         }
       }
     }
@@ -570,7 +644,7 @@ function AppContent() {
   // Sync state tracking variables
   const [authEmail, setAuthEmail] = useState("");
   const [authPassword, setAuthPassword] = useState("");
-  const [authMode, setAuthMode] = useState<"guest" | "mongodb_register" | "mongodb_login" | "stytch">("stytch");
+  const [authMode, setAuthMode] = useState<"guest" | "mongodb_register" | "mongodb_login" | "stytch">("guest");
   const [dbHealth, setDbHealth] = useState<{ status: string, database: string, connectionString?: string } | null>(null);
   const [authError, setAuthError] = useState<string | null>(null);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
@@ -845,473 +919,22 @@ function AppContent() {
 
   const renderContent = () => {
     if (currentHash === "#home") return <LandingPage />;
-    
-    if (!user) {
-      return (
-        <div className="container mx-auto px-6 py-12 max-w-4xl space-y-10">
-          {/* Header section with brand message */}
-          <div className="text-center space-y-4">
-            <motion.div 
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              className="inline-flex items-center gap-2 px-3 py-1 bg-accent-gold/10 border border-accent-gold/20 rounded-full text-accent-gold text-xs font-bold font-mono uppercase tracking-wider"
-            >
-              <Database className="w-3.5 h-3.5" />
-              <span>Multi-Device MCP Sessions Active</span>
-            </motion.div>
-            <h2 className="text-4xl md:text-5xl font-display font-black tracking-tight text-text-primary">
-              Access the Elite Wealth Simulator
-            </h2>
-            <p className="text-text-secondary max-w-2xl mx-auto text-sm md:text-base">
-              Synchronize your multi-asset portfolio, customized budgeting plans, and prestigious career badges across devices securely with MongoDB integration.
-            </p>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
-            {/* Left side info panel: Benefits of Sync / Health Monitor */}
-            <div className="md:col-span-5 space-y-6">
-              <div className="card p-6 border-border/80 space-y-5 text-left bg-bg-secondary/10">
-                <h3 className="text-xs font-bold uppercase tracking-widest text-text-primary flex items-center gap-2">
-                  <Server className="w-4 h-4 text-accent-gold" />
-                  Database Diagnostics
-                </h3>
-                
-                <div className="space-y-4 bg-bg-void/40 p-4 rounded-xl border border-border/40 font-mono text-[11px]">
-                  <div className="flex items-center justify-between">
-                    <span className="text-text-muted">Persistence Engine</span>
-                    {isDbChecking ? (
-                      <span className="text-accent-gold flex items-center gap-1">
-                        <RefreshCw className="w-3 h-3 animate-spin" /> Verifying...
-                      </span>
-                    ) : (
-                      <span className="font-extrabold text-accent-blue">{dbHealth?.database || "Sandbox Emulator"}</span>
-                    )}
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-text-muted">Access Protocol</span>
-                    <span className="font-semibold text-text-primary">MongoDB Native Drivers</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-text-muted">Cluster Response</span>
-                    <span className="text-accent-emerald flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-accent-emerald animate-pulse" /> Live & Healthy
-                    </span>
-                  </div>
-                </div>
+    const effectiveProfile = profile || {
+      uid: user?.uid || "guest_investor",
+      name: user?.displayName || "Guest Investor",
+      age: "28",
+      learningGoal: "Elite Wealth & XPRIZE Monetization",
+      currency: "INR",
+      joinDate: new Date().toISOString(),
+      lastVisit: new Date().toISOString(),
+      visitDates: [new Date().toISOString().split("T")[0]],
+      highScore: 100,
+      netWorth: { assets: 5000000, liabilities: 0 },
+      gitProvider: "github" as const
+    };
 
-                <div className="space-y-3 pt-2 text-xs">
-                  <div className="flex items-start gap-3">
-                    <div className="w-5 h-5 rounded bg-accent-gold/10 flex items-center justify-center shrink-0 text-accent-gold font-bold">1</div>
-                    <p className="text-text-muted leading-relaxed"><strong>Restore Budgets:</strong> Log in on any phone, laptop, or desktop and recover your complex monthly cash flows instantly.</p>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="w-5 h-5 rounded bg-accent-emerald/10 flex items-center justify-center shrink-0 text-accent-emerald font-bold">2</div>
-                    <p className="text-text-muted leading-relaxed"><strong>Sync Prestigious Badges:</strong> Keep your high scores, career landmarks, and unlocked achievements safely in the cloud archive.</p>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="w-5 h-5 rounded bg-accent-blue/10 flex items-center justify-center shrink-0 text-accent-blue font-bold">3</div>
-                    <p className="text-text-muted leading-relaxed"><strong>Dynamic Rule Retention:</strong> Custom drop alarm thresholds and market coefficients remain anchored to your profile.</p>
-                  </div>
-                </div>
-
-                <button 
-                  onClick={checkDbHealth}
-                  className="w-full flex items-center justify-center gap-2 py-2 border border-border/80 hover:border-accent-gold/40 text-text-secondary hover:text-text-primary rounded-xl text-[10px] font-mono tracking-wider transition-all uppercase"
-                >
-                  <RefreshCw className="w-3 h-3 text-accent-gold" /> Pinpoint Connection Status
-                </button>
-              </div>
-            </div>
-
-            {/* Right side form card */}
-            <div className="md:col-span-7">
-              <div className="card p-8 border-border relative overflow-hidden space-y-6">
-                {/* Visual tabs to choose auth mechanism */}
-                {/* Visual tabs to choose auth mechanism */}
-                <div className="flex border-b border-border/50">
-                  <button
-                    onClick={() => { setAuthMode("stytch"); setAuthError(null); }}
-                    className={`flex-1 pb-3 text-xs uppercase tracking-wider font-extrabold transition-all border-b-2 ${authMode === "stytch" ? "border-accent-gold text-accent-gold" : "border-transparent text-text-muted hover:text-text-primary"}`}
-                  >
-                    Stytch Passkey & OTP
-                  </button>
-                  <button
-                    onClick={() => { setAuthMode("mongodb_login"); setAuthError(null); }}
-                    className={`flex-1 pb-3 text-xs uppercase tracking-wider font-extrabold transition-all border-b-2 ${authMode === "mongodb_login" ? "border-accent-gold text-accent-gold" : "border-transparent text-text-muted hover:text-text-primary"}`}
-                  >
-                    Sign In / Restore
-                  </button>
-                  <button
-                    onClick={() => { setAuthMode("guest"); setAuthError(null); }}
-                    className={`flex-1 pb-3 text-xs uppercase tracking-wider font-extrabold transition-all border-b-2 ${authMode === "guest" ? "border-accent-gold text-accent-gold" : "border-transparent text-text-muted hover:text-text-primary"}`}
-                  >
-                    Offline Guest
-                  </button>
-                </div>
-
-                {authError && (
-                  <motion.div 
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="p-4 rounded-xl border border-accent-red/20 bg-accent-red/5 text-xs text-accent-red text-left font-mono space-y-2"
-                  >
-                    <div className="flex items-center gap-2 font-bold">
-                      <AlertTriangle className="w-4 h-4 text-accent-red shrink-0" />
-                      <span>{authError}</span>
-                    </div>
-                    <div className="pt-2 border-t border-accent-red/10 flex items-center justify-between">
-                      <span className="text-[11px] text-text-muted">Or enter without sign-in:</span>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const tempUid = "guest_" + Math.random().toString(36).substring(2, 11);
-                          const guestUser = {
-                            uid: tempUid,
-                            displayName: "Yash Choubey",
-                            email: null,
-                            photoURL: null
-                          };
-                          setUser(guestUser);
-                          localStorage.setItem("ww_user", JSON.stringify(guestUser));
-                          localStorage.setItem("ww_sync_enabled", "false");
-                          const savedProfile = localStorage.getItem("ww_profile");
-                          if (savedProfile) {
-                            setProfile(JSON.parse(savedProfile));
-                          } else {
-                            setShowExpertOnboarding(true);
-                          }
-                          setAuthError(null);
-                        }}
-                        className="px-2.5 py-1 rounded-lg bg-accent-gold/15 hover:bg-accent-gold/25 text-accent-gold font-bold text-[10px] uppercase transition-all cursor-pointer"
-                      >
-                        Launch Offline Guest Sandbox →
-                      </button>
-                    </div>
-                  </motion.div>
-                )}
-
-                <AnimatePresence mode="wait">
-                  {authMode === "stytch" ? (
-                    <motion.div
-                      key="stytch-auth-card"
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0 }}
-                      className="space-y-6 text-left py-2"
-                    >
-                      <StytchAuthBanner />
-                      <StytchAuthSignInWidget 
-                        onGuestSuccess={(guestUser) => {
-                          setUser(guestUser);
-                          localStorage.setItem("ww_user", JSON.stringify(guestUser));
-                          const savedProfile = localStorage.getItem("ww_profile");
-                          if (savedProfile) {
-                            setProfile(JSON.parse(savedProfile));
-                          } else {
-                            setShowExpertOnboarding(true);
-                          }
-                        }}
-                      />
-                    </motion.div>
-                  ) : authMode === "guest" ? (
-                    <motion.div
-                      key="guest-card"
-                      initial={{ opacity: 0, scale: 0.95, y: 15 }}
-                      animate={{ opacity: 1, scale: 1, y: 0 }}
-                      exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                      transition={{ duration: 0.35, ease: "easeOut" }}
-                      className="space-y-4 text-left py-2 [perspective:1000px]"
-                    >
-                      {/* 3D-Styled Animated Showcase Card */}
-                      <motion.div
-                        whileHover={{ rotateX: 3, rotateY: -3, scale: 1.01 }}
-                        transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                        className="p-4 rounded-2xl bg-gradient-to-br from-bg-secondary via-bg-secondary/90 to-bg-void border-2 border-accent-gold/40 shadow-[0_10px_30px_rgba(240,180,41,0.15)] space-y-3 relative overflow-hidden [transform-style:preserve-3d]"
-                      >
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-accent-gold/10 rounded-full blur-2xl pointer-events-none" />
-                        
-                        <div className="flex items-center justify-between">
-                          <h4 className="text-sm font-bold text-text-primary flex items-center gap-2">
-                            <span className="p-2 rounded-xl bg-accent-gold/15 text-accent-gold border border-accent-gold/30">
-                              <Globe className="w-4 h-4" />
-                            </span>
-                            <span>Deploy Instant Guest Sandbox</span>
-                          </h4>
-                          <span className="text-[10px] font-mono font-bold text-accent-gold px-2.5 py-0.5 rounded-full bg-accent-gold/15 border border-accent-gold/30">
-                            3D Zero-Latency
-                          </span>
-                        </div>
-
-                        <p className="text-xs text-text-secondary leading-relaxed font-sans">
-                          Instant access to AI portfolio rebalancers, live D3 treemaps, and XPRIZE financial stress-testing models without credentials.
-                        </p>
-
-                        <div className="grid grid-cols-2 gap-2 pt-1 font-mono text-[11px]">
-                          <div className="p-2 rounded-xl bg-bg-void/80 border border-border/80 text-text-muted flex items-center gap-1.5">
-                            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                            <span>100% Offline State</span>
-                          </div>
-                          <div className="p-2 rounded-xl bg-bg-void/80 border border-border/80 text-text-muted flex items-center gap-1.5">
-                            <span className="w-2 h-2 rounded-full bg-accent-gold" />
-                            <span>Full Pro Simulators</span>
-                          </div>
-                        </div>
-                      </motion.div>
-
-                      <div className="bg-bg-secondary/40 p-3 rounded-xl border border-border/40 text-[10px] text-text-muted font-mono">
-                        💡 NOTE: If you purge your cookies, local sandbox data is reset. You can link your cloud database credentials at any time.
-                      </div>
-                      
-                      <motion.button
-                        whileHover={{ scale: 1.02, y: -2 }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={() => {
-                          const tempUid = "guest_" + Math.random().toString(36).substring(2, 11);
-                          const guestUser = {
-                            uid: tempUid,
-                            displayName: "Guest Investor",
-                            email: null,
-                            photoURL: null
-                          };
-                          setUser(guestUser);
-                          localStorage.setItem("ww_user", JSON.stringify(guestUser));
-                          localStorage.setItem("ww_sync_enabled", "false");
-                          
-                          // Check if local storage already contains profile, otherwise create and launch onboard modals
-                          const savedProfile = localStorage.getItem("ww_profile");
-                          if (savedProfile) {
-                            try {
-                              const parsed = JSON.parse(savedProfile);
-                              if (!parsed.name || parsed.name === "Yash Choubey") {
-                                parsed.name = "Guest Investor";
-                              }
-                              setProfile(parsed);
-                              localStorage.setItem("ww_profile", JSON.stringify(parsed));
-                            } catch {
-                              setShowExpertOnboarding(true);
-                            }
-                          } else {
-                            const newGuestProfile: UserProfile = {
-                              uid: tempUid,
-                              name: "Guest Investor",
-                              age: "28",
-                              learningGoal: "Elite Wealth & XPRIZE Monetization",
-                              currency: "INR",
-                              joinDate: new Date().toISOString(),
-                              lastVisit: new Date().toISOString(),
-                              visitDates: [new Date().toISOString().split("T")[0]],
-                              highScore: 100,
-                              netWorth: { assets: 1000000, liabilities: 0 },
-                              gitProvider: "github"
-                            };
-                            setProfile(newGuestProfile);
-                            localStorage.setItem("ww_profile", JSON.stringify(newGuestProfile));
-                            setShowExpertOnboarding(true);
-                          }
-                        }}
-                        className="btn-primary w-full flex items-center justify-center gap-2.5 py-3.5 text-xs font-mono font-bold uppercase tracking-widest text-bg-void cursor-pointer shadow-lg mt-3"
-                      >
-                        <Globe className="w-4 h-4 text-bg-void" />
-                        <span>Boot Sandbox Guest Session</span>
-                        <ArrowRight className="w-4 h-4 text-bg-void" />
-                      </motion.button>
-                    </motion.div>
-                  ) : (
-                    <motion.form
-                      key={authMode}
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0 }}
-                      onSubmit={async (e) => {
-                        e.preventDefault();
-                        if (!authEmail || !authPassword) {
-                          setAuthError("Credential inputs cannot be left blank.");
-                          return;
-                        }
-                        setAuthError(null);
-                        setIsAuthenticating(true);
-
-                        try {
-                          if (authMode === "mongodb_register") {
-                            // Register flow
-                            const tempUid = "ww_" + Math.random().toString(36).substring(2, 15);
-                            const initialProfile: UserProfile = {
-                              uid: tempUid,
-                              name: authEmail.split("@")[0],
-                              age: "28",
-                              learningGoal: "Elite Compound Simulation",
-                              currency: "USD",
-                              joinDate: new Date().toISOString(),
-                              lastVisit: new Date().toISOString(),
-                              visitDates: [new Date().toISOString().split('T')[0]],
-                              highScore: 0,
-                              netWorth: { assets: 0, liabilities: 0 },
-                              gitProvider: "github"
-                            };
-
-                            const initialBudget: BudgetPlan = {
-                              income: 0,
-                              expenses: {
-                                housing: 0,
-                                food: 0,
-                                transport: 0,
-                                health: 0,
-                                entertainment: 0,
-                                education: 0,
-                                loans: 0,
-                                other: 0
-                              },
-                              timestamp: new Date().toISOString()
-                            };
-
-                            const res = await fetch("/api/auth/register", {
-                              method: "POST",
-                              headers: { "Content-Type": "application/json" },
-                              body: JSON.stringify({
-                                email: authEmail,
-                                password: authPassword,
-                                profile: initialProfile,
-                                budget: initialBudget
-                              })
-                            });
-
-                            if (!res.ok) {
-                              const errData = await res.json();
-                              throw new Error(errData.error || "Could not register storage credentials.");
-                            }
-
-                            const data = await res.json();
-                            const newUser = data.user;
-                            
-                            setUser(newUser);
-                            setProfile(data.profile);
-                            setBudget(data.budget);
-                            
-                            localStorage.setItem("ww_user", JSON.stringify(newUser));
-                            localStorage.setItem("ww_profile", JSON.stringify(data.profile));
-                            localStorage.setItem("ww_budget", JSON.stringify(data.budget));
-                            localStorage.setItem("ww_sync_enabled", "true");
-
-                            window.dispatchEvent(new CustomEvent('ww-trigger-alert', {
-                              detail: {
-                                type: 'success',
-                                title: 'Cloud Anchor Created',
-                                message: `Session ${authEmail} securely persisted in MongoDB.`
-                              }
-                            }));
-                          } else {
-                            // Login / Switch Device Flow
-                            const res = await fetch("/api/auth/login", {
-                              method: "POST",
-                              headers: { "Content-Type": "application/json" },
-                              body: JSON.stringify({
-                                email: authEmail,
-                                password: authPassword
-                              })
-                            });
-
-                            if (!res.ok) {
-                              const errData = await res.json();
-                              throw new Error(errData.error || "Device credential validation failed.");
-                            }
-
-                            const data = await res.json();
-                            const recoveredUser = data.user;
-
-                            setUser(recoveredUser);
-                            setProfile(data.profile);
-                            setBudget(data.budget);
-
-                            localStorage.setItem("ww_user", JSON.stringify(recoveredUser));
-                            if (data.profile) localStorage.setItem("ww_profile", JSON.stringify(data.profile));
-                            if (data.budget) localStorage.setItem("ww_budget", JSON.stringify(data.budget));
-                            localStorage.setItem("ww_sync_enabled", "true");
-
-                            window.dispatchEvent(new CustomEvent('ww-trigger-alert', {
-                              detail: {
-                                type: 'success',
-                                title: 'Device Restored Successfully',
-                                message: `All budget plans, badges, and milestones loaded from MongoDB.`
-                              }
-                            }));
-                          }
-                        } catch (err: any) {
-                          setAuthError(err.message || "An authentication exception occurred.");
-                        } finally {
-                          setIsAuthenticating(false);
-                        }
-                      }}
-                      className="space-y-4 text-left"
-                    >
-                      <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold uppercase tracking-widest text-text-muted flex items-center gap-1.5">
-                          <Mail className="w-3.5 h-3.5 text-accent-gold" /> Email Address
-                        </label>
-                        <input
-                          type="email"
-                          required
-                          value={authEmail}
-                          onChange={(e) => setAuthEmail(e.target.value)}
-                          placeholder="e.g. manager@firm.com"
-                          className="w-full bg-bg-secondary border border-border/80 focus:border-accent-gold/40 px-4 py-3 rounded-xl text-text-primary text-sm focus:outline-none transition-colors"
-                        />
-                      </div>
-
-                      <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold uppercase tracking-widest text-text-muted flex items-center gap-1.5">
-                          <KeyRound className="w-3.5 h-3.5 text-accent-gold" /> Security PIN / Password
-                        </label>
-                        <input
-                          type="password"
-                          required
-                          value={authPassword}
-                          onChange={(e) => setAuthPassword(e.target.value)}
-                          placeholder="••••••••"
-                          className="w-full bg-bg-secondary border border-border/80 focus:border-accent-gold/40 px-4 py-3 rounded-xl text-text-primary text-sm focus:outline-none transition-colors"
-                        />
-                      </div>
-
-                      <button
-                        type="submit"
-                        disabled={isAuthenticating}
-                        className="btn-primary w-full flex items-center justify-center gap-2.5 py-4 text-sm font-bold uppercase tracking-widest text-bg-void cursor-pointer mt-6"
-                      >
-                        {isAuthenticating ? (
-                          <RefreshCw className="w-5 h-5 animate-spin text-bg-void" />
-                        ) : (
-                          <ShieldCheck className="w-5 h-5 text-bg-void" />
-                        )}
-                        <span>
-                          {isAuthenticating ? "Verifying..." : authMode === "mongodb_register" ? "Initialize & Cloud Sync" : "Sync From Backup PIN"}
-                        </span>
-                      </button>
-
-                      <div className="flex items-center justify-between pt-2 text-xs font-mono">
-                        <span className="text-text-muted">
-                          {authMode === "mongodb_login" ? "Need a new account?" : "Already registered?"}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setAuthMode(authMode === "mongodb_login" ? "mongodb_register" : "mongodb_login");
-                            setAuthError(null);
-                          }}
-                          className="text-accent-gold hover:underline font-bold cursor-pointer"
-                        >
-                          {authMode === "mongodb_login" ? "Create Backed Account" : "Sign In to Existing"}
-                        </button>
-                      </div>
-                    </motion.form>
-                  )}
-                </AnimatePresence>
-              </div>
-            </div>
-          </div>
-        </div>
-      );
-    }
-
-    if (isLoading || !profile) {
+    if (isLoading) {
       return (
         <div className="container mx-auto px-6 py-12 space-y-12">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
@@ -1345,7 +968,7 @@ function AppContent() {
               return (
                 <ModuleErrorBoundary moduleName="Wexa Autonomous Execution Engine">
                   <div className="container mx-auto px-6 py-12">
-                    <WexaExecutionEngine user={profile} />
+                    <WexaExecutionEngine user={effectiveProfile} />
                   </div>
                 </ModuleErrorBoundary>
               );
@@ -1353,7 +976,7 @@ function AppContent() {
               return (
                 <ModuleErrorBoundary moduleName="Wexa AI Companion & Multimodal Receipt Vision">
                   <div className="container mx-auto px-6 py-12">
-                    <WexaCompanion user={profile} budget={budget} />
+                    <WexaCompanion user={effectiveProfile} budget={budget} />
                   </div>
                 </ModuleErrorBoundary>
               );
@@ -1385,7 +1008,7 @@ function AppContent() {
               return (
                 <ModuleErrorBoundary moduleName="Control Dashboard">
                   <WealthDashboard 
-                    user={profile} 
+                    user={effectiveProfile} 
                     budget={budget} 
                     onUnlockAchievement={unlockAchievement} 
                     onUpdateGitProvider={handleUpdateGitProvider} 
@@ -1402,7 +1025,7 @@ function AppContent() {
                 <ModuleErrorBoundary moduleName="MacroPulse Simulation Engine">
                   <div className="container mx-auto px-6 py-12">
                     <MacroPulse 
-                      user={profile} 
+                      user={effectiveProfile} 
                       onUpdateProfile={(updated) => {
                         setProfile(updated);
                         localStorage.setItem("ww_profile", JSON.stringify(updated));
@@ -1442,26 +1065,26 @@ function AppContent() {
             case "#badges": 
               return (
                 <ModuleErrorBoundary moduleName="Achievement Badging Service">
-                  <div className="container mx-auto px-6 py-12"><Badges user={profile} unlockedAchievements={profile.achievements || []} /></div>
+                  <div className="container mx-auto px-6 py-12"><Badges user={effectiveProfile} unlockedAchievements={effectiveProfile.achievements || []} /></div>
                 </ModuleErrorBoundary>
               );
             case "#docs": 
               return (
                 <ModuleErrorBoundary moduleName="GitOps Rulebook & Case Study">
-                  <div className="container mx-auto px-6 py-12"><CaseStudy user={profile} onUpdateGitProvider={handleUpdateGitProvider} /></div>
+                  <div className="container mx-auto px-6 py-12"><CaseStudy user={effectiveProfile} onUpdateGitProvider={handleUpdateGitProvider} /></div>
                 </ModuleErrorBoundary>
               );
             case "#portfolio": 
               return (
                 <ModuleErrorBoundary moduleName="Interactive Portfolio Balance Matrix">
-                  <PortfolioOverview user={profile} />
+                  <PortfolioOverview user={effectiveProfile} />
                 </ModuleErrorBoundary>
               );
             case "#crypto": 
               return (
                 <ModuleErrorBoundary moduleName="Real-Time Crypto Asset Intelligence">
                   <div className="container mx-auto px-6 py-12">
-                    <CryptoPortfolio user={profile} />
+                    <CryptoPortfolio user={effectiveProfile} />
                   </div>
                 </ModuleErrorBoundary>
               );
@@ -1477,7 +1100,7 @@ function AppContent() {
               return (
                 <ModuleErrorBoundary moduleName="Platform Revenue Audit Center">
                   <div className="container mx-auto px-6 py-12">
-                    <AuditReport user={profile} />
+                    <AuditReport user={effectiveProfile} />
                   </div>
                 </ModuleErrorBoundary>
               );
@@ -1486,10 +1109,10 @@ function AppContent() {
                 <ModuleErrorBoundary moduleName="Instamojo Pro Pricing & Subscription Center">
                   <div className="container mx-auto px-6 py-12">
                     <PricingPage 
-                      userProfile={profile} 
+                      userProfile={effectiveProfile} 
                       onUpgradeSuccess={() => {
-                        if (profile) {
-                          const updated = { ...profile, isPremium: true, plan: "pro" as const };
+                        if (effectiveProfile) {
+                          const updated = { ...effectiveProfile, isPremium: true, plan: "pro" as const };
                           setProfile(updated);
                           localStorage.setItem("ww_profile", JSON.stringify(updated));
                         }
@@ -1501,33 +1124,33 @@ function AppContent() {
             case "#networth": 
               return (
                 <ModuleErrorBoundary moduleName="NetWorth Real-Time Tracker">
-                  <Dashboard user={profile} budget={budget} onUpdateNetWorth={handleUpdateNetWorth} />
+                  <Dashboard user={effectiveProfile} budget={budget} onUpdateNetWorth={handleUpdateNetWorth} />
                 </ModuleErrorBoundary>
               );
             case "#budget": 
               return (
                 <ModuleErrorBoundary moduleName="Interactive Budget Planner">
-                  <BudgetPlanner user={profile} onSave={handleSaveBudget} initialPlan={budget} gitProvider={gitProvider} onUnlockAchievement={unlockAchievement} />
+                  <BudgetPlanner user={effectiveProfile} onSave={handleSaveBudget} initialPlan={budget} gitProvider={gitProvider} onUnlockAchievement={unlockAchievement} />
                 </ModuleErrorBoundary>
               );
             case "#monthly-report":
               return (
                 <ModuleErrorBoundary moduleName="Monthly Financial Variance Report">
                   <div className="container mx-auto px-6 py-12">
-                    <MonthlyFinancialReport user={profile} budget={budget} onUpdateGoals={handleUpdateGoals} />
+                    <MonthlyFinancialReport user={effectiveProfile} budget={budget} onUpdateGoals={handleUpdateGoals} />
                   </div>
                 </ModuleErrorBoundary>
               );
             case "#simulator": 
               return (
                 <ModuleErrorBoundary moduleName="Compound Interest & Lump-Sum Simulator">
-                  <InvestmentSimulator user={profile} onUpdateGoals={handleUpdateGoals} />
+                  <InvestmentSimulator user={effectiveProfile} onUpdateGoals={handleUpdateGoals} />
                 </ModuleErrorBoundary>
               );
             case "#quiz": 
               return (
                 <ModuleErrorBoundary moduleName="Literacy Command Quiz">
-                  <FinancialQuiz onComplete={handleQuizComplete} bestScore={profile.highScore} />
+                  <FinancialQuiz onComplete={handleQuizComplete} bestScore={effectiveProfile.highScore} />
                 </ModuleErrorBoundary>
               );
             case "#quests": 
@@ -1535,7 +1158,7 @@ function AppContent() {
                 <ModuleErrorBoundary moduleName="Financial Quests & Shop">
                   <div className="container mx-auto px-6 py-12">
                     <QuestsHub 
-                      userProfile={profile} 
+                      userProfile={effectiveProfile} 
                       onUpdateProfile={(updated) => {
                         setProfile(updated);
                         localStorage.setItem("ww_profile", JSON.stringify(updated));
@@ -1548,7 +1171,7 @@ function AppContent() {
             case "#scenarios": 
               return (
                 <ModuleErrorBoundary moduleName="Strategic Projection Engine">
-                  <ScenarioSimulator user={profile} budget={budget} onComplete={() => unlockAchievement('simulation_expert')} />
+                  <ScenarioSimulator user={effectiveProfile} budget={budget} onComplete={() => unlockAchievement('simulation_expert')} />
                 </ModuleErrorBoundary>
               );
             case "#resources": 
@@ -1566,14 +1189,14 @@ function AppContent() {
             case "#rebalancer": 
               return (
                 <ModuleErrorBoundary moduleName="Dynamic Asset Rebalancing Engine">
-                  <AssetRebalancer user={profile} onUpdatePortfolio={handleUpdatePortfolio} onUnlockAchievement={unlockAchievement} />
+                  <AssetRebalancer user={effectiveProfile} onUpdatePortfolio={handleUpdatePortfolio} onUnlockAchievement={unlockAchievement} />
                 </ModuleErrorBoundary>
               );
             case "#tax-estimator":
               return (
                 <ModuleErrorBoundary moduleName="Tax Estimator Suite">
                   <div className="container mx-auto px-6 py-12">
-                    <TaxEstimator user={profile} />
+                    <TaxEstimator user={effectiveProfile} />
                   </div>
                 </ModuleErrorBoundary>
               );
@@ -1581,7 +1204,7 @@ function AppContent() {
               return (
                 <ModuleErrorBoundary moduleName="Debt Acceleration Plan">
                   <div className="container mx-auto px-6 py-12">
-                    <DebtPayoff user={profile} />
+                    <DebtPayoff user={effectiveProfile} />
                   </div>
                 </ModuleErrorBoundary>
               );
@@ -1589,7 +1212,7 @@ function AppContent() {
               return (
                 <ModuleErrorBoundary moduleName="Secure Premium Subscription & Billing">
                   <div className="container mx-auto px-6 py-12">
-                    <StripeBillingCenter user={profile} onUpdateProfile={(updated) => {
+                    <StripeBillingCenter user={effectiveProfile} onUpdateProfile={(updated) => {
                       setProfile(updated);
                       localStorage.setItem("ww_profile", JSON.stringify(updated));
                     }} />
@@ -1660,7 +1283,17 @@ function AppContent() {
         onLogoClick={() => setShowSplash(true)}
       />
 
-      <main className="flex-1 pt-24">
+      <div className="pt-16">
+        <InvestorPitchModeBanner
+          isPitchMode={isPitchMode}
+          onTogglePitchMode={handleTogglePitchMode}
+          currency={(profile?.currency as SupportedCurrency) || "INR"}
+          onOpenEvidenceEngine={() => setIsEvidenceEngineOpen(true)}
+          onOpenExecutiveReport={() => { window.location.hash = "#monthly-report"; }}
+        />
+      </div>
+
+      <main className="flex-1">
         {renderContent()}
       </main>
 

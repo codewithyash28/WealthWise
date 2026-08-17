@@ -48,6 +48,17 @@ import {
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { UserProfile } from "../types";
+import {
+  SupportedCurrency,
+  FX_RATES,
+  CURRENCY_SYMBOLS,
+  convertInrToTargetCurrency,
+  convertTargetCurrencyToInr,
+  formatStandardCurrency,
+  formatRevenueValue,
+  computeLinearRegressionForecast,
+  safeHydrateProfile
+} from "../lib/revenueUtils";
 
 interface EvidenceEngineModalProps {
   isOpen: boolean;
@@ -56,7 +67,7 @@ interface EvidenceEngineModalProps {
   onUpdateProfile?: (profile: UserProfile) => void;
 }
 
-export type SupportedCurrency = "INR" | "USD" | "EUR";
+export type { SupportedCurrency };
 
 export interface MonthlyRevenuePoint {
   id?: string;
@@ -73,7 +84,7 @@ export interface MonthlyRevenuePoint {
 }
 
 // Currency Conversion Rates relative to INR (Base)
-const CURRENCY_CONFIG = {
+const CURRENCY_CONFIG: Record<SupportedCurrency, { symbol: string; rate: number; name: string; unit: string; unitDivisor: number; formatLocale: string }> = {
   INR: {
     symbol: "₹",
     rate: 1.0,
@@ -84,7 +95,7 @@ const CURRENCY_CONFIG = {
   },
   USD: {
     symbol: "$",
-    rate: 0.012, // 1 USD = ~83.33 INR
+    rate: 1 / 83.50, // 1 USD = ~83.50 INR
     name: "US Dollar (USD)",
     unit: "k",
     unitDivisor: 1000,
@@ -92,7 +103,7 @@ const CURRENCY_CONFIG = {
   },
   EUR: {
     symbol: "€",
-    rate: 0.011, // 1 EUR = ~90.91 INR
+    rate: 1 / 91.00, // 1 EUR = ~91.00 INR
     name: "Euro (EUR)",
     unit: "k",
     unitDivisor: 1000,
@@ -245,76 +256,71 @@ export function EvidenceEngineModal({ isOpen, onClose, userProfile, onUpdateProf
   const [newMonthLabel, setNewMonthLabel] = useState("");
   const [newMonthTarget, setNewMonthTarget] = useState("2500000");
 
-  // Format Helper for Active Currency
+  // Safe user profile guaranteed to never be null
+  const safeProfile = useMemo(() => {
+    return userProfile || safeHydrateProfile(localStorage.getItem("ww_profile"));
+  }, [userProfile]);
+
   const currCfg = CURRENCY_CONFIG[selectedCurrency];
 
+  // Format Helpers for Active Currency using centralized revenue utility
   const formatVal = (valInInr: number) => {
-    const converted = valInInr * currCfg.rate;
-    if (selectedCurrency === "INR") {
-      return `${currCfg.symbol}${Math.round(converted).toLocaleString("en-IN")}`;
-    }
-    return `${currCfg.symbol}${Math.round(converted).toLocaleString("en-US")}`;
+    return formatRevenueValue(valInInr, selectedCurrency, false);
   };
 
   const formatCompactVal = (valInInr: number) => {
-    const converted = valInInr * currCfg.rate;
-    if (selectedCurrency === "INR") {
-      return `${currCfg.symbol}${(converted / 100000).toFixed(1)}L`;
-    }
-    return `${currCfg.symbol}${(converted / 1000).toFixed(1)}k`;
+    return formatRevenueValue(valInInr, selectedCurrency, true);
   };
 
-  // Dynamic user name from profile (avoids hardcoding)
+  // Dynamic user name from safeProfile (avoids hardcoding)
   const displayUserName = useMemo(() => {
-    if (userProfile?.name && userProfile.name !== "Guest User" && userProfile.name.trim() !== "") {
-      return userProfile.name;
+    if (safeProfile?.name && safeProfile.name !== "Guest User" && safeProfile.name.trim() !== "") {
+      return safeProfile.name;
     }
     return "Guest Investor";
-  }, [userProfile]);
+  }, [safeProfile]);
 
   // Adjust editIndex if it exceeds monthlyData length
   useEffect(() => {
     if (editIndex >= monthlyData.length && monthlyData.length > 0) {
       setEditIndex(monthlyData.length - 1);
     }
-  }, [monthlyData, editIndex]);
+  }, [monthlyData.length, editIndex]);
 
   // Sync profile data when opened
   useEffect(() => {
-    if (userProfile?.userRevenueData) {
-      setUserRevAmount(String(userProfile.userRevenueData.amount || "863460"));
-      setUserRevSource(userProfile.userRevenueData.source || "Pro Subscriptions");
-      setUserRevFrequency(userProfile.userRevenueData.frequency || "monthly");
-      if (userProfile.userRevenueData.notes) setUserRevNotes(userProfile.userRevenueData.notes);
+    if (safeProfile?.userRevenueData) {
+      setUserRevAmount(String(safeProfile.userRevenueData.amount || "863460"));
+      setUserRevSource(safeProfile.userRevenueData.source || "Pro Subscriptions");
+      setUserRevFrequency(safeProfile.userRevenueData.frequency || "monthly");
+      if (safeProfile.userRevenueData.notes) setUserRevNotes(safeProfile.userRevenueData.notes);
     }
-  }, [userProfile]);
+  }, [safeProfile]);
 
-  // Simple Linear Regression & Computed Financial Intelligence Summary
+  // Memoized Linear Regression & Computed Financial Intelligence Summary
   const computedSummary = useMemo(() => {
     let totalGrossRevenue = 0;
     let totalCloudCost = 0;
     let maxMonthlyRevenue = 0;
     let topMonthName = "August 2026";
-    let latestMonthlyRevenue = 0;
-    let totalPaidAccounts = 0;
 
     // Calculate actual total revenue for each entered month
     const actualDataWithTotals = monthlyData.map((pt) => {
-      const totalRev = pt.proSubscriptions + pt.eliteSubscriptions + pt.b2bAdvisoryLicenses + pt.executionFees;
-      const netMarginVal = totalRev - pt.cloudCost;
+      const totalRev = (pt.proSubscriptions || 0) + (pt.eliteSubscriptions || 0) + (pt.b2bAdvisoryLicenses || 0) + (pt.executionFees || 0);
+      const netMarginVal = totalRev - (pt.cloudCost || 0);
       const target = pt.targetRevenue || Math.round(totalRev * 1.08);
       const targetPct = target > 0 ? Math.min(150, Math.round((totalRev / target) * 100)) : 100;
 
       totalGrossRevenue += totalRev;
-      totalCloudCost += pt.cloudCost;
+      totalCloudCost += (pt.cloudCost || 0);
 
       if (totalRev > maxMonthlyRevenue) {
         maxMonthlyRevenue = totalRev;
         topMonthName = pt.month;
       }
 
-      // Convert to active currency for recharts display
-      const rate = currCfg.rate;
+      // Convert to active currency using centralized converter
+      const rate = 1 / (FX_RATES[selectedCurrency] || 1);
       return {
         ...pt,
         totalRevenue: totalRev,
@@ -322,42 +328,26 @@ export function EvidenceEngineModal({ isOpen, onClose, userProfile, onUpdateProf
         targetRevenue: target,
         targetPct,
         // Currency scaled fields for Recharts
-        c_totalRevenue: Math.round(totalRev * rate),
-        c_pro: Math.round(pt.proSubscriptions * rate),
-        c_elite: Math.round(pt.eliteSubscriptions * rate),
-        c_b2b: Math.round(pt.b2bAdvisoryLicenses * rate),
-        c_execution: Math.round(pt.executionFees * rate),
-        c_cloudCost: Math.round(pt.cloudCost * rate),
-        c_target: Math.round(target * rate),
+        c_totalRevenue: Math.round(convertInrToTargetCurrency(totalRev, selectedCurrency)),
+        c_pro: Math.round(convertInrToTargetCurrency(pt.proSubscriptions, selectedCurrency)),
+        c_elite: Math.round(convertInrToTargetCurrency(pt.eliteSubscriptions, selectedCurrency)),
+        c_b2b: Math.round(convertInrToTargetCurrency(pt.b2bAdvisoryLicenses, selectedCurrency)),
+        c_execution: Math.round(convertInrToTargetCurrency(pt.executionFees, selectedCurrency)),
+        c_cloudCost: Math.round(convertInrToTargetCurrency(pt.cloudCost, selectedCurrency)),
+        c_target: Math.round(convertInrToTargetCurrency(target, selectedCurrency)),
       };
     });
 
     const latest = actualDataWithTotals[actualDataWithTotals.length - 1];
-    latestMonthlyRevenue = latest ? latest.totalRevenue : 0;
-    totalPaidAccounts = latest ? latest.paidUsers : 0;
+    const latestMonthlyRevenue = latest ? latest.totalRevenue : 0;
+    const totalPaidAccounts = latest ? latest.paidUsers : 0;
 
     const totalNetProfit = totalGrossRevenue - totalCloudCost;
     const overallGrossMarginPct = totalGrossRevenue > 0 ? ((totalNetProfit / totalGrossRevenue) * 100).toFixed(1) : "92.4";
 
-    // Simple Linear Regression on user revenue data points: y = slope * x + intercept
-    const n = Math.max(1, actualDataWithTotals.length);
-    const yValues = actualDataWithTotals.map((d) => d.totalRevenue);
-    
-    let sumX = 0;
-    let sumY = 0;
-    let sumXY = 0;
-    let sumX2 = 0;
-
-    for (let i = 0; i < n; i++) {
-      sumX += i;
-      sumY += yValues[i];
-      sumXY += i * yValues[i];
-      sumX2 += i * i;
-    }
-
-    const denominator = n * sumX2 - sumX * sumX;
-    const slope = denominator !== 0 ? (n * sumXY - sumX * sumY) / denominator : (yValues[n - 1] - yValues[0]) / Math.max(1, n - 1);
-    const intercept = (sumY - slope * sumX) / n;
+    // Centralized Linear Regression
+    const historicalPoints = actualDataWithTotals.map((d) => d.totalRevenue);
+    const { slope, intercept, forecastPoints, rSquared } = computeLinearRegressionForecast(historicalPoints, 6);
 
     // Overlay linear regression trendline
     const dataWithTrend = actualDataWithTotals.map((pt, i) => {
@@ -365,26 +355,25 @@ export function EvidenceEngineModal({ isOpen, onClose, userProfile, onUpdateProf
       return {
         ...pt,
         growthForecast: fittedLinearTrend,
-        c_growthForecast: Math.round(fittedLinearTrend * currCfg.rate),
+        c_growthForecast: Math.round(convertInrToTargetCurrency(fittedLinearTrend, selectedCurrency)),
       };
     });
 
-    // Extend 6-Month Forward Growth Forecast using linear regression
+    // Extend 6-Month Forward Growth Forecast
     let combinedChartData = [...dataWithTrend];
-    const forecastMonths = [
-      { month: "Sept 2026 (Est.)", key: "2026-09", idx: n },
-      { month: "Oct 2026 (Est.)", key: "2026-10", idx: n + 1 },
-      { month: "Nov 2026 (Est.)", key: "2026-11", idx: n + 2 },
-      { month: "Dec 2026 (Est.)", key: "2026-12", idx: n + 3 },
-      { month: "Jan 2027 (Est.)", key: "2027-01", idx: n + 4 },
-      { month: "Feb 2027 (Est.)", key: "2027-02", idx: n + 5 },
+    const forecastMonthMeta = [
+      { month: "Sept 2026 (Est.)", key: "2026-09" },
+      { month: "Oct 2026 (Est.)", key: "2026-10" },
+      { month: "Nov 2026 (Est.)", key: "2026-11" },
+      { month: "Dec 2026 (Est.)", key: "2026-12" },
+      { month: "Jan 2027 (Est.)", key: "2027-01" },
+      { month: "Feb 2027 (Est.)", key: "2027-02" },
     ];
 
     if (includeForwardProjections) {
-      forecastMonths.forEach((fm, fIdx) => {
-        const projectedRev = Math.max(0, Math.round(slope * fm.idx + intercept));
-        const estimatedPaidUsers = Math.round(totalPaidAccounts + (fIdx + 1) * (totalPaidAccounts / Math.max(1, n)));
-        const rate = currCfg.rate;
+      forecastPoints.forEach((projectedRev, fIdx) => {
+        const fm = forecastMonthMeta[fIdx];
+        const estimatedPaidUsers = Math.round(totalPaidAccounts + (fIdx + 1) * (totalPaidAccounts / Math.max(1, actualDataWithTotals.length)));
         const projectedTarget = Math.round(projectedRev * 1.05);
 
         combinedChartData.push({
@@ -401,14 +390,14 @@ export function EvidenceEngineModal({ isOpen, onClose, userProfile, onUpdateProf
           targetPct: 95,
           netMarginVal: Math.round(projectedRev * 0.976),
           growthForecast: projectedRev,
-          c_totalRevenue: Math.round(projectedRev * rate),
-          c_pro: Math.round(projectedRev * 0.42 * rate),
-          c_elite: Math.round(projectedRev * 0.24 * rate),
-          c_b2b: Math.round(projectedRev * 0.24 * rate),
-          c_execution: Math.round(projectedRev * 0.10 * rate),
-          c_cloudCost: Math.round(projectedRev * 0.024 * rate),
-          c_target: Math.round(projectedTarget * rate),
-          c_growthForecast: Math.round(projectedRev * rate),
+          c_totalRevenue: Math.round(convertInrToTargetCurrency(projectedRev, selectedCurrency)),
+          c_pro: Math.round(convertInrToTargetCurrency(projectedRev * 0.42, selectedCurrency)),
+          c_elite: Math.round(convertInrToTargetCurrency(projectedRev * 0.24, selectedCurrency)),
+          c_b2b: Math.round(convertInrToTargetCurrency(projectedRev * 0.24, selectedCurrency)),
+          c_execution: Math.round(convertInrToTargetCurrency(projectedRev * 0.10, selectedCurrency)),
+          c_cloudCost: Math.round(convertInrToTargetCurrency(projectedRev * 0.024, selectedCurrency)),
+          c_target: Math.round(convertInrToTargetCurrency(projectedTarget, selectedCurrency)),
+          c_growthForecast: Math.round(convertInrToTargetCurrency(projectedRev, selectedCurrency)),
           isProjected: true,
         });
       });
@@ -417,7 +406,8 @@ export function EvidenceEngineModal({ isOpen, onClose, userProfile, onUpdateProf
     // Month-over-Month growth
     const firstRev = actualDataWithTotals[0]?.totalRevenue || 1;
     const latestRev = actualDataWithTotals[actualDataWithTotals.length - 1]?.totalRevenue || 1;
-    const totalGrowthMultiplier = ((latestRev / firstRev)).toFixed(1);
+    const totalGrowthMultiplier = (latestRev / firstRev).toFixed(1);
+    const n = Math.max(1, actualDataWithTotals.length);
     const compoundMonthlyRate = n > 1 ? ((Math.pow(latestRev / firstRev, 1 / (n - 1)) - 1) * 100).toFixed(1) : "0.0";
 
     return {
@@ -434,8 +424,38 @@ export function EvidenceEngineModal({ isOpen, onClose, userProfile, onUpdateProf
       totalGrowthMultiplier,
       compoundMonthlyRate,
       linearSlopeMonthly: Math.round(slope),
+      rSquared: (rSquared * 100).toFixed(1),
     };
-  }, [monthlyData, includeForwardProjections, selectedCurrency, currCfg]);
+  }, [monthlyData, includeForwardProjections, selectedCurrency]);
+
+  // Memoized Selector for Key Metric Cards
+  const keyMetricsSelector = useMemo(() => {
+    const annualRunRateInr = computedSummary.latestMonthlyRevenue * 12;
+    return {
+      mrrFormatted: formatVal(computedSummary.latestMonthlyRevenue),
+      arrFormatted: formatVal(annualRunRateInr),
+      netProfitFormatted: formatVal(computedSummary.totalNetProfit),
+      grossRevenueFormatted: formatVal(computedSummary.totalGrossRevenue),
+      cloudCostFormatted: formatVal(computedSummary.totalCloudCost),
+      slopeFormatted: `+${formatVal(computedSummary.linearSlopeMonthly)}/mo`,
+      paidUsers: computedSummary.totalPaidAccounts.toLocaleString(),
+      marginPct: `${computedSummary.overallGrossMarginPct}%`,
+    };
+  }, [computedSummary, formatVal]);
+
+  // Memoized Selector for Revenue Stream Breakdown
+  const revenueBreakdownSelector = useMemo(() => {
+    const latest = monthlyData[monthlyData.length - 1] || DEFAULT_REVENUE_DATA[0];
+    const total = (latest.proSubscriptions || 0) + (latest.eliteSubscriptions || 0) + (latest.b2bAdvisoryLicenses || 0) + (latest.executionFees || 0);
+    const safeTotal = total > 0 ? total : 1;
+
+    return [
+      { name: "Pro Subscriptions (₹1,599/mo)", rawInr: latest.proSubscriptions, pct: Math.round((latest.proSubscriptions / safeTotal) * 100), color: "#f0b429" },
+      { name: "WealthWise Elite Tier (₹4,099/mo)", rawInr: latest.eliteSubscriptions, pct: Math.round((latest.eliteSubscriptions / safeTotal) * 100), color: "#10b981" },
+      { name: "B2B RIA Enterprise API (₹24,999/mo)", rawInr: latest.b2bAdvisoryLicenses, pct: Math.round((latest.b2bAdvisoryLicenses / safeTotal) * 100), color: "#38bdf8" },
+      { name: "Autonomous Execution Fees", rawInr: latest.executionFees, pct: Math.round((latest.executionFees / safeTotal) * 100), color: "#a855f7" },
+    ];
+  }, [monthlyData]);
 
   // Handle Editing Month Fields
   const handleUpdateMonthField = (field: keyof MonthlyRevenuePoint, value: number) => {
@@ -531,6 +551,62 @@ export function EvidenceEngineModal({ isOpen, onClose, userProfile, onUpdateProf
     setTimeout(() => setIsSavedNotice(false), 2500);
   };
 
+  // Helper to instantly apply and save preset values
+  const handleApplyPreset = (amount: string, source: string, frequency: "monthly" | "annual", notes: string) => {
+    setUserRevAmount(amount);
+    setUserRevSource(source);
+    setUserRevFrequency(frequency);
+    setUserRevNotes(notes);
+
+    const numAmount = parseFloat(amount) || 0;
+    const revenuePayload = {
+      amount: numAmount,
+      source,
+      frequency,
+      notes,
+      currency: selectedCurrency,
+      lastUpdated: new Date().toISOString(),
+    };
+
+    localStorage.setItem("ww_user_revenue_profile", JSON.stringify(revenuePayload));
+
+    const currentProfileObj: UserProfile = safeHydrateProfile(localStorage.getItem("ww_profile"));
+    currentProfileObj.name = displayUserName;
+    currentProfileObj.currency = selectedCurrency;
+    currentProfileObj.userRevenueData = revenuePayload;
+    localStorage.setItem("ww_profile", JSON.stringify(currentProfileObj));
+    if (onUpdateProfile) onUpdateProfile(currentProfileObj);
+
+    // Synchronize into monthly data immediately
+    setMonthlyData((prev) => {
+      const updated = [...prev];
+      const targetIdx = Math.max(0, updated.length - 1);
+      const targetRev = numAmount > 0 ? numAmount : 2053560;
+      updated[targetIdx] = {
+        ...updated[targetIdx],
+        proSubscriptions: Math.round(targetRev * 0.42),
+        eliteSubscriptions: Math.round(targetRev * 0.24),
+        b2bAdvisoryLicenses: Math.round(targetRev * 0.24),
+        executionFees: Math.round(targetRev * 0.10),
+      };
+      localStorage.setItem("ww_evidence_revenue_data_inr", JSON.stringify(updated));
+      return updated;
+    });
+
+    setIsProfileSavedNotice(true);
+    setTimeout(() => setIsProfileSavedNotice(false), 2500);
+
+    window.dispatchEvent(
+      new CustomEvent("ww-trigger-alert", {
+        detail: {
+          type: "success",
+          title: "Preset Applied & Saved! ⚡",
+          message: `Loaded ${formatVal(numAmount)} (${frequency}) from ${source} into profile and dynamic forecast models.`,
+        },
+      })
+    );
+  };
+
   // Save Intake Form to User Profile
   const handleSaveRevenueToProfile = () => {
     const numAmount = parseFloat(userRevAmount) || 0;
@@ -545,40 +621,9 @@ export function EvidenceEngineModal({ isOpen, onClose, userProfile, onUpdateProf
 
     localStorage.setItem("ww_user_revenue_profile", JSON.stringify(revenuePayload));
 
-    const savedProfileStr = localStorage.getItem("ww_profile");
-    let currentProfileObj: UserProfile;
-    if (savedProfileStr) {
-      try {
-        currentProfileObj = JSON.parse(savedProfileStr);
-      } catch {
-        currentProfileObj = userProfile || {
-          uid: "ww_investor_session",
-          name: displayUserName,
-          age: "28",
-          learningGoal: "Elite Wealth & XPRIZE Monetization",
-          currency: selectedCurrency,
-          joinDate: new Date().toISOString(),
-          lastVisit: new Date().toISOString(),
-          visitDates: [new Date().toISOString().split("T")[0]],
-          highScore: 100,
-          netWorth: { assets: 1000000, liabilities: 0 }
-        };
-      }
-    } else {
-      currentProfileObj = userProfile || {
-        uid: "ww_investor_session",
-        name: displayUserName,
-        age: "28",
-        learningGoal: "Elite Wealth & XPRIZE Monetization",
-        currency: selectedCurrency,
-        joinDate: new Date().toISOString(),
-        lastVisit: new Date().toISOString(),
-        visitDates: [new Date().toISOString().split("T")[0]],
-        highScore: 100,
-        netWorth: { assets: 1000000, liabilities: 0 }
-      };
-    }
-
+    const currentProfileObj: UserProfile = safeHydrateProfile(localStorage.getItem("ww_profile"));
+    currentProfileObj.name = displayUserName;
+    currentProfileObj.currency = selectedCurrency;
     currentProfileObj.userRevenueData = revenuePayload;
     localStorage.setItem("ww_profile", JSON.stringify(currentProfileObj));
     if (onUpdateProfile) onUpdateProfile(currentProfileObj);
@@ -966,12 +1011,7 @@ export function EvidenceEngineModal({ isOpen, onClose, userProfile, onUpdateProf
                       <span className="text-text-muted font-bold">Quick Presets:</span>
                       <button
                         type="button"
-                        onClick={() => {
-                          setUserRevAmount("5000000"); // 5,000k (50 Lakh)
-                          setUserRevSource("B2B RIA Enterprise Suite");
-                          setUserRevFrequency("monthly");
-                          setUserRevNotes("Budget scale 5,000k target portfolio & RIA distribution");
-                        }}
+                        onClick={() => handleApplyPreset("5000000", "B2B RIA Enterprise Suite", "monthly", "Budget scale 5,000k target portfolio & RIA distribution")}
                         className="px-2 py-1 rounded-lg bg-accent-gold/15 hover:bg-accent-gold/25 border border-accent-gold/40 text-accent-gold font-bold transition-all cursor-pointer"
                         title="Load 5,000k (50L) Budget Scale"
                       >
@@ -979,12 +1019,7 @@ export function EvidenceEngineModal({ isOpen, onClose, userProfile, onUpdateProf
                       </button>
                       <button
                         type="button"
-                        onClick={() => {
-                          setUserRevAmount("900000"); // 9k (900k / 9 Lakh)
-                          setUserRevSource("Pro Subscriptions");
-                          setUserRevFrequency("monthly");
-                          setUserRevNotes("Optimized 9k Monthly Profit / Run-Rate Model");
-                        }}
+                        onClick={() => handleApplyPreset("900000", "Pro Subscriptions", "monthly", "Optimized 9k Monthly Profit / Run-Rate Model")}
                         className="px-2 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/40 text-emerald-400 font-bold transition-all cursor-pointer"
                         title="Load 9k Monthly Profit / Run-rate"
                       >
@@ -992,11 +1027,7 @@ export function EvidenceEngineModal({ isOpen, onClose, userProfile, onUpdateProf
                       </button>
                       <button
                         type="button"
-                        onClick={() => {
-                          setUserRevAmount("863460");
-                          setUserRevSource("Pro Subscriptions");
-                          setUserRevFrequency("monthly");
-                        }}
+                        onClick={() => handleApplyPreset("863460", "Pro Subscriptions", "monthly", "Organic developer acquisition & FinTech cohort")}
                         className="px-2 py-1 rounded-lg bg-bg-tertiary hover:bg-border border border-border text-text-muted hover:text-text-primary transition-all cursor-pointer"
                       >
                         Default Cohort
@@ -1450,24 +1481,14 @@ export function EvidenceEngineModal({ isOpen, onClose, userProfile, onUpdateProf
                       <div className="flex flex-wrap items-center gap-1.5 pt-1">
                         <button
                           type="button"
-                          onClick={() => {
-                            setUserRevAmount("5000000");
-                            setUserRevSource("B2B RIA Enterprise Suite");
-                            setUserRevFrequency("monthly");
-                            setUserRevNotes("Budget: 5,000k portfolio allocation model");
-                          }}
+                          onClick={() => handleApplyPreset("5000000", "B2B RIA Enterprise Suite", "monthly", "Budget: 5,000k portfolio allocation model")}
                           className="px-2 py-0.5 rounded bg-accent-gold/20 border border-accent-gold/40 text-[10px] text-accent-gold font-bold hover:bg-accent-gold/30 cursor-pointer"
                         >
                           ⚡ Budget: 5,000k
                         </button>
                         <button
                           type="button"
-                          onClick={() => {
-                            setUserRevAmount("900000");
-                            setUserRevSource("Pro Subscriptions");
-                            setUserRevFrequency("monthly");
-                            setUserRevNotes("Profit: 9k / MRR optimization model");
-                          }}
+                          onClick={() => handleApplyPreset("900000", "Pro Subscriptions", "monthly", "Profit: 9k / MRR optimization model")}
                           className="px-2 py-0.5 rounded bg-emerald-500/20 border border-emerald-500/40 text-[10px] text-emerald-400 font-bold hover:bg-emerald-500/30 cursor-pointer"
                         >
                           ⚡ Profit: 9k

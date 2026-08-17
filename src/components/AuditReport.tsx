@@ -9,6 +9,7 @@ import { jsPDF } from "jspdf";
 import { formatCurrency, cn } from "../lib/utils";
 import { CURRENCIES } from "../constants";
 import { UserProfile } from "../types";
+import { SupportedCurrency, formatStandardCurrency } from "../lib/revenueUtils";
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid, PieChart, Pie, Cell } from "recharts";
 
 interface Transaction {
@@ -30,7 +31,8 @@ interface AuditReportProps {
 }
 
 export function AuditReport({ user }: AuditReportProps) {
-  const currency = CURRENCIES[user.currency] || CURRENCIES.USD;
+  const targetCurrency: SupportedCurrency = (user?.currency as SupportedCurrency) || "USD";
+  const currency = CURRENCIES[user?.currency] || CURRENCIES.USD;
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<"ALL" | "SUCCESS" | "PENDING">("ALL");
   const [isAuditing, setIsAuditing] = useState(false);
@@ -567,7 +569,7 @@ export function AuditReport({ user }: AuditReportProps) {
           </div>
           <div className="mt-4">
             <span className="text-3xl font-mono font-bold text-text-primary">
-              {formatCurrency(totalRevenue, "USD", "en-US")}
+              {formatStandardCurrency(totalRevenue, targetCurrency)}
             </span>
             <p className="text-[10px] text-accent-emerald mt-1 font-mono flex items-center gap-1">
               <ArrowUpRight className="w-3.5 h-3.5" /> +28.4% MoM Growth
@@ -585,7 +587,7 @@ export function AuditReport({ user }: AuditReportProps) {
           </div>
           <div className="mt-4">
             <span className="text-3xl font-mono font-bold text-accent-emerald">
-              {formatCurrency(netProfits, "USD", "en-US")}
+              {formatStandardCurrency(netProfits, targetCurrency)}
             </span>
             <p className="text-[10px] text-text-muted mt-1 font-mono">
               Net margin: {((netProfits / (totalRevenue || 1)) * 100).toFixed(1)}% after expenses
@@ -603,7 +605,7 @@ export function AuditReport({ user }: AuditReportProps) {
           </div>
           <div className="mt-4">
             <span className="text-3xl font-mono font-bold text-text-primary">
-              {formatCurrency(totalApiCosts, "USD", "en-US")}
+              {formatStandardCurrency(totalApiCosts, targetCurrency)}
             </span>
             <p className="text-[10px] text-text-muted mt-1 font-mono">
               Mocked tokens/context costs
@@ -621,7 +623,7 @@ export function AuditReport({ user }: AuditReportProps) {
           </div>
           <div className="mt-4">
             <span className="text-3xl font-mono font-bold text-text-primary">
-              {formatCurrency(totalGatewayFees, "USD", "en-US")}
+              {formatStandardCurrency(totalGatewayFees, targetCurrency)}
             </span>
             <p className="text-[10px] text-text-muted mt-1 font-mono">
               Standard secure routing fees
