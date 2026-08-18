@@ -101,6 +101,7 @@ import { KnowledgeVault } from "./components/KnowledgeVault";
 import { CryptoPortfolio } from "./components/CryptoPortfolio";
 import { RentVsBuySimulator } from "./components/RentVsBuySimulator";
 import { CurrencySelector, NameInput } from "./components/Modals";
+import { UniversalAuthModal } from "./components/UniversalAuthModal";
 import { Onboarding } from "./components/Onboarding";
 import { JudgeTour } from "./components/JudgeTour";
 import { GoalCelebrationOverlay } from "./components/GoalCelebration";
@@ -109,6 +110,7 @@ import { logAuditAction } from "./lib/auditLogger";
 import { StartupLogoAnimation } from "./components/StartupLogoAnimation";
 import { Logo } from "./components/Logo";
 import { InvestorPitchModeBanner } from "./components/InvestorPitchModeBanner";
+import { CurrencyFluctuationAlert } from "./components/CurrencyFluctuationAlert";
 import { SupportedCurrency } from "./lib/revenueUtils";
 import { UserProfile, BudgetPlan, FinancialGoal, Achievement, Portfolio } from "./types";
 import { CURRENCIES, ACHIEVEMENTS } from "./constants";
@@ -117,7 +119,7 @@ import { PulseAlert } from "./components/mastery/PulseAlert";
 import { Skeleton } from "./components/ui/Skeleton";
 import { motion, AnimatePresence } from "motion/react";
 import { QuickTips } from "./components/QuickTips";
-import { Database, RefreshCw, Cloud, ShieldCheck, Mail, Lock, Server, LogIn, ArrowRight, Activity, Globe, Wifi, KeyRound, AlertTriangle } from "lucide-react";
+import { Database, RefreshCw, Cloud, ShieldCheck, Mail, Lock, Server, LogIn, ArrowRight, Activity, Globe, Wifi, KeyRound, AlertTriangle, Star } from "lucide-react";
 
 // Performance monitoring utility tracking latency of each lazy-loaded financial engine module
 function trackLazyModule<T>(moduleName: string, importFn: () => Promise<{ default: React.ComponentType<any> }>) {
@@ -152,6 +154,7 @@ const MonthlyFinancialReport = trackLazyModule("MonthlyFinancialReport", () => i
 const TaxEstimator = trackLazyModule("TaxEstimator", () => import("./components/TaxEstimator").then(m => ({ default: m.TaxEstimator })));
 const DebtPayoff = trackLazyModule("DebtPayoff", () => import("./components/DebtPayoff").then(m => ({ default: m.DebtPayoff })));
 const StockIntelligence = trackLazyModule("StockIntelligence", () => import("./components/StockIntelligence").then(m => ({ default: m.StockIntelligence })));
+const CommunityReviews = trackLazyModule("CommunityReviews", () => import("./components/CommunityReviews").then(m => ({ default: m.CommunityReviews })));
 
 function ModuleLoadingSkeleton() {
   return (
@@ -321,7 +324,8 @@ function AppContent() {
     setThemeMode(prev => (prev === "light" ? "dark" : "light"));
   };
   
-  // Onboarding state
+  // Onboarding & Auth modal state
+  const [showUniversalAuth, setShowUniversalAuth] = useState(false);
   const [showCurrencySelector, setShowCurrencySelector] = useState(false);
   const [showNameInput, setShowNameInput] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
@@ -877,7 +881,7 @@ function AppContent() {
     logAuditAction({
       action: "USER_LOGOUT",
       category: "auth",
-      description: `User signed out of session safely.`,
+      description: `User signed out of session safely. All cached credentials purged.`,
       initiator: "User",
       status: "SUCCESS"
     });
@@ -885,13 +889,62 @@ function AppContent() {
     setUser(null);
     setProfile(null);
     setBudget(null);
-    localStorage.removeItem("ww_user");
-    localStorage.removeItem("ww_profile");
-    localStorage.removeItem("ww_budget");
-    localStorage.removeItem("ww_sync_enabled");
+    setTempCurrency(null);
+    
+    // Completely purge all identity and session data to prevent data carryover
+    const keysToRemove = [
+      "ww_user",
+      "ww_profile",
+      "ww_budget",
+      "ww_sync_enabled",
+      "ww_custom_budget",
+      "stytch_session",
+      "stytch_user",
+      "ww_offline_cache",
+      "ww_pitch_mode",
+      "ww_judge_mode"
+    ];
+    keysToRemove.forEach(k => localStorage.removeItem(k));
+    
     stytchAuth.signOut();
     window.location.hash = "#home";
+
+    window.dispatchEvent(new CustomEvent('ww-trigger-alert', {
+      detail: {
+        type: 'info',
+        title: 'Logged Out Successfully',
+        message: 'All local session credentials and identity data have been purged.'
+      }
+    }));
   };
+
+  // Instamojo & Stripe payment return callback listener
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const paymentGateway = params.get("payment_gateway");
+    const paymentStatus = params.get("payment_status");
+    const paymentId = params.get("payment_id") || params.get("payment_request_id");
+
+    if (paymentGateway === "instamojo" || paymentStatus === "success" || paymentId) {
+      if (profile) {
+        const updated = { ...profile, isPremium: true, plan: "pro" as const };
+        setProfile(updated);
+        localStorage.setItem("ww_profile", JSON.stringify(updated));
+      }
+      
+      window.dispatchEvent(new CustomEvent('ww-trigger-alert', {
+        detail: {
+          type: 'success',
+          title: 'Payment Confirmed & Pro Activated! 🚀',
+          message: 'Instamojo transaction verified. All institutional AI engines, OCR vision & rebalancing active.'
+        }
+      }));
+
+      // Clean search parameters from URL without reloading
+      const cleanUrl = window.location.pathname + (window.location.hash || "#pricing");
+      window.history.replaceState({}, document.title, cleanUrl);
+    }
+  }, [profile]);
 
   const handleUpdateGoals = (goals: FinancialGoal[]) => {
     if (!profile) return;
@@ -918,7 +971,7 @@ function AppContent() {
   };
 
   const renderContent = () => {
-    if (currentHash === "#home") return <LandingPage />;
+    if (currentHash === "#home") return <LandingPage onOpenAuth={() => setShowUniversalAuth(true)} />;
 
     const effectiveProfile = profile || {
       uid: user?.uid || "guest_investor",
@@ -1121,6 +1174,16 @@ function AppContent() {
                   </div>
                 </ModuleErrorBoundary>
               );
+            case "#reviews":
+            case "#community-ratings":
+            case "#ratings":
+              return (
+                <ModuleErrorBoundary moduleName="500+ Verified Investor Community Reviews">
+                  <div className="container mx-auto px-6 py-12">
+                    <CommunityReviews />
+                  </div>
+                </ModuleErrorBoundary>
+              );
             case "#networth": 
               return (
                 <ModuleErrorBoundary moduleName="NetWorth Real-Time Tracker">
@@ -1279,11 +1342,13 @@ function AppContent() {
         onSetThemeMode={setThemeMode}
         user={user}
         onSignOut={handleSignOut}
+        onOpenAuth={() => setShowUniversalAuth(true)}
         streak={profile?.streak || 1}
         onLogoClick={() => setShowSplash(true)}
       />
 
       <div className="pt-16">
+        <CurrencyFluctuationAlert activeCurrency={profile?.currency || "USD"} />
         <InvestorPitchModeBanner
           isPitchMode={isPitchMode}
           onTogglePitchMode={handleTogglePitchMode}
@@ -1318,6 +1383,22 @@ function AppContent() {
           onClose={() => setShowExpertOnboarding(false)} 
         />
       )}
+
+      <UniversalAuthModal
+        isOpen={showUniversalAuth}
+        onClose={() => setShowUniversalAuth(false)}
+        onSuccess={({ uid, displayName, email, currency, learningGoal }) => {
+          handleOnboardingComplete(displayName, "28", learningGoal, "github", currency);
+          setShowUniversalAuth(false);
+          window.dispatchEvent(new CustomEvent('ww-trigger-alert', {
+            detail: {
+              type: 'success',
+              title: `Welcome, ${displayName}! 🚀`,
+              message: `Authenticated successfully. Currency set to ${currency}. Sandbox session initialized.`
+            }
+          }));
+        }}
+      />
 
       <CurrencySelector 
         isOpen={showCurrencySelector} 

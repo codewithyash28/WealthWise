@@ -14,6 +14,9 @@ import { EmergencyFundWidget } from "./EmergencyFundWidget";
 import { LevelingSystem } from "./LevelingSystem";
 import { DailyGoalTracker } from "./DailyGoalTracker";
 import { FinancialRoadmap } from "./FinancialRoadmap";
+import { MarketSnapshot } from "./MarketSnapshot";
+import { WealthComparator } from "./WealthComparator";
+import { FinancialMilestones } from "./FinancialMilestones";
 
 interface DashboardProps {
   user: UserProfile;
@@ -150,6 +153,15 @@ export function Dashboard({ user, budget, onUpdateNetWorth }: DashboardProps) {
 
       {/* Financial Roadmap Visualizer */}
       <FinancialRoadmap user={user} />
+
+      {/* Financial Milestones Linear Progress Tracking Section */}
+      <FinancialMilestones user={user} />
+
+      {/* Side-by-Side Wealth Growth Comparator Sandbox */}
+      <WealthComparator user={user} />
+
+      {/* Top 3 Grounded Market Intelligence Headlines Snapshot */}
+      <MarketSnapshot />
 
       {/* Daily Goal Tracker Widget */}
       <DailyGoalTracker user={user} />

@@ -4,7 +4,11 @@ import { cn } from "../lib/utils";
 import { Logo } from "./Logo";
 import { CommunityReviews } from "./CommunityReviews";
 
-export function LandingPage() {
+interface LandingPageProps {
+  onOpenAuth?: () => void;
+}
+
+export function LandingPage({ onOpenAuth }: LandingPageProps = {}) {
   const fadeInUp = {
     initial: { opacity: 0, y: 20 },
     whileInView: { opacity: 1, y: 0 },
@@ -91,9 +95,21 @@ export function LandingPage() {
           className="flex flex-col sm:flex-row items-center gap-4 mb-20"
         >
           <div className="flex flex-col items-center gap-2 w-full sm:w-auto">
-            <a href="#wexa-agent" className="btn-primary text-base px-9 py-4 w-full sm:w-auto font-mono uppercase font-bold tracking-wider" aria-label="Enter Wexa AI Platform">
-              Launch Agent Platform <ChevronRight className="w-5 h-5 ml-2" />
-            </a>
+            <button 
+              type="button"
+              onClick={() => {
+                if (onOpenAuth) {
+                  onOpenAuth();
+                } else {
+                  window.location.hash = "#wexa-agent";
+                }
+              }}
+              className="btn-primary text-base px-9 py-4 w-full sm:w-auto font-mono uppercase font-bold tracking-wider flex items-center justify-center cursor-pointer" 
+              aria-label="Enter Wexa AI Platform"
+            >
+              <span>Launch Agent Platform</span>
+              <ChevronRight className="w-5 h-5 ml-2" />
+            </button>
             <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider font-mono">Live AI Agent Console</span>
           </div>
           

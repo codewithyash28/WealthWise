@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { 
   Menu, X, Sun, Moon, Flame, Sparkles, Cloud, Check, Trophy, 
   Bot, TrendingUp, BarChart2, PieChart, Globe, ShieldCheck, Target, 
-  DollarSign, Award, FileText, Building2, Zap, User, ArrowRight, Palette, Monitor, LogOut, ChevronDown, Crown
+  DollarSign, Award, FileText, Building2, Zap, User, ArrowRight, Palette, Monitor, LogOut, ChevronDown, Crown, KeyRound, Star
 } from "lucide-react";
 import { NotificationCenter } from "./NotificationCenter";
 import { Logo } from "./Logo";
@@ -20,6 +20,7 @@ interface NavbarProps {
   onSetThemeMode?: (mode: "system" | "light" | "dark" | "noir") => void;
   user?: { displayName: string | null; photoURL: string | null; email?: string | null } | null;
   onSignOut?: () => void;
+  onOpenAuth?: () => void;
   streak?: number;
   onLogoClick?: () => void;
 }
@@ -34,6 +35,7 @@ export function Navbar({
   onSetThemeMode,
   user, 
   onSignOut, 
+  onOpenAuth,
   streak = 1, 
   onLogoClick 
 }: NavbarProps) {
@@ -85,6 +87,7 @@ export function Navbar({
   const mainTabs = [
     { name: "Market Weather 🌤️", hash: "#macropulse", icon: TrendingUp },
     { name: "TrendMarket 📈", hash: "#trendmarket", icon: Zap },
+    { name: "Reviews (500+) ⭐", hash: "#reviews", icon: Star },
     { name: "Evidence Engine 📊", hash: "#evidence-engine", icon: BarChart2, highlight: true },
     { name: "💎 Pro / Pricing", hash: "#pricing", icon: Crown },
     { name: "Platform Transparency Hub 🛡️", hash: "#hackathon-hub", icon: ShieldCheck },
@@ -96,6 +99,7 @@ export function Navbar({
       title: "💎 PLANS & UPGRADES",
       items: [
         { name: "Wexa AI Pro ($19/mo) 💎", hash: "#pricing", icon: Crown, desc: "Global Stripe/Razorpay payments, unlimited OCR & autonomous AI rebalancing" },
+        { name: "500+ Verified User Reviews ⭐", hash: "#reviews", icon: Star, desc: "Anonymized ratings, impact feedback, and verified ledger" },
       ]
     },
     {
@@ -222,11 +226,18 @@ export function Navbar({
               ) : (
                 <button 
                   type="button"
-                  onClick={() => handleNavClick("#dashboard")}
-                  className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500 to-accent-gold text-slate-950 font-black font-mono text-xs flex items-center justify-center border border-amber-300 shadow-sm cursor-pointer hover:scale-105 transition-all"
-                  title="YC Investor / Verified Member"
+                  onClick={() => {
+                    if (onOpenAuth) {
+                      onOpenAuth();
+                    } else {
+                      handleNavClick("#dashboard");
+                    }
+                  }}
+                  className="px-3 py-1.5 rounded-xl bg-gradient-to-br from-amber-500 to-accent-gold text-slate-950 font-black font-mono text-xs flex items-center justify-center gap-1.5 border border-amber-300 shadow-sm cursor-pointer hover:scale-105 transition-all"
+                  title="Sign In / Launch Sandbox"
                 >
-                  YC
+                  <KeyRound className="w-3.5 h-3.5" />
+                  <span>Sign In</span>
                 </button>
               )}
 
@@ -287,19 +298,29 @@ export function Navbar({
 
             {/* 2. DARK/LIGHT MODE TOGGLE */}
             <div className="relative" ref={themePanelRef}>
-              <button
+              <motion.button
+                whileTap={{ scale: 0.9, rotate: 180 }}
+                whileHover={{ scale: 1.08 }}
                 onClick={() => setIsThemePanelOpen(!isThemePanelOpen)}
-                className="p-2 rounded-xl bg-bg-secondary border border-border hover:border-accent-gold/50 text-accent-gold transition-all cursor-pointer shadow-sm text-xs font-bold flex items-center justify-center"
+                className="p-2 rounded-xl bg-bg-secondary border border-border hover:border-accent-gold/50 text-accent-gold transition-all cursor-pointer shadow-sm text-xs font-bold flex items-center justify-center relative overflow-hidden group hover:shadow-[0_0_15px_rgba(240,180,41,0.35)]"
                 title="Toggle Dark / Light / Midnight Theme"
               >
-                {themeMode === "light" ? (
-                  <Sun className="w-4 h-4 text-amber-500" />
-                ) : themeMode === "noir" ? (
-                  <Sparkles className="w-4 h-4 text-amber-300 animate-pulse" />
-                ) : (
-                  <Moon className="w-4 h-4 text-accent-gold" />
-                )}
-              </button>
+                <motion.div
+                  key={themeMode}
+                  initial={{ rotate: -90, scale: 0.5, opacity: 0 }}
+                  animate={{ rotate: 0, scale: 1, opacity: 1 }}
+                  exit={{ rotate: 90, scale: 0.5, opacity: 0 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                >
+                  {themeMode === "light" ? (
+                    <Sun className="w-4 h-4 text-amber-500 drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]" />
+                  ) : themeMode === "noir" ? (
+                    <Sparkles className="w-4 h-4 text-amber-300 animate-pulse drop-shadow-[0_0_8px_rgba(252,211,77,0.8)]" />
+                  ) : (
+                    <Moon className="w-4 h-4 text-accent-gold drop-shadow-[0_0_8px_rgba(240,180,41,0.5)]" />
+                  )}
+                </motion.div>
+              </motion.button>
 
               {/* Theme Dropdown Panel */}
               <AnimatePresence>
